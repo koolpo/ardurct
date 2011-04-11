@@ -33,8 +33,8 @@
 #include <avr/pgmspace.h>
 
 // If this was a ".h", it would get added to sketches when using
-// the "Sketch -> Import Library..." menu on the Arduino IDE...
-#include "font_5x7.cpp"
+// the "Sketch -> Import Library..." menu on the Arduino IDE
+#include "fonts.cpp"
 
 
 LCD_PCD8544::LCD_PCD8544(uint8_t sce, uint8_t sclk, uint8_t sdin, uint8_t dc, uint8_t reset) {
@@ -247,7 +247,7 @@ bool LCD_PCD8544::bufferChar(uint8_t *buffer, uint8_t chr) {
 		return false;
 	}
 	
-	// if unknown return null
+	// if unknown return false
 	if ((chr < ' ') || (chr >= 0x80+LCD_PCD8544_MAX_USER_GLYPHS)) return false;
 	
 	if (chr >= 0x80) {

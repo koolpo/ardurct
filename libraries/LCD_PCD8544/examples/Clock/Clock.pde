@@ -75,7 +75,7 @@ void drawHands(float angleH, float angleM, float angleS, bool on) {
 void setup() {
     
     // initialize the screen, and adjust the contrast (value of 2 or 3 is fine)
-    lcd.begin(2);  
+    lcd.begin();  
 
     // draw the clock frame, compensate for the display dots not being square
     lcd.fillEllipse(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_RADIUS+CLOCK_SKEW, CLOCK_RADIUS, ON);
