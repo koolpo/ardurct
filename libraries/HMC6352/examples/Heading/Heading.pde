@@ -50,7 +50,7 @@ void setup() {
 
 void loop() {
     Serial.print("Heading: ");
-    Serial.print(Hmc6352.getHeading());
+    Serial.println(Hmc6352.getHeading());
     delay(500);
 }
 
