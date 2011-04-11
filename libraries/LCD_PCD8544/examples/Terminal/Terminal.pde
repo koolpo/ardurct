@@ -42,7 +42,7 @@
  * using a 3.3V variant of the Arduino, such as Sparkfun's Arduino Pro).
  */
  
- #include <LCD_PCD8544.h>
+#include <LCD_PCD8544.h>
 
 LCD_PCD8544 lcd();
 

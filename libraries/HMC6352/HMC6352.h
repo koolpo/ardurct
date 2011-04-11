@@ -22,7 +22,11 @@
  * THE SOFTWARE.
  */
 
-
+/* 
+ * Versions
+ *	v1.0	Initial release
+ */
+ 
 #ifndef HMC6352_H
 #define HMC6352_H
 

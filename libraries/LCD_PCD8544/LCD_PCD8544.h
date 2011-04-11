@@ -26,6 +26,10 @@
  * THE SOFTWARE.
  */
 
+/* 
+ * Versions
+ *	v1.0	Initial release
+ */
 
 #ifndef LCD_PCD8544_H
 #define LCD_PCD8544_H
