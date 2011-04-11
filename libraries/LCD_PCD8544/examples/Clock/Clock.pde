@@ -43,16 +43,22 @@
  */
 
 
+// Position of the clock
 #define CLOCK_CENTER_X	(LCD_PCD8544_WIDTH / 2)
 #define CLOCK_CENTER_Y	(LCD_PCD8544_HEIGHT / 2)
+
+// Size of the clock
 #define CLOCK_RADIUS	((LCD_PCD8544_HEIGHT / 2) - 2)
+
+// Size of the hands on the clock
 #define CLOCK_HAND_S	(CLOCK_RADIUS - 5)
 #define CLOCK_HAND_M	(CLOCK_HAND_S * 0.9f)
 #define CLOCK_HAND_H	(CLOCK_HAND_S * 0.7f)
+
+// Because the pixels are not square, we increase the size on the horizontal
 #define CLOCK_SKEW	4
 
-LCD_PCD8544_VG lcdG(7);
-LCD_PCD8544 lcdT(8);
+LCD_PCD8544_VG lcd();
 
 uint8_t seconds = 0;
 uint8_t minutes = 0;
@@ -60,72 +66,50 @@ uint8_t hours = 0;
 uint8_t days = 0;
 
 
-void drawHandles(float angleH, float angleM, float angleS, bool on) {
-    lcdG.drawLine(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_CENTER_X + round((CLOCK_HAND_H+CLOCK_SKEW) * cos(angleH)), CLOCK_CENTER_Y + round(CLOCK_HAND_H * sin(angleH)), on, 3);
-    lcdG.drawLine(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_CENTER_X + round((CLOCK_HAND_M+CLOCK_SKEW) * cos(angleM)), CLOCK_CENTER_Y + round(CLOCK_HAND_M * sin(angleM)), on, 2);
-    lcdG.drawLine(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_CENTER_X + round((CLOCK_HAND_S+CLOCK_SKEW) * cos(angleS)), CLOCK_CENTER_Y + round(CLOCK_HAND_S * sin(angleS)), on);
+void drawHands(float angleH, float angleM, float angleS, bool on) {
+    lcd.drawLine(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_CENTER_X + round((CLOCK_HAND_H+CLOCK_SKEW) * cos(angleH)), CLOCK_CENTER_Y + round(CLOCK_HAND_H * sin(angleH)), on, 3);
+    lcd.drawLine(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_CENTER_X + round((CLOCK_HAND_M+CLOCK_SKEW) * cos(angleM)), CLOCK_CENTER_Y + round(CLOCK_HAND_M * sin(angleM)), on, 2);
+    lcd.drawLine(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_CENTER_X + round((CLOCK_HAND_S+CLOCK_SKEW) * cos(angleS)), CLOCK_CENTER_Y + round(CLOCK_HAND_S * sin(angleS)), on);
 }
-    
-
-void printJustified(uint8_t val, uint8_t space) {
-    if (val >= 10) lcdT.print((int)(val/10));
-    else lcdT.print(space);
-    lcdT.print((int)(val%10));
-}
-
 
 void setup() {
-
-    analogWrite(11, 140);
     
-    // initialize the screen
-    lcdG.begin(2);  
-    lcdT.begin(3);  
+    // initialize the screen, and adjust the contrast (value of 2 or 3 is fine)
+    lcd.begin(2);  
 
     // draw the clock frame, compensate for the display dots not being square
-    lcdG.fillEllipse(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_RADIUS+CLOCK_SKEW, CLOCK_RADIUS, ON);
-    lcdG.fillEllipse(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_RADIUS+CLOCK_SKEW-2, CLOCK_RADIUS-2, OFF);
+    lcd.fillEllipse(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_RADIUS+CLOCK_SKEW, CLOCK_RADIUS, ON);
+    lcd.fillEllipse(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_RADIUS+CLOCK_SKEW-2, CLOCK_RADIUS-2, OFF);
+
 	// draw the hour lines
     for (uint8_t i=0; i<12; i++) {
         float angle = (-90.0f + i * 30.0f) * 3.1415f / 180.0f;
         float ca = cos(angle);
         float sa = sin(angle);
-        lcdG.drawLine(CLOCK_CENTER_X + round((CLOCK_RADIUS+CLOCK_SKEW-4) * ca), CLOCK_CENTER_Y+ round((CLOCK_RADIUS-4) * sa), 
+        lcd.drawLine(CLOCK_CENTER_X + round((CLOCK_RADIUS+CLOCK_SKEW-4) * ca), CLOCK_CENTER_Y+ round((CLOCK_RADIUS-4) * sa), 
             CLOCK_CENTER_X + round((CLOCK_RADIUS+CLOCK_SKEW) * ca), CLOCK_CENTER_Y+ round(CLOCK_RADIUS * sa), ON);
     }
-    lcdG.updateDisplay();
-    
-    lcdT.setCursor(0, 3);
-    lcdT.print("Battery: ");
-
+	
+	// update the screen with all the changes
+    lcd.updateDisplay();
 }
 
 void loop() {
-    // calculate the angle in radians
+    // calculate the angle in radians for seconds
     float angleS = (-90.0f + seconds * 6.0f) * 3.1415f / 180.0f;
-    // calculate the angle in radians
+    // calculate the angle in radians for minutes
     float angleM = (-90.0f + minutes * 6.0f) * 3.1415f / 180.0f;
-    // calculate the angle in radians (11h59 = 720mn)
+    // calculate the angle in radians for hours (11h59 = 720mn)
     float angleH = (-90.0f + (60*(hours%12) + minutes) * 0.5f) * 3.1415f / 180.0f;
 	
-    // draw handles
-    drawHandles(angleH, angleM, angleS, ON);
-    lcdG.updateDisplay();
-    
-	// draw the text version
-    lcdT.setCursor(1, 1);
-    printJustified(days, ' ');
-    lcdT.print("d ");
-    printJustified(hours, ' ');
-    lcdT.print(":");
-    printJustified(minutes, '0');
-    lcdT.print(":");
-    printJustified(seconds, '0');
-    
+    // draw hands
+    drawHands(angleH, angleM, angleS, ON);
+    lcd.updateDisplay();
+        
     // wait for 1 second
     delay(1000);
-    // erase the previous line, to prepare for next drawing
-    drawHandles(angleH, angleM, angleS, OFF);
+    // erase the previous lines, to prepare for next drawing
+    drawHands(angleH, angleM, angleS, OFF);
 
     // increase the seconds, minutes, hours and days
     seconds ++;

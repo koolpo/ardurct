@@ -44,15 +44,14 @@
  
  #include <LCD_PCD8544.h>
 
-LCD_PCD8544 lcd1(7);
-LCD_PCD8544 lcd2(8);
+LCD_PCD8544 lcd();
 
 void setup() {
     Serial.begin(9600);
-    lcd1.begin();
+    lcd.begin();
 }
 
 void loop() {
     if (Serial.available() > 0) 
-        lcd1.print((uint8_t)Serial.read()); 
+        lcd.print((uint8_t)Serial.read()); 
 }
