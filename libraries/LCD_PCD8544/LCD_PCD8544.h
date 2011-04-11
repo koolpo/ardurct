@@ -63,28 +63,28 @@ class LCD_PCD8544: public Print {
         // Draw a bitmap of width x height at x y
         virtual void drawBitmap(const uint8_t *data, uint8_t x, uint8_t y, uint8_t width, uint8_t height);
 		
-        // Erase everything on the display...
+        // Erase everything on the display
         virtual void clear();
-        virtual void clearLine();  // ...or just the current line
+        virtual void clearLine();  // or just the current line
 
-        // LCD initialization and finalization
+        // LCD start and stop
         virtual void begin(uint8_t bias = 2);
         void stop();
   
-        // Control the display's power state...
+        // Control the display's power state
         void setPower(bool on);
 
-        // For compatibility with the LiquidCrystal library...
+        // For compatibility with the LiquidCrystal library
         void display();
         void noDisplay();
 
-        // Activate white-on-black mode (whole display)...
+        // Activate white-on-black mode (whole display)
         void setInverse(bool inverse);
 
-        // Place the cursor at the start of the current line...
+        // Place the cursor at the start of the current line
         void home();
 
-        // Place the cursor at position (column, line)...
+        // Place the cursor at position (column, line)
         void setCursor(uint8_t column, uint8_t line);
 
 		// define a glyph
@@ -120,15 +120,8 @@ class LCD_PCD8544: public Print {
 		// Prepare next write to be on column x, line line
 		void setXYAddress(uint8_t x, uint8_t line);
 		
-		// Retrieve into a buffer the chr, returns the buffer or null
+		// Retrieve into a buffer the chr, returns true if we have to write it or false if nothing to do
 		bool bufferChar(uint8_t *buffer, uint8_t chr);
-		
-	private:
-		// draw a filled progress bar
-		void drawFilledProgressBar(uint8_t column, uint8_t line, uint8_t size, uint8_t percentage);
-		
-		// draw a line progress bar
-		void drawLineProgressBar(uint8_t column, uint8_t line, uint8_t size, uint8_t percentage);
 		
 };
 
