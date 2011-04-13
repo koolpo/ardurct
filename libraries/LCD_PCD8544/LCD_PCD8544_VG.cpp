@@ -86,12 +86,13 @@ void LCD_PCD8544_VG::drawBitmap(const uint8_t *data, uint8_t x, uint8_t y, uint8
 	// clip the bitmap to the screen
 	uint8_t line = y / 8;
 	uint8_t shift = y % 8;
-	uint8_t stopLine = (y + height > LCD_PCD8544_HEIGHT ? LCD_PCD8544_HEIGHT : y + height) / 8;
-	uint8_t stopColumn = (x + width > LCD_PCD8544_WIDTH ? LCD_PCD8544_WIDTH : x + width);
+	uint8_t stopLine = (y + height > LCD_PCD8544_HEIGHT ? LCD_PCD8544_HEIGHT-y : height) / 8;
+	if (stopLine == 0) stopLine = 1;
+	uint8_t stopColumn = (x + width > LCD_PCD8544_WIDTH ? LCD_PCD8544_WIDTH-x : width);
 	
 	uint8_t pix8;
 	
-	for (uint8_t l = 0; l <= stopLine; l++) {
+	for (uint8_t l = 0; l < stopLine; l++) {
 		for (uint8_t c = 0; c < stopColumn; c++) {
 			pix8 = data[l*width+c] << shift;
 			_buffer[line+l][x+c] &= ~(0xFF << shift);
@@ -268,7 +269,7 @@ bool LCD_PCD8544_VG::bufferHLine(int8_t x1, int8_t x2, int8_t y, bool on) {
 }
 
 
-bool LCD_PCD8544_VG::bufferVLine(uint8_t x, uint8_t y1, uint8_t y2, bool on) {
+void LCD_PCD8544_VG::bufferVLine(uint8_t x, uint8_t y1, uint8_t y2, bool on) {
 	if (y2 < y1) swap(y1, y2);
 	for (uint8_t y = y1; y <= y2; y++) bufferPixel(x, y, on);
 }

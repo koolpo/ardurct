@@ -132,10 +132,11 @@ void LCD_PCD8544::drawBitmap(const uint8_t *data, uint8_t x, uint8_t y, uint8_t 
 	
 	// clip the bitmap to the screen
 	uint8_t line = y / 8;
-	uint8_t stopLine = (y + height > LCD_PCD8544_HEIGHT ? LCD_PCD8544_HEIGHT : y + height) / 8;
-	uint8_t stopColumn = (x + width > LCD_PCD8544_WIDTH ? LCD_PCD8544_WIDTH : x + width);
+	uint8_t stopLine = (y + height > LCD_PCD8544_HEIGHT ? LCD_PCD8544_HEIGHT-y : height) / 8;
+	if (stopLine == 0) stopLine = 1;
+	uint8_t stopColumn = (x + width > LCD_PCD8544_WIDTH ? LCD_PCD8544_WIDTH-x : width);
 	
-	for (uint8_t l = 0; l <= stopLine; l++) {
+	for (uint8_t l = 0; l < stopLine; l++) {
 		setXYAddress(x, line + l);
 		for (uint8_t c = 0; c < stopColumn; c++) {
 			send(LCD_PCD8544_DATA, data[l*width+c]);

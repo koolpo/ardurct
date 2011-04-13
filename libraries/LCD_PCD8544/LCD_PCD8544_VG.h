@@ -93,7 +93,7 @@ class LCD_PCD8544_VG: public LCD_PCD8544 {
 		bool bufferHLine(uint8_t x1, uint8_t x2, uint8_t y, bool on);
 
 		// Set a full vertical line in the buffer
-		bool bufferVLine(uint8_t x, uint8_t y1, uint8_t y2, bool on);
+		void bufferVLine(uint8_t x, uint8_t y1, uint8_t y2, bool on);
 		
 		// Set 4 quadrants around a center in the buffer, either filled or not
 		void bufferQuadrants(uint8_t x0, uint8_t y0, int8_t x, int8_t y, bool on, bool filled);
