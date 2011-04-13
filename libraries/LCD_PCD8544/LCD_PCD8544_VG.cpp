@@ -238,8 +238,8 @@ void LCD_PCD8544_VG::updateDisplay() {
 
 // --------------- Private ----------------------
 
-void LCD_PCD8544_VG::bufferPixel(uint8_t x, uint8_t y, bool on) {
-	if ((x >= LCD_PCD8544_WIDTH) || (y >= LCD_PCD8544_HEIGHT)) return;
+void LCD_PCD8544_VG::bufferPixel(int8_t x, int8_t y, bool on) {
+	if ((x < 0) || (y < 0) || (x >= LCD_PCD8544_WIDTH) || (y >= LCD_PCD8544_HEIGHT)) return;
 	
 	uint8_t mask = 0x01 << (y & 0x07);
 	uint8_t line = y >> 3;
@@ -249,10 +249,12 @@ void LCD_PCD8544_VG::bufferPixel(uint8_t x, uint8_t y, bool on) {
 }
 
 
-bool LCD_PCD8544_VG::bufferHLine(uint8_t x1, uint8_t x2, uint8_t y, bool on) {
-	if (y >= LCD_PCD8544_HEIGHT) return false;
+bool LCD_PCD8544_VG::bufferHLine(int8_t x1, int8_t x2, int8_t y, bool on) {
+	if ((y < 0) || (y >= LCD_PCD8544_HEIGHT)) return false;
 	if (x1 >= LCD_PCD8544_WIDTH) x1 = LCD_PCD8544_WIDTH-1;
+	if (x1 < 0) x1 = 0;
 	if (x2 >= LCD_PCD8544_WIDTH) x2 = LCD_PCD8544_WIDTH-1;
+	if (x2 < 0) x2 = 0;
 	
 	uint8_t mask = 0x01 << (y & 0x07);
 	uint8_t line = y >> 3;
