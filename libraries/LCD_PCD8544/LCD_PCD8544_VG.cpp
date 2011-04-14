@@ -126,7 +126,11 @@ uint8_t LCD_PCD8544_VG::drawMediumFontDigit(uint8_t val, uint8_t x, uint8_t y) {
 
 uint8_t LCD_PCD8544_VG::drawMediumFontValueRA(uint16_t val, uint8_t maxLength, uint8_t space, uint8_t x, uint8_t y) {
 	uint8_t lx = x;
-	if (maxLength == 4) lx = drawMediumFontDigit(space, lx, y);
+	if (val >= 10000) return x;
+	if (maxLength >= 4) {
+		if (val >= 1000) lx = drawMediumFontDigit(val/1000, lx, y);
+		else lx = drawMediumFontDigit(space, lx, y);
+	}
 	if (maxLength >= 3) {
 		if (val >= 100) lx = drawMediumFontDigit(val/100, lx, y);
 		else lx = drawMediumFontDigit(space, lx, y);
@@ -146,9 +150,25 @@ void LCD_PCD8544_VG::drawMediumFontValueRA(float val, uint8_t maxLength, uint8_t
 		uint16_t ival = (uint16_t)(val * 10);
 		uint8_t lx = drawMediumFontValueRA(ival/10, maxLength, space, x+2, y);
 		drawMediumFontChar(' ', lx, y);
-		bufferPixel(lx, y+5, true);
+		bufferPixel(lx, y+5, ON);
 		drawMediumFontChar(ival%10, lx+2, y);
 	}
+}
+
+
+void LCD_PCD8544_VG::drawMediumFontTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint8_t x, uint8_t y) {
+	uint8_t lx = x+10;
+	if (hours > 0) {
+		lx = drawMediumFontValueRA(hours, 2, ' ', x, y);
+		drawMediumFontDigit(' ', lx, y);
+		bufferPixel(lx, y+2, ON);
+		bufferPixel(lx, y+4, ON);
+	}
+	lx = drawMediumFontValueRA(minutes, 2, hours > 0 ? 0 : ' ', lx+2, y);
+	drawMediumFontDigit(' ', lx, y);
+	bufferPixel(lx, y+2, ON);
+	bufferPixel(lx, y+4, ON);
+	drawMediumFontValueRA(seconds, 2, 0, lx+2, y);
 }
 
 #endif
