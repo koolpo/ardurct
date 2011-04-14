@@ -49,6 +49,9 @@ class LCD_PCD8544_VG: public LCD_PCD8544 {
         // LCD initialization and finalization
         virtual void begin(uint8_t bias = 2);
 
+		// Set the cursor on a precise column
+		void setXCursor(uint8_t x, uint8_t line);
+		
         // Draw a bitmap of width x height at x y
         virtual void drawBitmap(const uint8_t *data, uint8_t x, uint8_t y, uint8_t width, uint8_t height);
 		

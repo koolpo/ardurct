@@ -32,13 +32,13 @@
 #define swap(a, b) { uint8_t t; t = a; a = b; b = t; }
 
 LCD_PCD8544_VG::LCD_PCD8544_VG(uint8_t sce, uint8_t sclk, uint8_t sdin, uint8_t dc, uint8_t reset) {
-	LCD_PCD8544::setup(sclk, sdin, dc, reset, sce);
+	setup(sclk, sdin, dc, reset, sce);
 }
 
 
 void LCD_PCD8544_VG::begin(uint8_t bias) {
 	memset(_buffer, 0, sizeof(_buffer));
-	LCD_PCD8544::init(bias);
+	init(bias);
 }
 
 
@@ -61,6 +61,11 @@ void LCD_PCD8544_VG::clearLine() {
 		_buffer[_line][c] = 0x00;
     }
     setXYAddress(0, _line);
+}
+
+
+void LCD_PCD8544_VG::setXCursor(uint8_t x, uint8_t line) {
+	setXYAddress(x, line);
 }
 
 
@@ -106,6 +111,66 @@ void LCD_PCD8544_VG::drawBitmap(const uint8_t *data, uint8_t x, uint8_t y, uint8
 	}
 }
 
+
+#ifdef LCD_PCD8544_FONT_4X6
+
+uint8_t LCD_PCD8544_VG::drawMediumFontDigit(uint8_t val, uint8_t x, uint8_t y) {
+	uint8_t buffer[4];
+	
+	memcpy_P(buffer, &font_4x6[val == 0x20 ? 10 : val], 4);
+	drawBitmap(buffer, x, y, 4, 6);
+	bufferVLine(x+4, y, y+6, OFF);
+	return x+5;
+}
+
+
+uint8_t LCD_PCD8544_VG::drawMediumFontValueRA(uint16_t val, uint8_t maxLength, uint8_t space, uint8_t x, uint8_t y) {
+	uint8_t lx = x;
+	if (maxLength == 4) lx = drawMediumFontDigit(space, lx, y);
+	if (maxLength >= 3) {
+		if (val >= 100) lx = drawMediumFontDigit(val/100, lx, y);
+		else lx = drawMediumFontDigit(space, lx, y);
+	}
+	if (maxLength >= 2) {
+		if (val >= 10)  lx = drawMediumFontDigit((val/10-(10*(val/100))), lx, y);
+		else  lx = drawMediumFontDigit(space, lx, y);
+	}
+	lx = drawMediumFontDigit(val % 10, lx, y);
+	return lx;
+}
+
+
+void LCD_PCD8544_VG::drawMediumFontValueRA(float val, uint8_t maxLength, uint8_t space, uint8_t x, uint8_t y) {
+	if (val >= 100.0f) drawMediumFontValueRA((uint16_t)val, maxLength+2, space, x, y);
+	else {
+		uint16_t ival = (uint16_t)(val * 10);
+		uint8_t lx = drawMediumFontValueRA(ival/10, maxLength, space, x+2, y);
+		drawMediumFontChar(' ', lx, y);
+		bufferPixel(lx, y+5, true);
+		drawMediumFontChar(ival%10, lx+2, y);
+	}
+}
+
+#endif
+
+
+#ifdef LCD_PCD8544_FONT_3X5
+
+void LCD_PCD8544_VG::LCD_PCD8544_VG::drawSmallFontText(uint8_t *text, uint8_t length, int x, int y) {
+	uint8_t buffer[3];
+	
+	for (uint8_t i=0; i<length; i++) {
+		uint8_t c = text[i];
+		if ((c >= 0x20) && (c <= 0x7B)) {					// only chars from space to z are defined
+			if ((c > 0x60) && (c < 0x7B)) c -= 'a'-'A';		// only uppercase chars are defined, replace lowercase by uppercase
+			memcpy_P(buffer, &font_3x5[c - 0x20], 3);
+			drawBitmap(buffer, x+i*4, y, 3, 5);
+			bufferVLine(x+3+i*4, y, y+5, OFF);
+		}
+	}
+}
+
+#endif
 
 void LCD_PCD8544_VG::drawPixel(uint8_t x, uint8_t y, bool on) {
 	bufferPixel(x, y, on);

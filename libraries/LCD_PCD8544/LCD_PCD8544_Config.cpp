@@ -34,6 +34,14 @@
 // these are displayed when using ascii codes >= 128
 #define LCD_PCD8544_MAX_USER_GLYPHS 4
 
+// whether to use small fonts or not
+// comment out, not to use
+#define LCD_PCD8544_FONT_3X5 1
+
+// whether to use medium fonts or not
+// comment out, not to use
+#define LCD_PCD8544_FONT_4X6 1
+
 
 // ------ Hardware descriptions ---------
 // no need to change these in most cases
