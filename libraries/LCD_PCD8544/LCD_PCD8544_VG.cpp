@@ -176,7 +176,7 @@ void LCD_PCD8544_VG::drawMediumFontTime(uint8_t hours, uint8_t minutes, uint8_t 
 
 #ifdef LCD_PCD8544_FONT_3X5
 
-void LCD_PCD8544_VG::LCD_PCD8544_VG::drawSmallFontText(uint8_t *text, uint8_t length, int x, int y) {
+void LCD_PCD8544_VG::drawSmallFontText(uint8_t *text, uint8_t length, int x, int y) {
 	uint8_t buffer[3];
 	
 	for (uint8_t i=0; i<length; i++) {

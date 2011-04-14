@@ -55,6 +55,22 @@ class LCD_PCD8544_VG: public LCD_PCD8544 {
         // Draw a bitmap of width x height at x y
         virtual void drawBitmap(const uint8_t *data, uint8_t x, uint8_t y, uint8_t width, uint8_t height);
 		
+#ifdef LCD_PCD8544_FONT_4X6
+		// Draw a integer value of maxLength size, Right Aligned, padding the value with space at x, y position, using font_4x6
+		uint8_t drawMediumFontValueRA(uint16_t val, uint8_t maxLength, uint8_t space, uint8_t x, uint8_t y);
+		
+		// Draw a float value of maxLength size, Right Aligned, padding the value with space at x, y position, using font_4x6
+		void drawMediumFontValueRA(float val, uint8_t maxLength, uint8_t space, uint8_t x, uint8_t y);
+		
+		// Draw the time at x, y, using font_4x6
+		void drawMediumFontTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint8_t x, uint8_t y)
+#endif
+
+#ifdef LCD_PCD8544_FONT_3X5
+		// Draw a string of size length at x, y
+		void drawSmallFontText(uint8_t *text, uint8_t length, int x, int y);
+#endif
+		
 		// Draw a pixel
 		void drawPixel(uint8_t x, uint8_t y, bool on);
 
@@ -89,6 +105,11 @@ class LCD_PCD8544_VG: public LCD_PCD8544 {
 		// Buffer to hold the pixels and draw the graphics
         uint8_t _buffer[LCD_PCD8544_LINES][LCD_PCD8544_WIDTH];
 		
+#ifdef LCD_PCD8544_FONT_4X6
+		// Draw a single digit for 0 to 9 or space using font_4x6
+		void drawMediumFontDigit(uint8_t val, uint8_t x, uint8_t y);
+#endif		
+
 		// Set a pixel in the buffer
 		void bufferPixel(uint8_t x, uint8_t y, bool on);
 		
