@@ -29,6 +29,12 @@
 
 #include "LCD_PCD8544_VG.h"
 
+#include <avr/pgmspace.h>
+
+// If this was a ".h", it would get added to sketches when using
+// the "Sketch -> Import Library..." menu on the Arduino IDE
+#include "fonts.cpp"
+
 #define swap(a, b) { uint8_t t; t = a; a = b; b = t; }
 
 LCD_PCD8544_VG::LCD_PCD8544_VG(uint8_t sce, uint8_t sclk, uint8_t sdin, uint8_t dc, uint8_t reset) {
@@ -124,51 +130,50 @@ uint8_t LCD_PCD8544_VG::drawMediumFontDigit(uint8_t val, uint8_t x, uint8_t y) {
 }
 
 
-uint8_t LCD_PCD8544_VG::drawMediumFontValueRA(uint16_t val, uint8_t maxLength, uint8_t space, uint8_t x, uint8_t y) {
+uint8_t LCD_PCD8544_VG::drawMediumFontValueRA(uint16_t value, uint8_t maxL, uint8_t space, uint8_t x, uint8_t y, bool isTenTimes) {
 	uint8_t lx = x;
+	uint16_t val = value;
+	uint8_t maxLength = maxL;
+	if (isTenTimes) {
+		val /= 10;
+		if (val < 100) lx += 3;
+		else maxLength += 2;
+	}
 	if (val >= 10000) return x;
 	if (maxLength >= 4) {
 		if (val >= 1000) lx = drawMediumFontDigit(val/1000, lx, y);
 		else lx = drawMediumFontDigit(space, lx, y);
 	}
 	if (maxLength >= 3) {
-		if (val >= 100) lx = drawMediumFontDigit(val/100, lx, y);
+		if (val >= 100) lx = drawMediumFontDigit(val/100-(10*(val/1000)), lx, y);
 		else lx = drawMediumFontDigit(space, lx, y);
 	}
 	if (maxLength >= 2) {
-		if (val >= 10)  lx = drawMediumFontDigit((val/10-(10*(val/100))), lx, y);
+		if (val >= 10)  lx = drawMediumFontDigit(val/10-(10*(val/100)), lx, y);
 		else  lx = drawMediumFontDigit(space, lx, y);
 	}
 	lx = drawMediumFontDigit(val % 10, lx, y);
+	if ((isTenTimes) && (val < 100)) {
+		drawMediumFontDigit(' ', lx, y);
+		bufferPixel(lx, y+5, true);
+		drawMediumFontDigit(value%10, lx+2, y);			
+	}
 	return lx;
 }
-
-
-void LCD_PCD8544_VG::drawMediumFontValueRA(float val, uint8_t maxLength, uint8_t space, uint8_t x, uint8_t y) {
-	if (val >= 100.0f) drawMediumFontValueRA((uint16_t)val, maxLength+2, space, x, y);
-	else {
-		uint16_t ival = (uint16_t)(val * 10);
-		uint8_t lx = drawMediumFontValueRA(ival/10, maxLength, space, x+2, y);
-		drawMediumFontChar(' ', lx, y);
-		bufferPixel(lx, y+5, ON);
-		drawMediumFontChar(ival%10, lx+2, y);
-	}
-}
-
 
 void LCD_PCD8544_VG::drawMediumFontTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint8_t x, uint8_t y) {
 	uint8_t lx = x+10;
 	if (hours > 0) {
-		lx = drawMediumFontValueRA(hours, 2, ' ', x, y);
+		lx = drawMediumFontValueRA(hours, 2, ' ', x, y, false);
 		drawMediumFontDigit(' ', lx, y);
 		bufferPixel(lx, y+2, ON);
 		bufferPixel(lx, y+4, ON);
 	}
-	lx = drawMediumFontValueRA(minutes, 2, hours > 0 ? 0 : ' ', lx+2, y);
+	lx = drawMediumFontValueRA(minutes, 2, hours > 0 ? 0 : ' ', lx+2, y, false);
 	drawMediumFontDigit(' ', lx, y);
 	bufferPixel(lx, y+2, ON);
 	bufferPixel(lx, y+4, ON);
-	drawMediumFontValueRA(seconds, 2, 0, lx+2, y);
+	drawMediumFontValueRA(seconds, 2, 0, lx+2, y, false);
 }
 
 #endif

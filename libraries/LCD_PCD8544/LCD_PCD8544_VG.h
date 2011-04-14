@@ -57,13 +57,10 @@ class LCD_PCD8544_VG: public LCD_PCD8544 {
 		
 #ifdef LCD_PCD8544_FONT_4X6
 		// Draw a integer value of maxLength size, Right Aligned, padding the value with space at x, y position, using font_4x6
-		uint8_t drawMediumFontValueRA(uint16_t val, uint8_t maxLength, uint8_t space, uint8_t x, uint8_t y);
-		
-		// Draw a float value of maxLength size, Right Aligned, padding the value with space at x, y position, using font_4x6
-		void drawMediumFontValueRA(float val, uint8_t maxLength, uint8_t space, uint8_t x, uint8_t y);
+		uint8_t drawMediumFontValueRA(uint16_t val, uint8_t maxLength, uint8_t space, uint8_t x, uint8_t y, bool isTenTimes = false);
 		
 		// Draw the time at x, y, using font_4x6
-		void drawMediumFontTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint8_t x, uint8_t y)
+		void drawMediumFontTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint8_t x, uint8_t y);
 #endif
 
 #ifdef LCD_PCD8544_FONT_3X5
@@ -107,14 +104,14 @@ class LCD_PCD8544_VG: public LCD_PCD8544 {
 		
 #ifdef LCD_PCD8544_FONT_4X6
 		// Draw a single digit for 0 to 9 or space using font_4x6
-		void drawMediumFontDigit(uint8_t val, uint8_t x, uint8_t y);
+		uint8_t drawMediumFontDigit(uint8_t val, uint8_t x, uint8_t y);
 #endif		
 
 		// Set a pixel in the buffer
-		void bufferPixel(uint8_t x, uint8_t y, bool on);
+		void bufferPixel(int8_t x, int8_t y, bool on);
 		
 		// Set a full horizontal line in the buffer
-		bool bufferHLine(uint8_t x1, uint8_t x2, uint8_t y, bool on);
+		bool bufferHLine(int8_t x1, int8_t x2, int8_t y, bool on);
 
 		// Set a full vertical line in the buffer
 		void bufferVLine(uint8_t x, uint8_t y1, uint8_t y2, bool on);
