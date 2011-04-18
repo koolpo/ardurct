@@ -153,18 +153,24 @@ void LCD_PCD8544::drawProgressBar(uint8_t column, uint8_t line, uint8_t size, ui
 	uint8_t range = 4 + 6 * (size - 2);
 	uint16_t filling = percentage * range / 100;
 	
-	setCursor(column, line);
-	for (uint8_t i=0; i<3; i++) send(LCD_PCD8544_DATA, 0x00);
+	// draw an empty bar
+	setXYAddress(column * LCD_PCD8544_CHAR_WIDTH, line);
+	for (int i=0; i<3; i++) send(LCD_PCD8544_DATA, 0x00);
 	send(LCD_PCD8544_DATA, 0x7F);
-	for (uint8_t i=0; i<filling-3; i++) {
-		if (filled) send(LCD_PCD8544_DATA, 0x7F);
-		else send(LCD_PCD8544_DATA, 0x41);
+	for (int i=0; i<range; i++) send(LCD_PCD8544_DATA, 0x41);
+	send(LCD_PCD8544_DATA, 0x7F);
+	for (int i=0; i<3; i++) send(LCD_PCD8544_DATA, 0x00);
+	
+	// draw the progress bar
+	if (!filled) {
+		if (filling < 2) setXYAddress(column * LCD_PCD8544_CHAR_WIDTH + 4, line);
+		else setXYAddress(column * LCD_PCD8544_CHAR_WIDTH + 4 + filling - 2, line);
+		send(LCD_PCD8544_DATA, 0x7F);
+		send(LCD_PCD8544_DATA, 0x7F);
+	} else {
+		setXYAddress(column * LCD_PCD8544_CHAR_WIDTH + 4, line);
+		for (int i=0; i<filling; i++) send(LCD_PCD8544_DATA, 0x7F);
 	}
-	send(LCD_PCD8544_DATA, 0x7F);
-	send(LCD_PCD8544_DATA, 0x7F);
-	for (uint8_t i=filling+1; i<=range; i++) send(LCD_PCD8544_DATA, 0x41);
-	send(LCD_PCD8544_DATA, 0x7F);
-	for (uint8_t i=0; i<3; i++) send(LCD_PCD8544_DATA, 0x00);
 }
 
 

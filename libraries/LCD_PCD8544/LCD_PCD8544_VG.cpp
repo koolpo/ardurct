@@ -136,7 +136,10 @@ uint8_t LCD_PCD8544_VG::drawMediumFontValueRA(uint16_t value, uint8_t maxL, uint
 	uint8_t maxLength = maxL;
 	if (isTenTimes) {
 		val /= 10;
-		if (val < 100) lx += 3;
+		if (val < 100) {
+			drawMediumFontDigit(' ', lx, y);
+			lx += 3;
+		}
 		else maxLength += 2;
 	}
 	if (val >= 10000) return x;
@@ -181,7 +184,7 @@ void LCD_PCD8544_VG::drawMediumFontTime(uint8_t hours, uint8_t minutes, uint8_t 
 
 #ifdef LCD_PCD8544_FONT_3X5
 
-void LCD_PCD8544_VG::drawSmallFontText(uint8_t *text, uint8_t length, int x, int y) {
+void LCD_PCD8544_VG::drawSmallFontText(const char *text, uint8_t length, int x, int y) {
 	uint8_t buffer[3];
 	
 	for (uint8_t i=0; i<length; i++) {

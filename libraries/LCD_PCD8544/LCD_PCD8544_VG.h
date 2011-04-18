@@ -57,6 +57,7 @@ class LCD_PCD8544_VG: public LCD_PCD8544 {
 		
 #ifdef LCD_PCD8544_FONT_4X6
 		// Draw a integer value of maxLength size, Right Aligned, padding the value with space at x, y position, using font_4x6
+		// isTenTimes indicate that this uint should be divided by ten when displayed (with one digit)
 		uint8_t drawMediumFontValueRA(uint16_t val, uint8_t maxLength, uint8_t space, uint8_t x, uint8_t y, bool isTenTimes = false);
 		
 		// Draw the time at x, y, using font_4x6
@@ -65,7 +66,7 @@ class LCD_PCD8544_VG: public LCD_PCD8544 {
 
 #ifdef LCD_PCD8544_FONT_3X5
 		// Draw a string of size length at x, y
-		void drawSmallFontText(uint8_t *text, uint8_t length, int x, int y);
+		void drawSmallFontText(const char *text, uint8_t length, int x, int y);
 #endif
 		
 		// Draw a pixel
