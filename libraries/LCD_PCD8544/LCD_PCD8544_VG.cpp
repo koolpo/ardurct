@@ -94,9 +94,16 @@ void LCD_PCD8544_VG::drawBitmap(const uint8_t *data, uint8_t x, uint8_t y, uint8
 	// draw in the frame
 	if ((x > LCD_PCD8544_WIDTH) || (y > LCD_PCD8544_HEIGHT)) return;
 	
-	// clip the bitmap to the screen
 	uint8_t line = y / 8;
 	uint8_t shift = y % 8;
+	
+	// calculate the masks for the bitmap
+	uint16_t mask = 0;
+	for (uint8_t i=0; (i<height) && (i<8); i++) mask = mask*2+1;
+	uint8_t lsmask = (uint8_t)~(mask << shift);
+	uint8_t rsmask = (uint8_t)~(mask >> (8-shift));
+
+	// clip the bitmap to the screen
 	uint8_t stopLine = (y + height > LCD_PCD8544_HEIGHT ? LCD_PCD8544_HEIGHT-y : height) / 8;
 	if (stopLine == 0) stopLine = 1;
 	uint8_t stopColumn = (x + width > LCD_PCD8544_WIDTH ? LCD_PCD8544_WIDTH-x : width);
@@ -106,11 +113,11 @@ void LCD_PCD8544_VG::drawBitmap(const uint8_t *data, uint8_t x, uint8_t y, uint8
 	for (uint8_t l = 0; l < stopLine; l++) {
 		for (uint8_t c = 0; c < stopColumn; c++) {
 			pix8 = data[l*width+c] << shift;
-			_buffer[line+l][x+c] &= ~(0xFF << shift);
+			_buffer[line+l][x+c] &= lsmask;
 			_buffer[line+l][x+c] |= pix8;
 			if ((shift != 0) && (line+l+1 < LCD_PCD8544_LINES)) {
 				pix8 = data[l*width+c] >> (8-shift);
-				_buffer[line+l+1][x+c] &= ~(0xFF >> (8-shift));
+				_buffer[line+l+1][x+c] &= rsmask;
 				_buffer[line+l+1][x+c] |= pix8;
 			}
 		}
@@ -278,7 +285,7 @@ void LCD_PCD8544_VG::drawProgressBar(uint8_t column, uint8_t line, uint8_t size,
 	uint8_t x2 = (column + size) * LCD_PCD8544_CHAR_WIDTH - 3;
 	uint8_t y1 = line * 8;
 	uint8_t y2 = y1 + 6;
-	fillRectangle(x1, y1, x2, y2, OFF);
+	fillRectangle(x1-3, y1, x2+3, y2, OFF);
 	drawRectangle(x1, y1, x2, y2, ON);
 	
 	x2 = 3 + percentage * (x2 - x1) / 100;
