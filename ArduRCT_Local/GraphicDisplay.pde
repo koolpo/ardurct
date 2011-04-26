@@ -67,9 +67,14 @@ void gdRefreshBattery(uint8_t batteryPct) {
     lcdG.updateDisplay();
 }    
 
+
+void gdRefreshTimer(uint8_t hours, uint8_t minutes, uint8_t seconds) {
+    lcdG.drawMediumFontTime(hours, minutes, seconds, GD_TIME_X, GD_TIME_Y);
+    lcdG.updateDisplay();
+}
+
     
 void gdRefresh(uint8_t hours, uint8_t minutes, uint8_t seconds, uint16_t mpsSpeed, uint16_t kphSpeed, uint16_t altitude, uint16_t distance) {
-    lcdG.drawMediumFontTime(hours, minutes, seconds, GD_TIME_X, GD_TIME_Y);
     lcdG.drawMediumFontValueRA(mpsSpeed, 2, ' ', GD_VAL_X, GD_MPS_Y, true);
     lcdG.drawMediumFontValueRA(kphSpeed, 2, ' ', GD_VAL_X, GD_KPH_Y, true);
     lcdG.drawMediumFontValueRA(altitude, 2, ' ', GD_VAL_X, GD_ALT_Y, true);

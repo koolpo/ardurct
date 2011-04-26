@@ -1,6 +1,8 @@
 #ifndef ARDURCT_LOCAL_CONFIG_H
 #define ARDURCT_LOCAL_CONFIG_H
 
+#include "../ArduRCT_Config.h"
+
 #define LCD_BACKLIGHT_PIN 11
 
 #define LCD_SCLK_PIN 3
@@ -14,5 +16,7 @@
 #define JOYSTICK_YAW_PIN 3
 #define JOYSTICK_PITCH_PIN 0
 #define JOYSTICK_ROLL_PIN 1
+
+#define BATTERY_PIN 6
 
 #endif
