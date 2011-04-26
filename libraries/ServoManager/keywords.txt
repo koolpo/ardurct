@@ -1,0 +1,27 @@
+#######################################
+# Syntax Coloring Map LCD_Nokia5110
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ServoManager	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+attach	KEYWORD2
+detach	KEYWORD2
+set	KEYWORD2
+setMicroseconds	KEYWORD2
+setAngle	KEYWORD2
+getMicroseconds	KEYWORD2
+getAngle	KEYWORD2
+isAttached	KEYWORD2
+run	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
