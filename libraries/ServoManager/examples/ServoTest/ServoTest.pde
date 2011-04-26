@@ -11,6 +11,6 @@ void setup() {
 }
 
 void loop() {
-    // run the servo manager: needs to be called at least once per 50ms
+    // run the servo manager: needs to be called at least once per 20ms (50Hz)
     ServoManager.run();
 }
