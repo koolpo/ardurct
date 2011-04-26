@@ -23,8 +23,7 @@
  */
 
 /* 
- * Versions
- *	v1.0	Initial release
+ * Versions: see ServoManager.h
  */
 
 #include "ServoManager.h"

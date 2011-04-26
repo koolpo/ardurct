@@ -24,6 +24,7 @@
 
 /* 
  * Versions
+ *	v1.1	Updated the update rate to 50Hz
  *	v1.0	Initial release
  */
 
