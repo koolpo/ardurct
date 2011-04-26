@@ -24,6 +24,7 @@
 
 /* 
  * Versions
+ *	v1.2	Added mapSet method
  *	v1.1	Updated the update rate to 50Hz
  *	v1.0	Initial release
  */
@@ -65,6 +66,9 @@ class NIServoManager {
 		// Detach a servo
 		void detach(uint8_t servo);
 		
+		// Set the pulse to a value mapped between min and max
+		void mapSet(uint8_t servo, uint16_t value, int16_t min, int16_t max);
+
 		// Set the pulse to value (if <= 180 setAngle, otherwise setMicroseconds)
 		void set(uint8_t servo, uint16_t value);
 		

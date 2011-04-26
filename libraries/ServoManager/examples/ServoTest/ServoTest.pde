@@ -2,6 +2,7 @@
 
 #define THROTTLE 0
 #define THROTTLE_SERVO_PIN 2
+#define THROTTLE_COMMAND A0
 
 void setup() {
     // Attach the THROTTLE servo to THROTTLE_SERVO_PIN
@@ -13,4 +14,8 @@ void setup() {
 void loop() {
     // run the servo manager: needs to be called at least once per 20ms (50Hz)
     ServoManager.run();
+    // wait between command reads
+    delay(5);
+    // adjust the servo position according to the command
+    ServoManager.mapSet(THROTTLE, analogRead(THROTTLE_COMMAND), 0, 1023);
 }

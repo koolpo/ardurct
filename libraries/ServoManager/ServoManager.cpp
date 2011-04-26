@@ -77,6 +77,15 @@ void NIServoManager::detach(uint8_t servo) {
 }
 
 
+void NIServoManager::mapSet(uint8_t servo, uint16_t value, int16_t mapMin, int16_t mapMax) {
+	uint8_t i = getServoIndex(servo);
+	if (i == 0xFF) return;
+	uint16_t oldValue = _servos[i].value;
+	_servos[i].value = map(angle, mapMin, mapMax, _servos[i].min,  _servos[i].max);
+	if (oldValue != _servos[i].value) reOrderPulse(i, oldValue);
+}
+
+
 void NIServoManager::set(uint8_t servo, uint16_t value) {
 	if (value <= 180) setAngle(servo, value);
 	else setMicroseconds(servo, value);
@@ -93,11 +102,7 @@ void NIServoManager::setMicroseconds(uint8_t servo, uint16_t value) {
 
 
 void NIServoManager::setAngle(uint8_t servo, uint16_t angle) {
-	uint8_t i = getServoIndex(servo);
-	if (i == 0xFF) return;
-	uint16_t oldValue = _servos[i].value;
-	_servos[i].value = map(angle, 0, 180, _servos[i].min,  _servos[i].max);
-	if (oldValue != _servos[i].value) reOrderPulse(i, oldValue);
+	mapSet(servo, angle, 0, 180);
 }
 
 
