@@ -33,20 +33,23 @@
 #include <WProgram.h>
 #include <inttypes.h>
 
-#define SERVO_MANAGER_INTER_PULSE_MS 50
+// On pulse every 20ms, this is the standard 50Hz update rate for servos
+#define SERVO_MANAGER_INTER_PULSE_MS 20
 
+// Number of servos managed by the library,can be as high as the number of pins
 #define SERVO_MANAGER_NB_SERVOS 12
 
+// Default min max and medium pulse for the servos
 #define SERVO_MANAGER_MIN_PULSE 544
 #define SERVO_MANAGER_MAX_PULSE 2400
 #define SERVO_MANAGER_DEFAULT_PULSE 1500
 
 typedef struct {
 	uint8_t id;
+	uint8_t pin;
 	uint16_t value;
 	uint16_t min;
 	uint16_t max;
-	uint8_t pin;
 } ServoManager_Servo_t;
 
 
