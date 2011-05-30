@@ -127,10 +127,10 @@ bool NIServoManager::isAttached(uint8_t servo) {
 }
 
 /** 
- *	This function has to be called at least every SERVO_MANAGER_INTER_PULSE_MS (50ms) 
- *	It will take between 0 and 2.5ms to run, whatever the number of servo to run
+ *	This function has to be called at least every SERVO_MANAGER_INTER_PULSE_MS (20ms) 
+ *	It will take between 0 and 2.5ms to run, whatever the number of servos to run
  **/
-void NIServoManager::run() {
+void NIServoManager::loop() {
 	// if no servo attached, do nothing
 	if (_lastServo == 0) return;
 	
@@ -145,7 +145,7 @@ void NIServoManager::run() {
 	
 	while (i < _lastServo) {
 		// wait time between last pulse width and current pulse
-		delayMicroseconds(_servos[_pulseOrder[i]].value - pulse);
+		if (_servos[_pulseOrder[i]].value > pulse) delayMicroseconds(_servos[_pulseOrder[i]].value - pulse);
 		// remember last pulse
 		pulse = _servos[_pulseOrder[i]].value;
 		// finish the pulse on the servo
