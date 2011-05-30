@@ -42,11 +42,11 @@ bool NIServoManager::attach(uint8_t servo, uint8_t pin, uint16_t min, uint16_t m
 	_servos[_lastServo].id = servo;
 	_servos[_lastServo].min = min;
 	_servos[_lastServo].max = max;
+	// set the servo to center position
+	_servos[_lastServo].value = SERVO_MANAGER_DEFAULT_PULSE;
 	// from wiring_digital.c
 	_servos[_lastServo].pinBitMask = digitalPinToBitMask(pin);
 	_servos[_lastServo].pinPort = portOutputRegister(digitalPinToPort(pin));
-	// set the servo to center position
-	_servos[_lastServo].value = SERVO_MANAGER_DEFAULT_PULSE;
 	// set the pin as output
 	pinMode(pin, OUTPUT);
 	// lower the pin, prepare for pulse, turn-off timers ...
