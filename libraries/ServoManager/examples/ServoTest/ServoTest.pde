@@ -13,7 +13,7 @@ void setup() {
 
 void loop() {
     // run the servo manager: needs to be called at least once per 20ms (50Hz)
-    ServoManager.run();
+    ServoManager.loop();
     // wait between command reads
     delay(5);
     // adjust the servo position according to the command

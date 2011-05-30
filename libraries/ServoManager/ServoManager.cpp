@@ -27,12 +27,12 @@
  */
 
 #include "ServoManager.h"
+#include <pins_arduino.h>
 
 NIServoManager::NIServoManager() {
 	_lastServo = 0;
 	_nextPulse = 0;
 }
-
 
 bool NIServoManager::attach(uint8_t servo, uint8_t pin, uint16_t min, uint16_t max) {
 	// prepare for first active run
@@ -40,23 +40,26 @@ bool NIServoManager::attach(uint8_t servo, uint8_t pin, uint16_t min, uint16_t m
 	// return false if no more ServoManager slot available
 	if (_lastServo >= SERVO_MANAGER_NB_SERVOS) return false;
 	_servos[_lastServo].id = servo;
-	_servos[_lastServo].pin = pin;
 	_servos[_lastServo].min = min;
 	_servos[_lastServo].max = max;
+	// from wiring_digital.c
+	_servos[_lastServo].pinBitMask = digitalPinToBitMask(pin);
+	_servos[_lastServo].pinPort = portOutputRegister(digitalPinToPort(pin));
 	// set the servo to center position
 	_servos[_lastServo].value = SERVO_MANAGER_DEFAULT_PULSE;
 	// set the pin as output
 	pinMode(pin, OUTPUT);
-	// lower the pin, prepare for pulse
+	// lower the pin, prepare for pulse, turn-off timers ...
+	// called once so we save some time in the loop by accessing directly the ports
 	digitalWrite(_servos[_lastServo].pin, LOW);
-	// insert the servo pulse in the _pulseOrder
+	// insert the servo pulse at the right place in _pulseOrder
 	uint8_t i;
 	for (i=0; i<_lastServo; i++) {
 		if (_servos[_lastServo].value < _servos[_pulseOrder[i]].value) break;
 	}
 	for (uint8_t j=i; j<_lastServo; j++) _pulseOrder[j+1] = _pulseOrder[j];
 	_pulseOrder[i] = _lastServo;
-	// store the number f active servos
+	// store the number of active servos
 	_lastServo ++;
 	return true;
 }
@@ -67,7 +70,8 @@ void NIServoManager::detach(uint8_t servo) {
 	if (i == 0xFF) return;
 	for (;i<_lastServo-1; i++) {
 		_servos[i].id = _servos[i+1].id;
-		_servos[i].pin = _servos[i+1].pin;
+		_servos[i].pinBitMask = _servos[i+1].pinBitMask;
+		_servos[i].pinPort = _servos[i+1].pinPort;
 		_servos[i].min = _servos[i+1].min;
 		_servos[i].max = _servos[i+1].max;
 		_servos[i].value =  _servos[i+1].value;
@@ -78,11 +82,11 @@ void NIServoManager::detach(uint8_t servo) {
 
 
 void NIServoManager::mapSet(uint8_t servo, uint16_t value, int16_t mapMin, int16_t mapMax) {
-	uint8_t i = getServoIndex(servo);
-	if (i == 0xFF) return;
-	uint16_t oldValue = _servos[i].value;
-	_servos[i].value = map(angle, mapMin, mapMax, _servos[i].min,  _servos[i].max);
-	if (oldValue != _servos[i].value) reOrderPulse(i, oldValue);
+	uint8_t servoIndex = getServoIndex(servo);
+	if (servoIndex == 0xFF) return;
+	uint16_t oldValue = _servos[servoIndex].value;
+	_servos[servoIndex].value = map(angle, mapMin, mapMax, _servos[servoIndex].min,  _servos[servoIndex].max);
+	if (oldValue != _servos[servoIndex].value) reOrderPulses(servoIndex, oldValue);
 }
 
 
@@ -93,11 +97,11 @@ void NIServoManager::set(uint8_t servo, uint16_t value) {
 
 
 void NIServoManager::setMicroseconds(uint8_t servo, uint16_t value) {
-	uint8_t i = getServoIndex(servo);
-	if (i == 0xFF) return;
-	uint16_t oldValue = _servos[i].value;
-	_servos[i].value = constrain(value, _servos[i].min, _servos[i].max);
-	if (oldValue != _servos[i].value) reOrderPulse(i, oldValue);
+	uint8_t servoIndex = getServoIndex(servo);
+	if (servoIndex == 0xFF) return;
+	uint16_t oldValue = _servos[servoIndex].value;
+	_servos[i].value = constrain(value, _servos[servoIndex].min, _servos[servoIndex].max);
+	if (oldValue != _servos[servoIndex].value) reOrderPulses(servoIndex, oldValue);
 }
 
 
@@ -107,22 +111,22 @@ void NIServoManager::setAngle(uint8_t servo, uint16_t angle) {
 
 
 uint16_t NIServoManager::getMicroseconds(uint8_t servo) {
-	uint8_t i = getServoIndex(servo);
-	if (i == 0xFF) return 0xFFFF;
-	return _servos[i].value;
+	uint8_t servoIndex = getServoIndex(servo);
+	if (servoIndex == 0xFF) return 0xFFFF;
+	return _servos[servoIndex].value;
 }
 
 
 uint16_t NIServoManager::getAngle(uint8_t servo) {
-	uint8_t i = getServoIndex(servo);
-	if (i == 0xFF) return 0xFFFF;
-	return map(_servos[i].value, _servos[i].min, _servos[i].max, 0, 180);
+	uint8_t servoIndex = getServoIndex(servo);
+	if (servoIndex == 0xFF) return 0xFFFF;
+	return map(_servos[servoIndex].value, _servos[servoIndex].min, _servos[servoIndex].max, 0, 180);
 }
 
 
 bool NIServoManager::isAttached(uint8_t servo) {
-	uint8_t i = getServoIndex(servo);
-	if (i == 0xFF) return false;
+	uint8_t servoIndex = getServoIndex(servo);
+	if (servoIndex == 0xFF) return false;
 	return true;
 }
 
@@ -136,13 +140,15 @@ void NIServoManager::loop() {
 	
 	// wait to reach the interpulse
 	if (millis() - _nextPulse < 0) return;
+
+	// Prepare for next pulse
+	_nextPulse = millis() + SERVO_MANAGER_INTER_PULSE_MS;
+	
+	// start the pulse on all the servos
+	for (uint8_t i=0; i<_lastServo; i++) *(_servos[i].pinPort) |= _servos[i].pinBitMask;
 	
 	uint16_t pulse = 0;
 	uint8_t i = 0;
-
-	// start the pulse on all the servos
-	for (uint8_t i=0; i<_lastServo; i++) digitalWrite(_servos[i].pin, HIGH);
-	
 	while (i < _lastServo) {
 		// wait time between last pulse width and current pulse
 		if (_servos[_pulseOrder[i]].value > pulse) delayMicroseconds(_servos[_pulseOrder[i]].value - pulse);
@@ -150,12 +156,11 @@ void NIServoManager::loop() {
 		pulse = _servos[_pulseOrder[i]].value;
 		// finish the pulse on the servo
 		while (_servos[_pulseOrder[i]].value == pulse) {
-			digitalWrite(_servos[_pulseOrder[i]].pin, LOW);
+			// end the pulse on relevant servos
+			*(_servos[_pulseOrder[i]].pinPort) &= ~(_servos[_pulseOrder[i]].pinBitMask);
 			i++;
 		}
 	}
-	// Prepare for next pulse
-	_nextPulse = millis() + SERVO_MANAGER_INTER_PULSE_MS;
 }
 
 
@@ -163,8 +168,8 @@ void NIServoManager::loop() {
 
 
 uint8_t NIServoManager::getServoIndex(uint8_t servo) {
-	for (uint8_t i=0; i<_lastServo; i++) {
-		if (_servos[i].id == servo) return i;
+	for (uint8_t servoIndex=0; servoIndex<_lastServo; servoIndex++) {
+		if (_servos[servoIndex].id == servo) return servoIndex;
 	}
 	return 0xFF;
 }
@@ -172,18 +177,20 @@ uint8_t NIServoManager::getServoIndex(uint8_t servo) {
 
 #define swap(a, b) { uint8_t t = a; a = b; b = t; }
 
-void NIServoManager::reOrderPulse(uint8_t index, uint16_t oldValue) {
+void NIServoManager::reOrderPulses(uint8_t servoIndex, uint16_t oldValue) {
 	uint8_t i;
 	for (i=0; i<_lastServo; i++) {
-		if (_pulseOrder[i] == index) break;
+		if (_pulseOrder[i] == servoIndex) break;
 	}
-	if (_servos[index].value > oldValue) {
+	if (_servos[servoIndex].value > oldValue) {
 		for (uint8_t j=i; j<_lastServo-1; j++) {
 			if (_servos[_pulseOrder[j]].value > _servos[_pulseOrder[j+1]].value) swap(_pulseOrder[j], _pulseOrder[j+1]);
+			else break;
 		}
 	} else {
 		for (uint8_t j=i; j>0; j--) {
 			if (_servos[_pulseOrder[j]].value < _servos[_pulseOrder[j-1]].value) swap(_pulseOrder[j], _pulseOrder[j-1]);
+			else break;
 		}
 	}
 }

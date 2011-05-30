@@ -24,8 +24,9 @@
 
 /* 
  * Versions
+ *  v1.3	Directly set the ports instead of using digitalWrite
  *	v1.2	Added mapSet method
- *	v1.1	Updated the update rate to 50Hz
+ *	v1.1	Updated the refresh rate to 50Hz
  *	v1.0	Initial release
  */
 
@@ -48,7 +49,8 @@
 
 typedef struct {
 	uint8_t id;
-	uint8_t pin;
+	uint8_t pinBitMask;
+	uint8_t *pinPort;
 	uint16_t value;
 	uint16_t min;
 	uint16_t max;
@@ -87,8 +89,8 @@ class NIServoManager {
 		// Check if a servo is attached to the manager or not
 		bool isAttached(uint8_t servo);
 		
-		// Run the ServoManager, need to be called in the main loop
-		void run();
+		// Periodically run the ServoManager, need to be called in the main loop
+		void loop();
 		
 	private:
 		uint8_t _lastServo;
@@ -99,8 +101,8 @@ class NIServoManager {
 		// Get the index of the servo in the servo array
 		uint8_t getServoIndex(uint8_t servo);
 		
-		// Reorder the pulse in ascending order
-		void reOrderPulse(uint8_t index, uint16_t oldValue);
+		// Reorder the pulses in ascending order
+		void reOrderPulses(uint8_t servoIndex, uint16_t oldValue);
 };
 
 extern NIServoManager ServoManager;

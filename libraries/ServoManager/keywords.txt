@@ -20,7 +20,8 @@ setAngle	KEYWORD2
 getMicroseconds	KEYWORD2
 getAngle	KEYWORD2
 isAttached	KEYWORD2
-run	KEYWORD2
+loop	KEYWORD2
+mapSet	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
