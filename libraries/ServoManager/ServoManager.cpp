@@ -46,7 +46,7 @@ bool NIServoManager::attach(uint8_t servo, uint8_t pin, uint16_t min, uint16_t m
 	_servos[_lastServo].value = SERVO_MANAGER_DEFAULT_PULSE;
 	// from wiring_digital.c
 	_servos[_lastServo].pinBitMask = digitalPinToBitMask(pin);
-	_servos[_lastServo].pinPort = portOutputRegister(digitalPinToPort(pin));
+	_servos[_lastServo].pinPort = digitalPinToPort(pin);
 	// set the pin as output
 	pinMode(pin, OUTPUT);
 	// lower the pin, prepare for pulse, turn-off timers ...
@@ -135,6 +135,8 @@ bool NIServoManager::isAttached(uint8_t servo) {
  *	It will take between 0 and 2.5ms to run, whatever the number of servos to run
  **/
 void NIServoManager::loop() {
+	uint8_t *out;
+	
 	// if no servo attached, do nothing
 	if (_lastServo == 0) return;
 	
@@ -145,8 +147,12 @@ void NIServoManager::loop() {
 	_nextPulse = millis() + SERVO_MANAGER_INTER_PULSE_MS;
 	
 	// start the pulse on all the servos
-	for (uint8_t i=0; i<_lastServo; i++) *(_servos[i].pinPort) |= _servos[i].pinBitMask;
+	for (uint8_t i=0; i<_lastServo; i++) {
+		out = portOutputRegister(_servos[i].pinPort);
+		*out |= _servos[i].pinBitMask;
+	}
 	
+	// end the pulse on the servos, according to the pulse length
 	uint16_t pulse = 0;
 	uint8_t i = 0;
 	while (i < _lastServo) {
@@ -157,7 +163,8 @@ void NIServoManager::loop() {
 		// finish the pulse on the servo
 		while (_servos[_pulseOrder[i]].value == pulse) {
 			// end the pulse on relevant servos
-			*(_servos[_pulseOrder[i]].pinPort) &= ~(_servos[_pulseOrder[i]].pinBitMask);
+			out = portOutputRegister(_servos[_pulseOrder[i]].pinPort);
+			*out &= ~(_servos[_pulseOrder[i]].pinBitMask);
 			i++;
 		}
 	}
