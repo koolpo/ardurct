@@ -6,9 +6,9 @@ uint16_t altitude = 0;
 uint16_t distance = 0;
 uint16_t speedMS = 0;
 
-uint8_t throttle = 0;
-
 void setup() {
+    Serial.begin(SERIAL_BAUDRATE);
+    
     tdSetup();
     tdRefreshSignalAndBattery(88, 93);
 
@@ -17,13 +17,21 @@ void setup() {
     
     percentageSetup();
     timerStart();
+    radioSetup();
 }
 
 
 void loop() {
+    for (int i=1; i<NB_CHANNELS; i++) channel[i] = percentageGet(i);
+    uint8_t pct = percentageGet(THROTTLE);
+    if ((pct >+ 60) && (channel[THROTTLE] < 100)) channel[THROTTLE] += (pct-50)/10;
+    else if ((pct <= 40) && (channel > 0)) channel[THROTTLE] -= (50-pct)/10;
+    if (channel[THROTTLE] > 100) channel[THROTTLE] = 100;
+
+    tdRefreshChannels();
+
     gdRefresh(speedMS, speedMS*36/10, altitude, distance);
     gdDrawIndicators(1, 1, 0, -1);
-    tdRefresh(throttle, percentageGet(YAW), percentageGet(PITCH), percentageGet(ROLL), percentageGet(ADJUST));
     gdRefreshBattery(percentageGet(BATTERY));
     gdDraw();
     
@@ -33,9 +41,6 @@ void loop() {
         counter = 0;
         timerUpdate();
     }
-    
-    uint8_t pct = percentageGet(THROTTLE);
-    if ((pct >+ 60) && (throttle < 100)) throttle += (pct-50)/10;
-    else if ((pct <= 40) && (throttle > 0)) throttle -= (50-pct)/10;
-    if (throttle > 100) throttle = 100;
+    radioTransmitChannels();
+    radioProcessReceive();
 }

@@ -1,9 +1,0 @@
-#ifndef ARDURCT_CONFIG_H
-#define ARDURCT_CONFIG_H
-
-#define FRAME_START '#'
-#define REPEAT_FRAME_START 2
-
-#define SERIAL_SPEED 57600
-
-#endif

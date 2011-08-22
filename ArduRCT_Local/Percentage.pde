@@ -25,6 +25,9 @@ uint8_t percentageGet(uint8_t channel) {
         case BATTERY:
             value = analogRead(BATTERY_PIN);
             break;
+        default:
+            value = 0;
+            break;
     }
-    return 100 * value / 1024;
+    return 100 * value / 1023;
 }

@@ -3,11 +3,16 @@
 
 /* --- Common to Local and Remote --- */
 
-#define FRAME_START '#'
-#define REPEAT_FRAME_START 2
-#define SERIAL_SPEED 57600
+#define NB_CHANNELS 8
+
+#define RADIO_FRAME_START '#'
+#define RADIO_REPEAT_FRAME_START 2
+#define RADIO_BAUDRATE 19200
 
 /* ---------------------------------- */
+
+// Serial
+#define SERIAL_BAUDRATE 57600
 
 // Backlight
 #define LCD_BACKLIGHT_PIN 10

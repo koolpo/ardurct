@@ -11,13 +11,15 @@
 #define YAW 1
 #define PITCH 2
 #define ROLL 3
-#define ADJUST 5
-#define BATTERY 6
+#define ADJUST 4
+#define BATTERY 100
+
+uint8_t channel[NB_CHANNELS];
 
 // TextDisplay
 void tdSetup();
 void tdRefreshSignalAndBattery(uint8_t signalPct, uint8_t batteryPct);
-void tdRefresh(uint8_t throttle, uint8_t yaw, uint8_t pitch, uint8_t roll, uint8_t adjust);
+void tdRefreshChannels();
 
 // GraphicDisplay
 void gdSetup();
@@ -35,5 +37,10 @@ uint8_t percentageGet(uint8_t channel);
 // Timer
 void timerStart();
 void timerUpdate();
+
+// Radio
+void radioSetup();
+void radioTransmitChannels();
+void radioProcessReceive();
 
 #endif
