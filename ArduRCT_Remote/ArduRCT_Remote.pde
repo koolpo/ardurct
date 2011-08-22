@@ -12,8 +12,10 @@ void loop() {
     // run the servo manager
     ServoManager.loop();
     
+    // process the radio
     radioProcessReceive();
     radioProcessTransmit();
+    
     delay(5);
 } 
 

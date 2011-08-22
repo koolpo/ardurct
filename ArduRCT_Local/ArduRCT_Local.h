@@ -3,6 +3,7 @@
 
 #include <WProgram.h>
 #include <inttypes.h>
+#include <LCD_PCD8544.h>
 
 #include "ArduRCT_Local_Config.h"
 
@@ -14,7 +15,11 @@
 #define ADJUST 4
 #define BATTERY 100
 
-uint8_t channel[NB_CHANNELS];
+#define MENU_NONE 0
+
+extern uint8_t channel[NB_CHANNELS];
+extern uint8_t menuState;
+extern LCD_PCD8544 lcdT;
 
 // TextDisplay
 void tdSetup();
@@ -42,5 +47,9 @@ void timerUpdate();
 void radioSetup();
 void radioTransmitChannels();
 void radioProcessReceive();
+
+// Menu
+void menuSetup();
+void menuProcess();
 
 #endif
