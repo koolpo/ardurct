@@ -103,6 +103,9 @@ class NIServoManager {
 		
 		// Reorder the pulses in ascending order
 		void reOrderPulses(uint8_t servoIndex, uint16_t oldValue);
+
+		// Reorder the pulses in ascending order
+		void reOrderPulses(uint8_t servoIndex);
 };
 
 extern NIServoManager ServoManager;

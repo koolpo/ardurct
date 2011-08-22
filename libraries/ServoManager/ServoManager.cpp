@@ -81,15 +81,6 @@ void NIServoManager::detach(uint8_t servo) {
 }
 
 
-void NIServoManager::mapSet(uint8_t servo, uint16_t value, int16_t mapMin, int16_t mapMax) {
-	uint8_t servoIndex = getServoIndex(servo);
-	if (servoIndex == 0xFF) return;
-	uint16_t oldValue = _servos[servoIndex].value;
-	_servos[servoIndex].value = map(value, mapMin, mapMax, _servos[servoIndex].min,  _servos[servoIndex].max);
-	if (oldValue != _servos[servoIndex].value) reOrderPulses(servoIndex, oldValue);
-}
-
-
 void NIServoManager::set(uint8_t servo, uint16_t value) {
 	if (value <= 180) setAngle(servo, value);
 	else setMicroseconds(servo, value);
@@ -101,9 +92,17 @@ void NIServoManager::setMicroseconds(uint8_t servo, uint16_t value) {
 	if (servoIndex == 0xFF) return;
 	uint16_t oldValue = _servos[servoIndex].value;
 	_servos[servoIndex].value = constrain(value, _servos[servoIndex].min, _servos[servoIndex].max);
-	if (oldValue != _servos[servoIndex].value) reOrderPulses(servoIndex, oldValue);
+	if (oldValue != _servos[servoIndex].value) reOrderPulses(servoIndex/*, oldValue*/);
 }
 
+
+void NIServoManager::mapSet(uint8_t servo, uint16_t value, int16_t mapMin, int16_t mapMax) {
+	uint8_t servoIndex = getServoIndex(servo);
+	if (servoIndex == 0xFF) return;
+	uint16_t oldValue = _servos[servoIndex].value;
+	_servos[servoIndex].value = map(value, mapMin, mapMax, _servos[servoIndex].min,  _servos[servoIndex].max);
+	if (oldValue != _servos[servoIndex].value) reOrderPulses(servoIndex/*, oldValue*/);
+}
 
 void NIServoManager::setAngle(uint8_t servo, uint16_t angle) {
 	mapSet(servo, angle, 0, 180);
@@ -197,6 +196,24 @@ void NIServoManager::reOrderPulses(uint8_t servoIndex, uint16_t oldValue) {
 		}
 	}
 }
+
+
+void NIServoManager::reOrderPulses(uint8_t servoIndex) {
+	// find the pulse
+	uint8_t i;
+	for (i=0; i<_lastServo; i++) {
+		if (_pulseOrder[i] == servoIndex) break;
+	}
+	// remove the pulse
+	for (uint8_t j=i; j<_lastServo-1; j++) _pulseOrder[j] = _pulseOrder[j+1];
+	// insert the pulse
+	for (i=0; i<_lastServo; i++) {
+		if (_servos[servoIndex].value < _servos[_pulseOrder[i]].value) break;
+	}
+	for (uint8_t j=i; j<_lastServo; j++) _pulseOrder[j+1] = _pulseOrder[j];
+	_pulseOrder[i] = servoIndex;
+}
+
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
 NIServoManager ServoManager = NIServoManager();
