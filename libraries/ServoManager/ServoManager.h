@@ -50,7 +50,7 @@
 typedef struct {
 	uint8_t id;
 	uint8_t pinBitMask;
-	uint8_t pinPort;
+	volatile uint8_t *pinPort;
 	uint16_t value;
 	uint16_t min;
 	uint16_t max;
