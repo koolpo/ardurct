@@ -2,7 +2,7 @@
 
 #include "ArduRCT_Local.h"
 
-LCD_PCD8544_VG lcdG(LCD_SCE_GRAPHIC_PIN);
+LCD_PCD8544_VG lcdG(LCD_SCE_GRAPHIC_PIN, LCD_SCLK_PIN, LCD_SDIN_PIN, LCD_DC_PIN, LCD_RESET_PIN);
 
 uint8_t gdID[4];
 
@@ -74,7 +74,7 @@ void gdRefreshTimer(uint8_t hours, uint8_t minutes, uint8_t seconds) {
 }
 
     
-void gdRefresh(uint8_t hours, uint8_t minutes, uint8_t seconds, uint16_t mpsSpeed, uint16_t kphSpeed, uint16_t altitude, uint16_t distance) {
+void gdRefresh(uint16_t mpsSpeed, uint16_t kphSpeed, uint16_t altitude, uint16_t distance) {
     lcdG.drawMediumFontValueRA(mpsSpeed, 2, ' ', GD_VAL_X, GD_MPS_Y, true);
     lcdG.drawMediumFontValueRA(kphSpeed, 2, ' ', GD_VAL_X, GD_KPH_Y, true);
     lcdG.drawMediumFontValueRA(altitude, 2, ' ', GD_VAL_X, GD_ALT_Y, true);

@@ -6,6 +6,7 @@ uint16_t altitude = 0;
 uint16_t distance = 0;
 uint16_t speedMS = 0;
 
+uint8_t throttle = 0;
 
 void setup() {
     tdSetup();
@@ -14,19 +15,16 @@ void setup() {
     gdSetup();
     gdSetID("8BC2");
     
-    joystickSetup();
-	timerStart();
+    percentageSetup();
+    timerStart();
 }
 
 
 void loop() {
-	uint32_t temp;
-
     gdRefresh(speedMS, speedMS*36/10, altitude, distance);
     gdDrawIndicators(1, 1, 0, -1);
-    tdRefresh(joystickGet(THROTTLE), joystickGet(YAW), joystickGet(PITCH), joystickGet(ROLL));
-	temp = 100 * analogRead(BATTERY_PIN) / 1023;
-    gdRefreshBattery(temp & 0x0FF);
+    tdRefresh(throttle, percentageGet(YAW), percentageGet(PITCH), percentageGet(ROLL), percentageGet(ADJUST));
+    gdRefreshBattery(percentageGet(BATTERY));
     gdDraw();
     
     delay(100);
@@ -34,5 +32,10 @@ void loop() {
     if (counter > 10) {
         counter = 0;
         timerUpdate();
-	}
+    }
+    
+    uint8_t pct = percentageGet(THROTTLE);
+    if ((pct >+ 60) && (throttle < 100)) throttle += (pct-50)/10;
+    else if ((pct <= 40) && (throttle > 0)) throttle -= (50-pct)/10;
+    if (throttle > 100) throttle = 100;
 }

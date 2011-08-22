@@ -1,10 +1,10 @@
 #include "ArduRCT_Local.h"
 
-void joystickSetup() {
-    analogReference(INTERNAL);
+void percentageSetup() {
+    analogReference(EXTERNAL);
 }
 
-uint8_t joystickGet(uint8_t channel) {
+uint8_t percentageGet(uint8_t channel) {
     uint32_t value;
     switch(channel) {
         case THROTTLE:
@@ -18,6 +18,12 @@ uint8_t joystickGet(uint8_t channel) {
             break;
         case ROLL:
             value = 1024-analogRead(JOYSTICK_ROLL_PIN);
+            break;
+        case ADJUST:
+            value = analogRead(ADJUST_PIN);
+            break;
+        case BATTERY:
+            value = analogRead(BATTERY_PIN);
             break;
     }
     return 100 * value / 1024;

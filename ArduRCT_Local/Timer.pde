@@ -12,15 +12,15 @@ void timerStart() {
 
 
 void timerUpdate() {
-	// increase the seconds   
-	timerSeconds ++;
-	if (timerSeconds > 59) {
-		timerSeconds = 0;
-		timerMinutes ++;
-		if (timerMinutes > 59) {
-			timerMinutes = 0;
-			timerHours ++;
-		}
-	}
-	gdRefreshTimer(timerHours, timerMinutes, timerSeconds);
+    // increase the seconds   
+    timerSeconds ++;
+    if (timerSeconds > 59) {
+        timerSeconds = 0;
+        timerMinutes ++;
+	if (timerMinutes > 59) {
+	    timerMinutes = 0;
+	    timerHours ++;
+        }
+    }
+    gdRefreshTimer(timerHours, timerMinutes, timerSeconds);
 }
