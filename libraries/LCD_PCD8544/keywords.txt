@@ -33,6 +33,7 @@ fillRectangle	KEYWORD2
 fillCircle	KEYWORD2
 fillEllipse	KEYWORD2
 drawProgressBar	KEYWORD2
+drawToggleSwitch	KEYWORD2
 updateDisplay	KEYWORD2
 drawMediumFontValueRA	KEYWORD2
 drawMediumFontTime	KEYWORD2
