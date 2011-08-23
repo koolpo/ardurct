@@ -30,6 +30,9 @@
 #ifndef BUTTON_MONITOR_H
 #define BUTTON_MONITOR_H
 
+#include <WProgram.h>
+#include <inttypes.h>
+
 // Check every 50ms as default
 #define BUTTON_MONITOR_DEBOUNCE_DELAY_MS 50
 // Consider that the button is repeating after ? ms
@@ -73,23 +76,23 @@ class NIButtonMonitor {
 		
 		// Returns true if the button has been depressed
 		// once this function has been called, it will return false
-		bool NIButtonMonitor::isDepressed(uint8_t buttonId);
+		bool isDepressed(uint8_t buttonId);
 		
 		// Returns true as long as the button is pressed
-		bool NIButtonMonitor::isPressed(uint8_t buttonId);
+		bool isPressed(uint8_t buttonId);
 				
 		// Returns true if the button has been pressed more than BUTTON_MONITOR_REPEATING_TRIGGER
-		bool NIButtonMonitor::isRepeating(uint8_t buttonId);
+		bool isRepeating(uint8_t buttonId);
 		
 		// Returns true if the button has been pressed more than BUTTON_MONITOR_FAST_REPEATING_TRIGGER
-		bool NIButtonMonitor::isFastRepeating(uint8_t buttonId)
+		bool isFastRepeating(uint8_t buttonId);
 		
 		// Returns true if the button has been released
 		// once this function has been called, it will return false
-		bool NIButtonMonitor::isReleased(uint8_t buttonId);
+		bool isReleased(uint8_t buttonId);
 
 		// Returns the state of the button
-		uint8_t NIButtonMonitor::getState(uint8_t buttonId);
+		uint8_t getState(uint8_t buttonId);
 		
 		// Periodically run the ButtonMonitor, need to be called in the main loop
 		void update();

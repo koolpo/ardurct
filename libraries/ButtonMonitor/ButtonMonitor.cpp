@@ -39,7 +39,7 @@ bool NIButtonMonitor::add(uint8_t buttonId, uint8_t pin, bool pullUp) {
 	// return false if no more ServoManager slot available
 	if (_lastButton >= BUTTON_MONITOR_NB_BUTTONS) return false;
 	_button[_lastButton].id = buttonId;
-	_button[_lastButton].pin = min;
+	_button[_lastButton].pin = pin;
 	_button[_lastButton].state = BUTTON_MONITOR_NOT_DEPRESSED;
 	// set the pin as input
 	pinMode(pin, OUTPUT);
@@ -72,8 +72,8 @@ void NIButtonMonitor::remove(uint8_t buttonId) {
  *	isFastRepeat: true if the button has been down more than BUTTON_MONITOR_FAST_REPEAT_TRIGGER
  */
 bool NIButtonMonitor::isDepressed(uint8_t buttonId) {
-	if (_button[i].state <= BUTTON_MONITOR_STATE_NOT_READ) return false;
-	_button[i].state &= ~BUTTON_MONITOR_STATE_NOT_READ;
+	if (_button[buttonId].state <= BUTTON_MONITOR_STATE_NOT_READ) return false;
+	_button[buttonId].state &= ~BUTTON_MONITOR_STATE_NOT_READ;
 	return true;
 }
 
@@ -81,7 +81,7 @@ bool NIButtonMonitor::isDepressed(uint8_t buttonId) {
  * Returns true as long as the button is pressed
  */
 bool NIButtonMonitor::isPressed(uint8_t buttonId) {
-	return (_button[i].state > 2);
+	return (_button[buttonId].state > 2);
 }
 
 /**
@@ -89,8 +89,8 @@ bool NIButtonMonitor::isPressed(uint8_t buttonId) {
  * once this function has been called, it will return false
  */
 bool NIButtonMonitor::isReleased(uint8_t buttonId) {
-	if (_button[i].state != BUTTON_MONITOR_STATE_NOT_READ) return false;
-	_button[i].state = BUTTON_MONITOR_NOT_DEPRESSED;
+	if (_button[buttonId].state != BUTTON_MONITOR_STATE_NOT_READ) return false;
+	_button[buttonId].state = BUTTON_MONITOR_NOT_DEPRESSED;
 	return true;
 }
 
@@ -98,14 +98,14 @@ bool NIButtonMonitor::isReleased(uint8_t buttonId) {
  * Returns true if the button has been pressed more than BUTTON_MONITOR_REPEATING_TRIGGER
  */
 bool NIButtonMonitor::isRepeating(uint8_t buttonId) {
-	return (_button[i].state & ~BUTTON_MONITOR_STATE_NOT_READ > BUTTON_MONITOR_REPEATING_TRIGGER/BUTTON_MONITOR_DEBOUNCE_DELAY_MS);
+	return (_button[buttonId].state & ~BUTTON_MONITOR_STATE_NOT_READ > BUTTON_MONITOR_REPEATING_TRIGGER/BUTTON_MONITOR_DEBOUNCE_DELAY_MS);
 }
 
 /**
  * Returns true if the button has been pressed more than BUTTON_MONITOR_FAST_REPEATING_TRIGGER
  */
 bool NIButtonMonitor::isFastRepeating(uint8_t buttonId) {
-	return (_button[i].state & ~BUTTON_MONITOR_STATE_NOT_READ > BUTTON_MONITOR_FAST_REPEATING_TRIGGER/BUTTON_MONITOR_DEBOUNCE_DELAY_MS);
+	return (_button[buttonId].state & ~BUTTON_MONITOR_STATE_NOT_READ > BUTTON_MONITOR_FAST_REPEATING_TRIGGER/BUTTON_MONITOR_DEBOUNCE_DELAY_MS);
 }
 
 
@@ -143,7 +143,7 @@ void NIButtonMonitor::update() {
 	
 	// update the states of the buttones
 	for (int i=0; i<_lastButton; i++) {
-		if (digitalRead(_button[i]) == HIGH) {
+		if (digitalRead(_button[i].pin) == HIGH) {
 			if (_button[i].state != BUTTON_MONITOR_NOT_DEPRESSED) _button[i].state = BUTTON_MONITOR_STATE_NOT_READ;
 			else _button[i].state = BUTTON_MONITOR_NOT_DEPRESSED;
 		} else {
@@ -158,7 +158,7 @@ void NIButtonMonitor::update() {
 
 
 uint8_t NIButtonMonitor::getButtonIndex(uint8_t buttonId) {
-	for (uint8_t buttonIndex=0; buttonIndex<_lastServo; buttonIndex++) {
+	for (uint8_t buttonIndex=0; buttonIndex<_lastButton; buttonIndex++) {
 		if (_button[buttonIndex].id == buttonId) return buttonIndex;
 	}
 	return 0xFF;
