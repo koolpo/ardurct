@@ -1,5 +1,5 @@
 #######################################
-# Syntax Coloring Map LCD_Nokia5110
+# Syntax Coloring Map ServoManager
 #######################################
 
 #######################################
@@ -20,7 +20,7 @@ setAngle	KEYWORD2
 getMicroseconds	KEYWORD2
 getAngle	KEYWORD2
 isAttached	KEYWORD2
-loop	KEYWORD2
+run	KEYWORD2
 mapSet	KEYWORD2
 
 #######################################
