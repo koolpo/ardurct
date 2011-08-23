@@ -90,12 +90,12 @@ class NIServoManager {
 		bool isAttached(uint8_t servo);
 		
 		// Periodically run the ServoManager, need to be called in the main loop
-		void loop();
+		void run();
 		
 	private:
 		uint8_t _lastServo;
 		uint32_t _nextPulse;
-		ServoManager_Servo_t _servos[SERVO_MANAGER_NB_SERVOS];
+		ServoManager_Servo_t _servo[SERVO_MANAGER_NB_SERVOS];
 		uint8_t _pulseOrder[SERVO_MANAGER_NB_SERVOS];
 		
 		// Get the index of the servo in the servo array
