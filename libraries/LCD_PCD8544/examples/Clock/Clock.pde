@@ -42,6 +42,7 @@
  * using a 3.3V variant of the Arduino, such as Sparkfun's Arduino Pro).
  */
 
+#include <LCD_PCD8544_VG.h>
 
 // Position of the clock
 #define CLOCK_CENTER_X	(LCD_PCD8544_WIDTH / 2)
