@@ -174,6 +174,27 @@ void LCD_PCD8544::drawProgressBar(uint8_t column, uint8_t line, uint8_t size, ui
 }
 
 
+void LCD_PCD8544::drawToggleSwitch(uint8_t column, uint8_t line, uint8_t size, uint8_t nbPositions, uint8_t position) {
+	// sanity checks
+	if ((size < 2) || (size > LCD_PCD8544_COLUMNS) || (column + size > LCD_PCD8544_COLUMNS) || (position >= nbPositions) || (line >= LCD_PCD8544_LINES)) return;
+
+	uint8_t range = 4 + 6 * (size - 2);
+	uint16_t fillingStart = position * range / nbPositions;
+	uint8_t filling = range / nbPositions;
+	
+	setXYAddress(column * LCD_PCD8544_CHAR_WIDTH, line);
+	for (uint8_t i=0; i<3; i++) send(LCD_PCD8544_DATA, 0x00);
+	// draw an empty bar
+	send(LCD_PCD8544_DATA, 0x7F);	
+	for (uint8_t i=0; i<range; i++) send(LCD_PCD8544_DATA, 0x41);
+	send(LCD_PCD8544_DATA, 0x7F);
+	for (uint8_t i=0; i<3; i++) send(LCD_PCD8544_DATA, 0x00);
+	// draw the toggle
+	setXYAddress(column * LCD_PCD8544_CHAR_WIDTH + 4 + fillingStart, line);
+	for (uint8_t i=0; i<filling; i++) send(LCD_PCD8544_DATA, 0x7F);
+}
+
+
 // --------------- Protected ----------------------
 
 void LCD_PCD8544::setup(uint8_t sclk, uint8_t sdin, uint8_t dc, uint8_t reset, uint8_t sce) {

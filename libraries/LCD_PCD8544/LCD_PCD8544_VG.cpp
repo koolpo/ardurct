@@ -277,13 +277,13 @@ void LCD_PCD8544_VG::drawEllipse(uint8_t x0, uint8_t y0, uint8_t a, uint8_t b, b
 }
 
 
-void LCD_PCD8544_VG::drawProgressBar(uint8_t column, uint8_t line, uint8_t size, uint8_t percentage, bool filled) {
+void LCD_PCD8544_VG::drawProgressBar(uint8_t x, uint8_t y, uint8_t width, uint8_t percentage, bool filled) {
 	// sanity checks
-	if ((size < 2) || (size > LCD_PCD8544_COLUMNS) || (column + size > LCD_PCD8544_COLUMNS) || (percentage > 100) || (line >= LCD_PCD8544_LINES)) return;
+	if ((width < 8) || (width > LCD_PCD8544_WIDTH) || (x + width > LCD_PCD8544_WIDTH) || (percentage > 100) || (y >= LCD_PCD8544_HEIGHT)) return;
 
-	uint8_t x1 = 3 + column * LCD_PCD8544_CHAR_WIDTH;
-	uint8_t x2 = (column + size) * LCD_PCD8544_CHAR_WIDTH - 3;
-	uint8_t y1 = line * 8;
+	uint8_t x1 = 3 + x;
+	uint8_t x2 = x + width - 3;
+	uint8_t y1 = y;
 	uint8_t y2 = y1 + 6;
 	fillRectangle(x1-3, y1, x2+3, y2, OFF);
 	drawRectangle(x1, y1, x2, y2, ON);

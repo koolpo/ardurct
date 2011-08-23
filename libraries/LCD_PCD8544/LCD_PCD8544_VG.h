@@ -85,7 +85,7 @@ class LCD_PCD8544_VG: public LCD_PCD8544 {
 		void drawEllipse(uint8_t x0, uint8_t y0, uint8_t a, uint8_t b, bool on);
 		
 		// Draw a progress bar
-		virtual void drawProgressBar(uint8_t column, uint8_t line, uint8_t size, uint8_t percentage, bool filled = true);
+		virtual void drawProgressBar(uint8_t x, uint8_t y, uint8_t size, uint8_t percentage, bool filled = true);
 
 		// Fill a rectangle
 		void fillRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, bool on);

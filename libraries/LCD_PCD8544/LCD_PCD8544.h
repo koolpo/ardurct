@@ -97,6 +97,9 @@ class LCD_PCD8544: public Print {
 		// Draw a progress bar
 		virtual void drawProgressBar(uint8_t column, uint8_t line, uint8_t size, uint8_t percentage, bool filled = true);
 		
+		// Draw a toggle switch
+		virtual void drawToggleSwitch(uint8_t column, uint8_t line, uint8_t size, uint8_t nbPositions, uint8_t position);
+		
     protected:
 		// display interface
 		uint8_t _sce;

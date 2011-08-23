@@ -38,8 +38,8 @@
  *		8-LED	+3.3V through a 1k resistor
  *
  * Since these LCDs are +3.3V devices, you have to add extra components to
- * connect it to the digital pins of the Arduino (not necessary if you are
- * using a 3.3V variant of the Arduino, such as Sparkfun's Arduino Pro).
+ * connect them to the digital pins of the Arduino (not necessary if you are
+ * using a 3.3V variant of the Arduino, such as Sparkfun's Arduino Pro 3V).
  */
 
 #include <LCD_PCD8544_VG.h>
@@ -59,7 +59,8 @@
 // Because the pixels are not square, we increase the size on the horizontal
 #define CLOCK_SKEW	4
 
-LCD_PCD8544_VG lcd();
+// LCD_PCD8544(sce, sclk, sdin, dc, reset);
+LCD_PCD8544_VG lcd;
 
 uint8_t seconds = 0;
 uint8_t minutes = 0;
