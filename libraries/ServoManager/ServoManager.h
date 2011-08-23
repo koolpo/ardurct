@@ -24,6 +24,7 @@
 
 /* 
  * Versions
+ *	v1.4	Takes into account interrupts in the middle of run()
  *  v1.3	Directly set the ports instead of using digitalWrite
  *	v1.2	Added mapSet method
  *	v1.1	Updated the refresh rate to 50Hz
@@ -36,8 +37,8 @@
 #include <WProgram.h>
 #include <inttypes.h>
 
-// On pulse every 20ms, this is the standard 50Hz update rate for servos
-#define SERVO_MANAGER_INTER_PULSE_MS 20
+// One pulse every 20ms, this is the standard 50Hz update rate for servos
+#define SERVO_MANAGER_PERIOD_MS 20
 
 // Number of servos managed by the library,can be as high as the number of pins
 #define SERVO_MANAGER_NB_SERVOS 12
@@ -95,7 +96,7 @@ class NIServoManager {
 	private:
 		uint8_t _lastServo;
 		uint32_t _nextPulse;
-		ServoManager_Servo_t _servo[SERVO_MANAGER_NB_SERVOS];
+		ServoManager_Servo_t _servos[SERVO_MANAGER_NB_SERVOS];
 		uint8_t _pulseOrder[SERVO_MANAGER_NB_SERVOS];
 		
 		// Get the index of the servo in the servo array
