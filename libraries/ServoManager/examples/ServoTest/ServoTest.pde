@@ -1,7 +1,7 @@
 #include <ServoManager.h>
 
 #define THROTTLE 0
-#define THROTTLE_SERVO_PIN 2
+#define THROTTLE_SERVO_PIN 4
 #define THROTTLE_COMMAND A0
 
 void setup() {
@@ -13,7 +13,7 @@ void setup() {
 
 void loop() {
     // run the servo manager: needs to be called at least once per 20ms (50Hz)
-    ServoManager.loop();
+    ServoManager.run();
     // wait between command reads
     delay(5);
     // adjust the servo position according to the command
