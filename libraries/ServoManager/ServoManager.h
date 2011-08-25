@@ -24,7 +24,7 @@
 
 /* 
  * Versions
- *	v1.4	Takes into account interrupts in the middle of run()
+ *	v1.4	Better takes into account interrupts in the middle of run()
  *  v1.3	Directly set the ports instead of using digitalWrite
  *	v1.2	Added mapSet method
  *	v1.1	Updated the refresh rate to 50Hz
@@ -44,9 +44,11 @@
 #define SERVO_MANAGER_NB_SERVOS 12
 
 // Default min max and medium pulse for the servos
-#define SERVO_MANAGER_MIN_PULSE 544
+#define SERVO_MANAGER_MIN_PULSE 600
 #define SERVO_MANAGER_MAX_PULSE 2400
 #define SERVO_MANAGER_DEFAULT_PULSE 1500
+
+
 
 typedef struct {
 	uint8_t id;
@@ -93,8 +95,11 @@ class NIServoManager {
 		// Periodically run the ServoManager, need to be called in the main loop
 		void run();
 		
+		// Prints on the serial port the values of the servos
+		void debug();
+		
 	private:
-		uint8_t _lastServo;
+		uint8_t _numberOfServos;
 		uint32_t _nextPulse;
 		ServoManager_Servo_t _servos[SERVO_MANAGER_NB_SERVOS];
 		uint8_t _pulseOrder[SERVO_MANAGER_NB_SERVOS];
