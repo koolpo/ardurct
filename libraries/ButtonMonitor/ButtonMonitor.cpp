@@ -1,5 +1,5 @@
 /*
- * ButtonMonitor - Monitor buttones with No Interrups 
+ * ButtonMonitor - Monitor buttons with No Interrups 
  *
  * Copyright (c) 2011 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -29,24 +29,24 @@
 #include "ButtonMonitor.h"
 
 NIButtonMonitor::NIButtonMonitor() {
-	_lastButton = 0;
+	_numberOfButtons = 0;
 	_nextCheck = 0;
 }
 
 bool NIButtonMonitor::add(uint8_t buttonId, uint8_t pin, bool pullUp) {
 	// prepare for first active run
-	if (_lastButton == 0) _nextCheck = millis() + BUTTON_MONITOR_DEBOUNCE_DELAY_MS;
+	if (_numberOfButtons == 0) _nextCheck = millis() + BUTTON_MONITOR_DEBOUNCE_DELAY_MS;
 	// return false if no more ServoManager slot available
-	if (_lastButton >= BUTTON_MONITOR_NB_BUTTONS) return false;
-	_button[_lastButton].id = buttonId;
-	_button[_lastButton].pin = pin;
-	_button[_lastButton].state = BUTTON_MONITOR_NOT_DEPRESSED;
+	if (_numberOfButtons >= BUTTON_MONITOR_NB_BUTTONS) return false;
+	_button[_numberOfButtons].id = buttonId;
+	_button[_numberOfButtons].pin = pin;
+	_button[_numberOfButtons].state = BUTTON_MONITOR_NOT_DEPRESSED;
 	// set the pin as input
 	pinMode(pin, OUTPUT);
 	// if required set a pull-up
 	if (pullUp) digitalWrite(pin, HIGH);
 	// store the number of monitored buttones
-	_lastButton ++;
+	_numberOfButtons ++;
 	return true;
 }
 
@@ -54,12 +54,12 @@ bool NIButtonMonitor::add(uint8_t buttonId, uint8_t pin, bool pullUp) {
 void NIButtonMonitor::remove(uint8_t buttonId) {
 	uint8_t i = getButtonIndex(buttonId);
 	if (i == 0xFF) return;
-	for (;i<_lastButton-1; i++) {
+	for (;i<_numberOfButtons-1; i++) {
 		_button[i].id = _button[i+1].id;
 		_button[i].pin = _button[i+1].pin;
 		_button[i].state = _button[i+1].state;
 	}
-	_lastButton --;
+	_numberOfButtons --;
 }
 
 
@@ -133,7 +133,7 @@ uint8_t NIButtonMonitor::getState(uint8_t buttonId) {
  **/
 void NIButtonMonitor::update() {
 	// if no button monitored, do nothing
-	if (_lastButton == 0) return;
+	if (_numberOfButtons == 0) return;
 	
 	// wait to reach the debounce time
 	if (millis() - _nextCheck < 0) return;
@@ -142,7 +142,7 @@ void NIButtonMonitor::update() {
 	_nextCheck = millis() + BUTTON_MONITOR_DEBOUNCE_DELAY_MS;
 	
 	// update the states of the buttones
-	for (int i=0; i<_lastButton; i++) {
+	for (int i=0; i<_numberOfButtons; i++) {
 		if (digitalRead(_button[i].pin) == HIGH) {
 			if (_button[i].state != BUTTON_MONITOR_NOT_DEPRESSED) _button[i].state = BUTTON_MONITOR_STATE_NOT_READ;
 			else _button[i].state = BUTTON_MONITOR_NOT_DEPRESSED;
@@ -158,7 +158,7 @@ void NIButtonMonitor::update() {
 
 
 uint8_t NIButtonMonitor::getButtonIndex(uint8_t buttonId) {
-	for (uint8_t buttonIndex=0; buttonIndex<_lastButton; buttonIndex++) {
+	for (uint8_t buttonIndex=0; buttonIndex<_numberOfButtons; buttonIndex++) {
 		if (_button[buttonIndex].id == buttonId) return buttonIndex;
 	}
 	return 0xFF;

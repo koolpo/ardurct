@@ -98,7 +98,7 @@ class NIButtonMonitor {
 		void update();
 		
 	private:
-		uint8_t _lastButton;
+		uint8_t _numberOfButtons;
 		uint32_t _nextCheck;
 		ButtonManager_Button_t _button[BUTTON_MONITOR_NB_BUTTONS];
 		
