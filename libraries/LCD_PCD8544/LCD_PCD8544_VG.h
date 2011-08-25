@@ -5,9 +5,6 @@
  *
  * Copyright (c) 2010 Laurent Wibaux <lm.wibaux@gmail.com>
  *
- *	Some portions:
- * 		Copyright (c) 2010 Carlos Rodrigues <cefrodrigues@gmail.com>
- *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -86,6 +83,9 @@ class LCD_PCD8544_VG: public LCD_PCD8544 {
 		
 		// Draw a progress bar
 		virtual void drawProgressBar(uint8_t x, uint8_t y, uint8_t size, uint8_t percentage, bool filled = true);
+
+		// Draw a toggle switch
+		virtual void drawToggleSwitch(uint8_t x, uint8_t y, uint8_t size, uint8_t nbPositions, uint8_t position);
 
 		// Fill a rectangle
 		void fillRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, bool on);

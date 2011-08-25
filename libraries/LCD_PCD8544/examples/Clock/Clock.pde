@@ -67,6 +67,7 @@ uint8_t minutes = 0;
 uint8_t hours = 0;
 uint8_t days = 0;
 
+uint32_t nextLoop;
 
 void drawHands(float angleH, float angleM, float angleS, bool on) {
     lcd.drawLine(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_CENTER_X + round((CLOCK_HAND_H+CLOCK_SKEW) * cos(angleH)), CLOCK_CENTER_Y + round(CLOCK_HAND_H * sin(angleH)), on, 3);
@@ -76,7 +77,7 @@ void drawHands(float angleH, float angleM, float angleS, bool on) {
 
 void setup() {
     
-    // initialize the screen, and adjust the contrast (value of 2 or 3 is fine)
+    // initialize the screen
     lcd.begin();  
 
     // draw the clock frame, compensate for the display dots not being square
@@ -94,9 +95,11 @@ void setup() {
 	
 	// update the screen with all the changes
     lcd.updateDisplay();
+	
+	nextLoop = millis() + 1000;
 }
 
-void loop() {
+void loop() {	
     // calculate the angle in radians for seconds
     float angleS = (-90.0f + seconds * 6.0f) * 3.1415f / 180.0f;
     // calculate the angle in radians for minutes
@@ -109,7 +112,9 @@ void loop() {
     lcd.updateDisplay();
         
     // wait for 1 second
-    delay(1000);
+	while ((int32_t)(millis()-nextLoop) < 0) delayMicroseconds(50);
+	nextLoop += 1000;
+
     // erase the previous lines, to prepare for next drawing
     drawHands(angleH, angleM, angleS, OFF);
 

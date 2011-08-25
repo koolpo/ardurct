@@ -297,6 +297,25 @@ void LCD_PCD8544_VG::drawProgressBar(uint8_t x, uint8_t y, uint8_t width, uint8_
 }
 
 
+void LCD_PCD8544_VG::drawToggleSwitch(uint8_t x, uint8_t y, uint8_t width, uint8_t nbPositions, uint8_t position) {
+	// sanity checks
+	if ((width < 8) || (width > LCD_PCD8544_WIDTH) || (x + width > LCD_PCD8544_WIDTH) || (position >= nbPositions) || (y >= LCD_PCD8544_HEIGHT)) return;
+
+	uint8_t x1 = 3 + x;
+	uint8_t x2 = x + width - 3;
+	uint8_t y1 = y;
+	uint8_t y2 = y1 + 6;
+	fillRectangle(x1-3, y1, x2+3, y2, OFF);
+	drawRectangle(x1, y1, x2, y2, ON);
+	
+	x2 = (width - 6) / nbPositions;
+	while (x2 * nbPositions < width - 6) x2++;
+	x1 = position * (width - 6) / nbPositions;
+	x2 += x1;
+	fillRectangle(x1, y1, x2, y2, ON);
+}
+
+
 void LCD_PCD8544_VG::fillRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, bool on) {
 	if (y2 < y1) swap(y1, y2);
 	for (uint8_t y = y1; y <= y2; y++) bufferHLine(x1, x2, y, on);

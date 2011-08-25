@@ -181,6 +181,7 @@ void LCD_PCD8544::drawToggleSwitch(uint8_t column, uint8_t line, uint8_t size, u
 	uint8_t range = 4 + 6 * (size - 2);
 	uint16_t fillingStart = position * range / nbPositions;
 	uint8_t filling = range / nbPositions;
+	while (filling * nbPositions < range) filling ++;
 	
 	setXYAddress(column * LCD_PCD8544_CHAR_WIDTH, line);
 	for (uint8_t i=0; i<3; i++) send(LCD_PCD8544_DATA, 0x00);

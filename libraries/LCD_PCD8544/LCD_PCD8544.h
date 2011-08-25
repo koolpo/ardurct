@@ -4,9 +4,6 @@
  *
  * Copyright (c) 2010 Laurent Wibaux <lm.wibaux@gmail.com>
  *
- *	Some portions:
- * 		Copyright (c) 2010 Carlos Rodrigues <cefrodrigues@gmail.com>
- *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -28,6 +25,9 @@
 
 /* 
  * Versions
+ *	v1.3	Added toggle switches
+ *  v1.2	Added progress bars
+ *  v1.1	Added LCD_PCD8544_VG
  *	v1.0	Initial release
  */
 
