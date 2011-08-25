@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
  
- #include <ButtonMonitor.h>
+#include <ButtonMonitor.h>
 
 #define BUTTON1 0
 #define BUTTON1_PIN 2
