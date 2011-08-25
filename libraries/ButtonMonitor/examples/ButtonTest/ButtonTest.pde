@@ -36,7 +36,7 @@ void setup() {
     ButtonMonitor.add(BUTTON1, BUTTON1_PIN);
     ButtonMonitor.add(BUTTON2, BUTTON2_PIN);
     // set the led as an output
-	pinMode(LED, OUTPUT);
+    pinMode(LED, OUTPUT);
 }
 
 void loop() {
@@ -45,6 +45,6 @@ void loop() {
     // wait between command reads
     delay(5);
     // adjust the led according to the command
-	if (ButtonMonitor.isDepressed(BUTTON1)) digitalWrite(LED, HIGH);
-	if (ButtonMonitor.isDepressed(BUTTON2)) digitalWrite(LED, LOW);
+    if (ButtonMonitor.isDepressed(BUTTON1)) digitalWrite(LED, HIGH);
+    if (ButtonMonitor.isDepressed(BUTTON2)) digitalWrite(LED, LOW);
 }

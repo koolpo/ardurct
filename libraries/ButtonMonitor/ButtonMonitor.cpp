@@ -40,7 +40,7 @@ bool NIButtonMonitor::add(uint8_t buttonId, uint8_t pin, bool pullUp) {
 	if (_numberOfButtons >= BUTTON_MONITOR_NB_BUTTONS) return false;
 	_button[_numberOfButtons].id = buttonId;
 	_button[_numberOfButtons].pin = pin;
-	_button[_numberOfButtons].state = BUTTON_MONITOR_NOT_DEPRESSED;
+	_button[_numberOfButtons].state = BUTTON_MONITOR_NOT_PRESSED;
 	// set the pin as input
 	pinMode(pin, OUTPUT);
 	// if required set a pull-up
@@ -66,14 +66,12 @@ void NIButtonMonitor::remove(uint8_t buttonId) {
 /**
  * Returns true if the button has been depressed
  * once this function has been called, it will return false
- * To know the current state of the button, call
- *	isPressed: true as long as the button is pressed
- *	isRepeat: true if the button has been down more than BUTTON_MONITOR_REPEAT_TRIGGER
- *	isFastRepeat: true if the button has been down more than BUTTON_MONITOR_FAST_REPEAT_TRIGGER
  */
 bool NIButtonMonitor::isDepressed(uint8_t buttonId) {
-	if (_button[buttonId].state <= BUTTON_MONITOR_STATE_NOT_READ) return false;
-	_button[buttonId].state &= ~BUTTON_MONITOR_STATE_NOT_READ;
+	uint8_t i = getButtonIndex(buttonId);
+	if (i == 0xFF) return false;
+	if (_button[i].state <= BUTTON_MONITOR_STATE_NOT_READ) return false;
+	_button[i].state &= ~BUTTON_MONITOR_STATE_NOT_READ;
 	return true;
 }
 
@@ -81,7 +79,9 @@ bool NIButtonMonitor::isDepressed(uint8_t buttonId) {
  * Returns true as long as the button is pressed
  */
 bool NIButtonMonitor::isPressed(uint8_t buttonId) {
-	return (_button[buttonId].state & ~BUTTON_MONITOR_STATE_NOT_READ > 2);
+	uint8_t i = getButtonIndex(buttonId);
+	if (i == 0xFF) return false;
+	return (_button[i].state & ~BUTTON_MONITOR_STATE_NOT_READ > 2);
 }
 
 /**
@@ -89,8 +89,10 @@ bool NIButtonMonitor::isPressed(uint8_t buttonId) {
  * once this function has been called, it will return false
  */
 bool NIButtonMonitor::isReleased(uint8_t buttonId) {
-	if (_button[buttonId].state != BUTTON_MONITOR_STATE_NOT_READ) return false;
-	_button[buttonId].state = BUTTON_MONITOR_NOT_DEPRESSED;
+	uint8_t i = getButtonIndex(buttonId);
+	if (i == 0xFF) return false;
+	if (_button[i].state != BUTTON_MONITOR_STATE_NOT_READ) return false;
+	_button[i].state = BUTTON_MONITOR_NOT_PRESSED;
 	return true;
 }
 
@@ -98,20 +100,24 @@ bool NIButtonMonitor::isReleased(uint8_t buttonId) {
  * Returns true if the button has been pressed more than BUTTON_MONITOR_REPEATING_TRIGGER
  */
 bool NIButtonMonitor::isRepeating(uint8_t buttonId) {
-	return (_button[buttonId].state & ~BUTTON_MONITOR_STATE_NOT_READ > BUTTON_MONITOR_REPEATING_TRIGGER/BUTTON_MONITOR_DEBOUNCE_DELAY_MS);
+	uint8_t i = getButtonIndex(buttonId);
+	if (i == 0xFF) return false;
+	return (_button[i].state & ~BUTTON_MONITOR_STATE_NOT_READ > BUTTON_MONITOR_REPEATING_TRIGGER/BUTTON_MONITOR_DEBOUNCE_DELAY_MS);
 }
 
 /**
  * Returns true if the button has been pressed more than BUTTON_MONITOR_FAST_REPEATING_TRIGGER
  */
 bool NIButtonMonitor::isFastRepeating(uint8_t buttonId) {
-	return (_button[buttonId].state & ~BUTTON_MONITOR_STATE_NOT_READ > BUTTON_MONITOR_FAST_REPEATING_TRIGGER/BUTTON_MONITOR_DEBOUNCE_DELAY_MS);
+	uint8_t i = getButtonIndex(buttonId);
+	if (i == 0xFF) return false;
+	return (_button[i].state & ~BUTTON_MONITOR_STATE_NOT_READ > BUTTON_MONITOR_FAST_REPEATING_TRIGGER/BUTTON_MONITOR_DEBOUNCE_DELAY_MS);
 }
 
 
 /**
  * Returns the state of the button
- *	BUTTON_MONITOR_NOT_DEPRESSED 0
+ *	BUTTON_MONITOR_NOT_PRESSED 0
  *  BUTTON_MONITOR_DEPRESSED 1
  *  BUTTON_MONITOR_PRESSED 2
  *  BUTTON_MONITOR_REPEATING 3
@@ -124,7 +130,7 @@ uint8_t NIButtonMonitor::getState(uint8_t buttonId) {
 	if (isFastRepeating(buttonId)) return BUTTON_MONITOR_FAST_REPEATING;
 	if (isRepeating(buttonId)) return BUTTON_MONITOR_REPEATING;
 	if (isPressed(buttonId)) return BUTTON_MONITOR_PRESSED;
-	return BUTTON_MONITOR_NOT_DEPRESSED;
+	return BUTTON_MONITOR_NOT_PRESSED;
 }
 
 
@@ -136,16 +142,16 @@ void NIButtonMonitor::update() {
 	if (_numberOfButtons == 0) return;
 	
 	// wait to reach the debounce time
-	if (millis() - _nextCheck < 0) return;
+	if ((int32_t)(millis() - _nextCheck) < 0) return;
 
 	// Prepare for next pulse
 	_nextCheck = millis() + BUTTON_MONITOR_DEBOUNCE_DELAY_MS;
 	
-	// update the states of the buttones
+	// update the states of the buttons
 	for (int i=0; i<_numberOfButtons; i++) {
 		if (digitalRead(_button[i].pin) == HIGH) {
-			if (_button[i].state != BUTTON_MONITOR_NOT_DEPRESSED) _button[i].state = BUTTON_MONITOR_STATE_NOT_READ;
-			else _button[i].state = BUTTON_MONITOR_NOT_DEPRESSED;
+			if (_button[i].state != BUTTON_MONITOR_NOT_PRESSED) _button[i].state = BUTTON_MONITOR_STATE_NOT_READ;
+			else _button[i].state = BUTTON_MONITOR_NOT_PRESSED;
 		} else {
 			if (_button[i].state & ~BUTTON_MONITOR_STATE_NOT_READ < BUTTON_MONITOR_STATE_NOT_READ-1) _button[i].state ++;
 			if (_button[i].state == 2) _button[i].state += BUTTON_MONITOR_STATE_NOT_READ;
