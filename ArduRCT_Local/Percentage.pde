@@ -11,13 +11,13 @@ uint8_t percentageGet(uint8_t channel) {
             value = analogRead(JOYSTICK_THROTTLE_PIN);
             break;
         case YAW:
-            value = analogRead(JOYSTICK_YAW_PIN);
+            value = 1024-analogRead(JOYSTICK_YAW_PIN);
             break;
         case PITCH:
-            value = 1024-analogRead(JOYSTICK_PITCH_PIN);
+            value = analogRead(JOYSTICK_PITCH_PIN);
             break;
         case ROLL:
-            value = 1024-analogRead(JOYSTICK_ROLL_PIN);
+            value = analogRead(JOYSTICK_ROLL_PIN);
             break;
         case ADJUST:
             value = analogRead(ADJUST_PIN);

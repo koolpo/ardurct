@@ -10,7 +10,7 @@ void setup() {
 
 void loop() {
     // run the servo manager
-    ServoManager.loop();
+    ServoManager.run();
     
     // process the radio
     radioProcessReceive();

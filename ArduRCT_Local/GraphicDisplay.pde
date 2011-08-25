@@ -55,7 +55,6 @@ void gdSetID(const char *id) {
     lcdG.fillRectangle(GD_ID_START, 0, GD_ID_START+16, 5, OFF);
     lcdG.drawSmallFontText(id, 4, GD_ID_START, 0);
     lcdG.drawLine(GD_ID_START, 6, GD_ID_START+16, 6, ON);
-    lcdG.updateDisplay();
 }
 
 
@@ -64,13 +63,11 @@ void gdRefreshBattery(uint8_t batteryPct) {
     uint16_t battery = batteryPct * GD_BATTERY_WIDTH / 100;
     lcdG.fillRectangle(GD_BATTERY_START + battery, 1, GD_BATTERY_START + GD_BATTERY_WIDTH, 3, OFF);
     lcdG.fillRectangle(GD_BATTERY_START, 0, GD_BATTERY_START + battery, 4, ON);
-    lcdG.updateDisplay();
 }    
 
 
 void gdRefreshTimer(uint8_t hours, uint8_t minutes, uint8_t seconds) {
     lcdG.drawMediumFontTime(hours, minutes, seconds, GD_TIME_X, GD_TIME_Y);
-    lcdG.updateDisplay();
 }
 
     
@@ -79,7 +76,6 @@ void gdRefresh(uint16_t mpsSpeed, uint16_t kphSpeed, uint16_t altitude, uint16_t
     lcdG.drawMediumFontValueRA(kphSpeed, 2, ' ', GD_VAL_X, GD_KPH_Y, true);
     lcdG.drawMediumFontValueRA(altitude, 2, ' ', GD_VAL_X, GD_ALT_Y, true);
     lcdG.drawMediumFontValueRA(distance, 2, ' ', GD_VAL_X, GD_DIS_Y, true);
-    lcdG.updateDisplay();
 }
 
 
@@ -102,3 +98,7 @@ void gdDraw() {
     lcdG.drawMediumFontValueRA(analogRead(JOYSTICK_PITCH_PIN), 4, ' ', 50, GD_ALT_Y, false);
     lcdG.drawMediumFontValueRA(analogRead(JOYSTICK_ROLL_PIN), 4, ' ', 50, GD_DIS_Y, false);
 }
+
+void gdUpdateDisplay() {
+    lcdG.updateDisplay();
+}    

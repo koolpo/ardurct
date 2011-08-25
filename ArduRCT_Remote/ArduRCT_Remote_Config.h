@@ -3,7 +3,7 @@
 
 /* --- Common to Local and Remote --- */
 
-#define NB_CHANNELS 8
+#define NB_CHANNELS 10
 
 #define RADIO_FRAME_START '#'
 #define RADIO_REPEAT_FRAME_START 2

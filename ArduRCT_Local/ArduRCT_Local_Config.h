@@ -3,7 +3,7 @@
 
 /* --- Common to Local and Remote --- */
 
-#define NB_CHANNELS 8
+#define NB_CHANNELS 10
 
 #define RADIO_FRAME_START '#'
 #define RADIO_REPEAT_FRAME_START 2
@@ -12,7 +12,7 @@
 /* ---------------------------------- */
 
 // Serial
-#define SERIAL_BAUDRATE 57600
+#define SERIAL_BAUDRATE 19200
 
 // Backlight
 #define LCD_BACKLIGHT_PIN 10
@@ -26,10 +26,10 @@
 #define LCD_SCE_TEXT_PIN 12
 
 // Joysticks and potentiometers
-#define JOYSTICK_THROTTLE_PIN 2
-#define JOYSTICK_YAW_PIN 3
-#define JOYSTICK_PITCH_PIN 0
-#define JOYSTICK_ROLL_PIN 1
+#define JOYSTICK_THROTTLE_PIN 0
+#define JOYSTICK_YAW_PIN 1
+#define JOYSTICK_PITCH_PIN 2
+#define JOYSTICK_ROLL_PIN 3
 
 #define ADJUST_PIN 6
 

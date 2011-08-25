@@ -11,22 +11,28 @@ void radioSetup() {
 }
 
 /*
- * We expect ##aabbccdd
+ * We expect to intercept ##aabbccdd
  *    where aa bb cc... are the position in percentage of the servos
  */
 void radioProcessReceive() {
     // wait to have something to do
     if (radio.available() > 0) {
         uint8_t val = radio.read();
-        // echo the character on the radio and on Serial
-        Serial.print((char)val);
+        // DEBUG: echo the character on the radio
         radio.print((char)val);        
         // detect the start of frame
         if (radioFrame < 0) {
             // if right char, we progress in the frame
             if (val == RADIO_FRAME_START) radioFrame ++;
             // else, we start over
-            else radioFrame = -1 * RADIO_REPEAT_FRAME_START;
+            else {
+                // we resend the incomplete start of frame
+                while (radioFrame != -1 * RADIO_REPEAT_FRAME_START) {
+                    Serial.print((char)RADIO_FRAME_START);
+                    radioFrame--;
+                }
+                Serial.print((char)val);
+            }
         } else {
             // convert the 2 bytes ascii value into a uint8_t 
             val -= '0';

@@ -1,7 +1,5 @@
 #include "ArduRCT_Local.h"
 
-uint8_t counter = 0;
-
 uint16_t altitude = 0;
 uint16_t distance = 0;
 uint16_t speedMS = 0;
@@ -18,33 +16,51 @@ void setup() {
     gdSetID("8BC2");
     
     percentageSetup();
-    timerStart();
     radioSetup();
+
+    menuSetup();
+
+    timerStart();
 }
 
 
 void loop() {
-    for (int i=1; i<NB_CHANNELS; i++) channel[i] = percentageGet(i);
+    // check on the menu
+    menuProcess();
+/**/menuLevel = MENU_NONE;
+    
+    // update the channels
+    updateChannels();
+    
+    
+    // display tthem unless we are in the menu
+    if (menuLevel == MENU_NONE) tdRefreshChannels();
+    
+    // transmit them to the remote
+    radioTransmitChannels();
+    
+    // process the telemetry
+    radioProcessReceive();
+    // update the telemetry display 5 times per second
+    if (timerCounter % 2 == 0) {    
+        gdRefresh(speedMS, speedMS*36/10, altitude, distance);
+        gdDrawIndicators(1, 1, 0, -1);
+        gdRefreshBattery(percentageGet(BATTERY));
+        gdDraw();
+        gdUpdateDisplay();
+    }            
+    
+    // update the timer, this will delay a variable time
+    timerUpdate();
+}
+
+void updateChannels() {
     uint8_t pct = percentageGet(THROTTLE);
-    if ((pct >+ 60) && (channel[THROTTLE] < 100)) channel[THROTTLE] += (pct-50)/10;
+    if ((pct >= 60) && (channel[THROTTLE] < 100)) channel[THROTTLE] += (pct-50)/10;
     else if ((pct <= 40) && (channel > 0)) channel[THROTTLE] -= (50-pct)/10;
     if (channel[THROTTLE] > 100) channel[THROTTLE] = 100;
 
-/**/menuState = MENU_NONE;
-    if (menuState == MENU_NONE) tdRefreshChannels();
-    else menuProcess();
-
-    gdRefresh(speedMS, speedMS*36/10, altitude, distance);
-    gdDrawIndicators(1, 1, 0, -1);
-    gdRefreshBattery(percentageGet(BATTERY));
-    gdDraw();
+    for (int i=YAW; i<=ADJUST; i++) channel[i] = percentageGet(i);
     
-    delay(50);
-    counter += 1;
-    if (counter > 20) {
-        counter = 0;
-        timerUpdate();
-    }
-    radioTransmitChannels();
-    radioProcessReceive();
+    channel[ADJUST] = channel[ADJUST]*ADJUST_POSITIONS/100;
 }

@@ -11,11 +11,11 @@ uint8_t tdHeader[] = {
     0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 
     0x51, 0x5F, 0x4E, 0x4E };
 
-uint8_t tdThrottle = 0;
-uint8_t tdYaw = 0;
-uint8_t tdPitch = 0;
-uint8_t tdRoll = 0;
-uint8_t tdAdjust = 0;
+uint8_t tdThrottle = 0xFF;
+uint8_t tdYaw = 0xFF;
+uint8_t tdPitch = 0xFF;
+uint8_t tdRoll = 0xFF;
+uint8_t tdAdjust = 0xFF;
 
 #define TD_SIGNAL_START 9
 #define TD_SIGNAL_BAR 3
@@ -90,7 +90,7 @@ void tdRefreshChannels() {
     }
     if (channel[ADJUST] != tdAdjust) {
         tdAdjust = channel[ADJUST];
-        lcdT.drawProgressBar(2, ADJUST_LINE, 12, tdAdjust, OFF);
+        lcdT.drawToggleSwitch(2, ADJUST_LINE, 12, ADJUST_POSITIONS, tdAdjust);
     }
 }
 

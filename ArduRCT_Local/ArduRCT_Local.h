@@ -7,6 +7,9 @@
 
 #include "ArduRCT_Local_Config.h"
 
+// loops per second
+#define LOOPS_PER_SECOND 10
+
 // channels
 #define THROTTLE 0
 #define YAW 1
@@ -15,11 +18,21 @@
 #define ADJUST 4
 #define BATTERY 100
 
+#define ADJUST_POSITIONS 3
+
+// menus
 #define MENU_NONE 0
 
+// buttons
+#define ENTER 1
+#define UP 2
+#define DOWN 3
+
+// shared variables
 extern uint8_t channel[NB_CHANNELS];
-extern uint8_t menuState;
+extern uint8_t menuLevel;
 extern LCD_PCD8544 lcdT;
+extern uint8_t timerCounter;
 
 // TextDisplay
 void tdSetup();
@@ -34,6 +47,7 @@ void gdRefreshTimer(uint8_t hours, uint8_t minutes, uint8_t seconds);
 void gdRefresh(uint16_t mpsSpeed, uint16_t kphSpeed, uint16_t altitude, uint16_t distance);
 void gdDrawIndicators(int8_t mps, int8_t kph, int8_t altitude, int8_t distance);
 void gdDraw();
+void gdUpdateDisplay();
 
 // Percentage
 void percentageSetup();
@@ -50,6 +64,6 @@ void radioProcessReceive();
 
 // Menu
 void menuSetup();
-void menuProcess();
+bool menuProcess();
 
 #endif
