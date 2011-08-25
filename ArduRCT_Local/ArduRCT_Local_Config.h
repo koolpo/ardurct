@@ -7,12 +7,12 @@
 
 #define RADIO_FRAME_START '#'
 #define RADIO_REPEAT_FRAME_START 2
-#define RADIO_BAUDRATE 19200
+#define RADIO_BAUDRATE 57600
 
 /* ---------------------------------- */
 
 // Serial
-#define SERIAL_BAUDRATE 19200
+#define SERIAL_BAUDRATE 57600
 
 // Backlight
 #define LCD_BACKLIGHT_PIN 10

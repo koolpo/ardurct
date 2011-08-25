@@ -7,7 +7,7 @@
 
 #define RADIO_FRAME_START '#'
 #define RADIO_REPEAT_FRAME_START 2
-#define RADIO_BAUDRATE 19200
+#define RADIO_BAUDRATE 57600
 
 /* ---------------------------------- */
 
