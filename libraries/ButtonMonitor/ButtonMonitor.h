@@ -24,6 +24,7 @@
 
 /* 
  * Versions
+ *  v1.1	Fixed the isPressed() to take into account isReleased()
  *	v1.0	Initial release
  */
 

@@ -81,7 +81,7 @@ bool NIButtonMonitor::isDepressed(uint8_t buttonId) {
  * Returns true as long as the button is pressed
  */
 bool NIButtonMonitor::isPressed(uint8_t buttonId) {
-	return (_button[buttonId].state > 2);
+	return (_button[buttonId].state & ~BUTTON_MONITOR_STATE_NOT_READ > 2);
 }
 
 /**
