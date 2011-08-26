@@ -89,8 +89,11 @@ class NIServoManager {
 		// Get the angle degrees pulse for servo
 		uint16_t getAngle(uint8_t servo);
 		
-		// Check if a servo is attached to the manager or not
-		bool isAttached(uint8_t servo);
+		// Check if a servo is defined in the manager or not
+		bool isDefined(uint8_t servo);
+		
+		// Check if a servoPin is attached to the manager or not
+		bool isAttached(uint8_t servoPin);
 		
 		// Periodically run the ServoManager, need to be called in the main loop
 		void run();

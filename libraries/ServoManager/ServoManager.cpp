@@ -139,12 +139,21 @@ uint16_t NIServoManager::getAngle(uint8_t servo) {
 }
 
 
-bool NIServoManager::isAttached(uint8_t servo) {
+bool NIServoManager::isDefined(uint8_t servo) {
 	uint8_t servoIndex = getServoIndex(servo);
 	if (servoIndex == 0xFF) return false;
 	return true;
 }
 
+
+bool NIServoManager::isAttached(uint8_t servoPin) {
+	uint8_t pinBitMask = digitalPinToBitMask(servoPin);
+	volatile uint8_t *pinPort = portOutputRegister(digitalPinToPort(servoPin));
+	for (uint8_t i=0; i<_numberOfServos; i++) {
+		if ((_servos[i].pinPort == pinPort) && (_servos[i].pinBitMask == pinBitMask)) return false;
+	}
+	return true;
+}
 
 /** 
  *	This function has to be called at least every SERVO_MANAGER_PERIOD_MS (20ms) 
