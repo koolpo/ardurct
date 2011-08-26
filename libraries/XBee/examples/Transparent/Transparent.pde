@@ -34,10 +34,10 @@ XBee xBee;
 
 void setup() {
     xBee.begin(&nss, BAUDRATE);
-	Serial.begin(BAUDRATE);
+    Serial.begin(BAUDRATE);
 }
 
 void loop() {
     if (Serial.available()) xBee.print(Serial.read());
-	if (xBee.available()) Serial.print(xBee.read());
+    if (xBee.available()) Serial.print(xBee.read());
 }

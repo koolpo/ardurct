@@ -28,9 +28,9 @@
 #include <inttypes.h>
 #include "Print.h"
 #include "WProgram.h"
-#include "../../NewSoftSerial/NewSoftSerial.h"
+#include "../NewSoftSerial/NewSoftSerial.h"
 
-#include "XBee_Config.h"
+#include "XBee_Config.cpp"
 
 class XBee : public Print {
 	public:
@@ -57,12 +57,12 @@ class XBee : public Print {
 		// The value can be read after isInCommandMode returns false by getId
 		void retrieveId();
 		
-		// Gets the id from the module, this is the last known value
+		// Gets the id from the module, NULL if not yet valid
 		// retrieveId() should be called before
-		uint8_t *XBee::getId();
+		uint8_t *getId();
 		
 		// Sets the baudrate of the module
-		void setBaudrate(uint16_t baudrate);
+		void setBaudrate(uint32_t baudrate);
 
 		void processCommand();
 		
@@ -75,11 +75,12 @@ class XBee : public Print {
 		uint8_t _state;
 		uint8_t _command;
 		uint32_t _waitUntilTime;
-		uint16t _guardTime;
+		uint16_t _guardTime;
 		uint8_t _id[4];
 		uint8_t _buffer[10];
 		uint8_t _counter;
 		uint32_t _baudrate;
+		bool _idIsValid;
 };
 
 #endif

@@ -37,43 +37,47 @@ XBee xBee;
 uint8_t state = 0;
 
 void setup() {
-	// initialize the xBee on a NewSoftSerial port with BAUDRATE speed
+    // initialize the xBee on a NewSoftSerial port with BAUDRATE speed
     xBee.begin(&nss, BAUDRATE);
-	
-	Serial.begin(BAUDRATE);
+    
+    Serial.begin(BAUDRATE);
 }
 
 void loop() {
-	uint8_t *buffer;
-		
-	if ((state < 10) && (state % 2 == 0) && !XBee.isInCommandMode()) state ++;
-	if (state == 1) {
-		// retrieves the id
-		Serial.print("Old id:");
-		xBee.requestId();
-		state ++;
-	} else if (state == 3) {
-		// print it
-		buffer = xBee.getId();
-		for (uint_t i=0; i<4; i++) Serial.print((char)buffer[i]);
-		Serial.println();
-		state += 2;
-	if (state == 5) {
-		// set the new id
-		xBee.setId(newId);
-		state ++;
-	} else if (state == 7) {
-		// retrieves the id
-		Serial.print("New id:");
-		xBee.requestId();
-		state ++;
-	} else if (state == 9) {
-		// print it
-		buffer = xBee.getId();
-		for (uint_t i=0; i<4; i++) Serial.print((char)buffer[i]);
-		Serial.println();
-		state += 2;
-	}
-	
-	xBee.processCommand();
+    uint8_t *buffer;
+    
+    switch (state) {
+        case 1:
+            Serial.print("Old id:");
+            // retrieves the id from the module
+            // will return NULL the first time
+            xBee.getId();
+            state ++;
+            break;
+        case 3:
+            // print it
+            buffer = xBee.getId();
+            for (uint8_t i=0; i<4; i++) Serial.print((char)buffer[i]);
+            Serial.println();
+            state ++;
+            break;
+        case 4:
+            // set the new id
+            xBee.setId(newId);
+            state ++;
+            break;
+        case 6:
+            // retrieves the id
+            Serial.print("New id:");
+            buffer = xBee.getId();
+            for (uint8_t i=0; i<4; i++) Serial.print((char)buffer[i]);
+            Serial.println();
+            state ++;
+            break;
+        default:
+            if ((state < 10) && !xBee.isInCommandMode()) state ++;
+            break;
+    }
+    
+    xBee.processCommand();
 }
