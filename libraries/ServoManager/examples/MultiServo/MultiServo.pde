@@ -27,17 +27,17 @@
 
 #define NB_SERVOS 8
 #define FIRST_SERVO_PIN 4
-#define SERIAL_BAUDRATE 19200
+#define SERIAL_BAUDRATE 57600
 
-#define PULSE_PIN 14
+#define FRAME_PIN 13
 
 uint8_t index = 0;
 
 void setup() {
     // Initialize the Serial
     Serial.begin(SERIAL_BAUDRATE);
-    // Setup a pulse pin to be high whenever at least one servo is pulsed
-    ServoManager.setup(PULSE_PIN);
+    // Setup a pulse pin to be high whenever at least one servo pin is high
+    ServoManager.setup(FRAME_PIN);
     // Attach the servos to the pins
     for (uint8_t i=0; i<NB_SERVOS; i++) ServoManager.attach(i, FIRST_SERVO_PIN+i);
     ServoManager.debug();
