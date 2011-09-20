@@ -7,13 +7,13 @@
  *    Y is one of the following
  */
 #define RADIO_IDLE 0
-#define RADIO_COMMAND 1
+#define RADIO_IN_FRAME 1
+#define RADIO_COMMAND 0xFF
+
 #define RADIO_SERVO 'S'
-#define RADIO_ID_PROPOSE 'i'
-#define RADIO_ID_VERIFY 'j'
-#define RADIO_ID_CHANGE 'I'
 #define RADIO_MESURE 'M'
 #define RADIO_GET_GPS 'G'
 #define RADIO_OUTPUT 'O'
+#define RADIO_DB 'D'
 
 #endif

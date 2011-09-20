@@ -6,118 +6,108 @@ uint8_t radioState;
 
 uint8_t servoPosition[NB_CHANNELS];
 
-uint8_t proposedRadioId[4];
-uint8_t confirmedRadioId[4];
-
-NewSoftSerial nss(XBEE_RX, XBEE_TX);
+NewSoftSerial nss(XBEE_TX, XBEE_RX);
 XBee xBee;
 
 void radioSetup() {
     radioCounter = 0;
     radioState = RADIO_IDLE;
     xBee.begin(&nss, XBEE_BAUDRATE, XBEE_GUARD_TIME);
+    pinMode(13, OUTPUT);
+    pinMode(12, OUTPUT);
 }
 
 
 void radioProcessReceive() {
-    // check if we have a command to finish
+    // process the command
     if (radioState == RADIO_COMMAND) {
-        if (xBee.isInCommandMode()) {
-            xBee.processCommand();
-            return;
-        }
+        xBee.processCommand();
+        if (xBee.isInCommandMode()) return;
         // command is finished, return to the idle mode
         radioState = RADIO_IDLE;
     }
 
-    // expect the start of frame if we are IDLE
-    uint8_t val;
+    if (!xBee.available()) return;
+    
+
     if (radioState == RADIO_IDLE) {
-        do {
-            val = xBee.read();
-            if (val == RADIO_FRAME_START) radioCounter ++;
-            else {
-                // release the trapped character as we are not in a frame
-                Serial.write((char)val);
+        while (xBee.available() && (radioCounter < RADIO_REPEAT_FRAME_START)) {
+            char val = xBee.read();
+            radioCounter ++;
+    radioDebugPulse(12, radioCounter*10);
+            if (val != RADIO_FRAME_START) {
+                // release the trapped markers
+                for (uint8_t i=radioCounter; i>1; i--) Serial.print(RADIO_FRAME_START);
+                // write back the received character
+                Serial.print(val);
+                Serial.print(":");
+                Serial.println(val, BIN);
                 radioCounter = 0;
-            }
-        } while (xBee.available() && (radioCounter < RADIO_REPEAT_FRAME_START));
+            } 
+        }
+        if (radioCounter < RADIO_REPEAT_FRAME_START) return;
+        radioState = RADIO_IN_FRAME;
+    }
+    radioDebugPulse(12, 80);
+    if (radioState == RADIO_IN_FRAME) {
         if (!xBee.available()) return;
-        val = xBee.read();
+        char val = xBee.read();
         switch (val) {
             case RADIO_SERVO:
-            case RADIO_ID_PROPOSE:
-            case RADIO_ID_CHANGE:
             case RADIO_MESURE:
             case RADIO_GET_GPS:
             case RADIO_OUTPUT:
+            case RADIO_DB:
                 radioState = val;
+                radioCounter = 0;
+                break;
             default:
+                radioState = RADIO_IDLE;
                 radioCounter = 0;
                 break;
         }
-        if (!xBee.available()) return;
-    }
+    }    
     
     switch (radioState) {
         case RADIO_SERVO:
-            do {
-                val = xBee.read();
+            radioDebugPulse(13, 10);
+            while (xBee.available() && (radioCounter < NB_CHANNELS*2)) {
+                char val = xBee.read();
                 if (radioCounter % 2 == 0) servoPosition[radioCounter/2] = val;
                 else servoPosition[radioCounter/2] = servoPosition[radioCounter/2] * 16 + val;
                 radioCounter ++;
-            } while (xBee.available() && (radioCounter < NB_CHANNELS));
-            if (radioCounter/2 == NB_CHANNELS) {
+                radioDebugPulse(13, radioCounter*2);
+            } 
+            if (radioCounter == NB_CHANNELS*2) {
+                radioDebugPulse(13, 5);
                 for (int i=0; i<NB_CHANNELS; i++) ServoManager.mapSet(i, servoPosition[i], 0, 100);
                 radioCounter = 0;
                 radioState = RADIO_IDLE;
+                xBee.print("#");
+                radioDebugPulse(13, 5);
             }
             break;
             
-        case RADIO_ID_PROPOSE:
-            do {
-                val = xBee.read();
-                proposedRadioId[radioCounter++] = val;
-            } while (xBee.available() && (radioCounter < 4));
-            if (radioCounter == 4) {
-                // return the proposed id to verify it
-                for (uint8_t i=0; i<RADIO_REPEAT_FRAME_START; i++) xBee.print(RADIO_FRAME_START);
-                xBee.print(RADIO_ID_VERIFY);
-                for (uint8_t i=0; i<4; i++) xBee.print(proposedRadioId[i]);
-                radioCounter = 0;
-                radioState = RADIO_IDLE;
-            }
-            break;
-        
-        case RADIO_ID_CHANGE:
-            do {
-                val = xBee.read();
-                confirmedRadioId[radioCounter++] = val;
-            } while (xBee.available() && (radioCounter < 4));
-            if (radioCounter == 4) {
-                uint8_t confirmedBytes;
-                for (confirmedBytes=0; confirmedBytes<4; confirmedBytes++) {
-                    if (confirmedRadioId[confirmedBytes] != proposedRadioId[confirmedBytes]) break;
-                }
-                if (confirmedBytes == 4) {
-                    radioState = RADIO_COMMAND;
-                    xBee.setId(confirmedRadioId);
-                } else radioState = RADIO_IDLE;
-                radioCounter = 0;
-            }
-            break;
-
         case RADIO_MESURE:
         case RADIO_GET_GPS:
         case RADIO_OUTPUT:
-            break;
-            
         default:
+            radioState = RADIO_IDLE;
             break;
     }
 } 
 
 void radioProcessTransmit() {
     // Send all the characters received by Serial to the radio
-    while (Serial.available()) xBee.print((char)Serial.read());
+    while (!ServoManager.isPulsing() && Serial.available()) xBee.print((char)Serial.read());
+}
+
+inline void radioDebugPulse(uint8_t pin, uint8_t count) {
+    volatile uint8_t *pport = portOutputRegister(digitalPinToPort(pin));
+    uint8_t val = *pport;
+
+    while (count--) {
+        *pport = val | digitalPinToBitMask(pin);
+        *pport = val;
+    }
 }

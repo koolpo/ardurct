@@ -3,11 +3,11 @@
 
 #include <WProgram.h>
 #include <inttypes.h>
+#include <pins_arduino.h>
 
-#include <NewSoftSerial.h>
-#include <XBee.h>
 
 #include "ArduRCT_Remote_Config.h"
+#include "Radio.h"
 
 extern uint8_t servoPosition[NB_CHANNELS];
 extern uint8_t radioState;
