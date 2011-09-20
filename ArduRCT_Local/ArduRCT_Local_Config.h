@@ -3,11 +3,12 @@
 
 /* --- Common to Local and Remote --- */
 
-#define NB_CHANNELS 10
+#define NB_CHANNELS 8
 
 #define RADIO_FRAME_START '#'
 #define RADIO_REPEAT_FRAME_START 2
-#define RADIO_BAUDRATE 57600
+
+#define RADIO_BAUDRATE 38400
 
 /* ---------------------------------- */
 
@@ -34,6 +35,9 @@
 #define ADJUST_PIN 6
 
 #define BATTERY_PIN 7
+
+// Allow for tolerance on the value measured
+#define ANALOG_TOLERANCE 2
 
 // Buttons
 #define DOWN_PIN 2

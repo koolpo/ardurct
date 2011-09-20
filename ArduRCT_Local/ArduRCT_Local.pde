@@ -32,15 +32,15 @@ void loop() {
     // update the channels
     updateChannels();
     
-    
-    // display tthem unless we are in the menu
+    // display them unless we are in the menu
     if (menuLevel == MENU_NONE) tdRefreshChannels();
-    
-    // transmit them to the remote
-    radioTransmitChannels();
     
     // process the telemetry
     radioProcessReceive();
+
+    // transmit the channels to the remote
+    radioTransmitChannels();
+    
     // update the telemetry display 5 times per second
     if (timerCounter % 2 == 0) {    
         gdRefresh(speedMS, speedMS*36/10, altitude, distance);
@@ -60,7 +60,11 @@ void updateChannels() {
     else if ((pct <= 40) && (channel > 0)) channel[THROTTLE] -= (50-pct)/10;
     if (channel[THROTTLE] > 100) channel[THROTTLE] = 100;
 
-    for (int i=YAW; i<=ADJUST; i++) channel[i] = percentageGet(i);
+    for (int i=YAW; i<=ADJUST; i++) {
+        pct = percentageGet(i);
+        if (pct >= channel[i] + ANALOG_TOLERANCE) channel[i] = pct;
+        else if ((channel[i] > ANALOG_TOLERANCE) && (pct <= channel[i] - ANALOG_TOLERANCE)) channel[i] = pct;
+    }        
     
     channel[ADJUST] = channel[ADJUST]*ADJUST_POSITIONS/100;
 }
