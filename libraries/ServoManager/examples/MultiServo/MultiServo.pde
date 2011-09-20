@@ -1,5 +1,6 @@
 /*
- * ServoManager - Running as many servos as there are pins with No Interrups 
+ * ServoManager - Running as many servos as there are pins with Timer1 Interrups 
+ *   This breaks pwm functions associated with timer 1: pin 9 and pin 10
  *
  * Copyright (c) 2011 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -28,20 +29,21 @@
 #define FIRST_SERVO_PIN 4
 #define SERIAL_BAUDRATE 19200
 
+#define PULSE_PIN 14
+
 uint8_t index = 0;
 
 void setup() {
     // Initialize the Serial
     Serial.begin(SERIAL_BAUDRATE);
+    // Setup a pulse pin to be high whenever at least one servo is pulsed
+    ServoManager.setup(PULSE_PIN);
     // Attach the servos to the pins
     for (uint8_t i=0; i<NB_SERVOS; i++) ServoManager.attach(i, FIRST_SERVO_PIN+i);
     ServoManager.debug();
 }
 
 void loop() {
-    // run the servo manager: needs to be called at least once per 20ms (50Hz)
-    ServoManager.run();
-    
     // read the Serial to adjust the positions
     if (Serial.available()) {
         uint8_t val = Serial.read();

@@ -1,5 +1,6 @@
 /*
- * ServoManager - Running as many servos as there are pins with No Interrups 
+ * ServoManager - Running as many servos as there are pins with Timer1 Interrups 
+ *		This breaks pwm functions associated with timer 1: pin 9 and pin 10
  *
  * Copyright (c) 2010 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -24,10 +25,6 @@
 
 /* 
  * Versions
- *	v1.4	Better takes into account interrupts in the middle of run()
- *  v1.3	Directly set the ports instead of using digitalWrite
- *	v1.2	Added mapSet method
- *	v1.1	Updated the refresh rate to 50Hz
  *	v1.0	Initial release
  */
 
@@ -40,15 +37,19 @@
 // One pulse every 20ms, this is the standard 50Hz update rate for servos
 #define SERVO_MANAGER_PERIOD_MS 20
 
-// Number of servos managed by the library,can be as high as the number of pins
+// Set framePin and start to pulse the servos after this us time has elapsed 
+#define SERVO_MANAGER_PULSE_SERVO_US_AFTER_FRAME_PULSE 500
+
+// Number of servos managed by the library, can be as high as the number of digital pins
 #define SERVO_MANAGER_NB_SERVOS 12
 
 // Default min max and medium pulse for the servos
-#define SERVO_MANAGER_MIN_PULSE 600
+#define SERVO_MANAGER_MIN_PULSE 544
 #define SERVO_MANAGER_MAX_PULSE 2400
 #define SERVO_MANAGER_DEFAULT_PULSE 1500
 
-
+// Defines the lack of framePin
+#define SERVO_MANAGER_NO_FRAME_PIN	0xFF
 
 typedef struct {
 	uint8_t id;
@@ -59,11 +60,22 @@ typedef struct {
 	uint16_t max;
 } ServoManager_Servo_t;
 
+typedef struct {
+	uint8_t pinBitMask;
+	volatile uint8_t *pinPort;
+	uint16_t compareTo;
+	bool nextIsSame;
+} ServoManager_ServoPulse_t;
 
-class NIServoManager {
+
+class T1ServoManager {
     
 	public:
-		NIServoManager();
+		T1ServoManager();
+		
+		// Setup and define the pin we need to pulse to reflect the widest pulse on the servo manager
+		// this framePin is used to prevent long interrupts from external sources (such as NSS)
+		void setup(uint8_t framePin = SERVO_MANAGER_NO_FRAME_PIN);
 
 		// Attach a servo to a pin
 		bool attach(uint8_t servo, uint8_t pin, uint16_t min = SERVO_MANAGER_MIN_PULSE, uint16_t max = SERVO_MANAGER_MAX_PULSE);
@@ -94,30 +106,40 @@ class NIServoManager {
 		
 		// Check if a servoPin is attached to the manager or not
 		bool isAttached(uint8_t servoPin);
-		
-		// Periodically run the ServoManager, need to be called in the main loop
-		void run();
-		
+				
 		// Prints on the serial port the values of the servos
 		void debug();
 		
+		// See if we are pulsing
+		bool isPulsing();
+		
+		// Start the servo pulses for this ServoManager
+		void start();
+		
+		// Stop pulsing the servos
+		void stop();
+		
+		
 	private:
 		uint8_t _numberOfServos;
-		uint32_t _nextPulse;
-		ServoManager_Servo_t _servos[SERVO_MANAGER_NB_SERVOS];
+		ServoManager_Servo_t _servo[SERVO_MANAGER_NB_SERVOS];
 		uint8_t _pulseOrder[SERVO_MANAGER_NB_SERVOS];
+		uint8_t _framePin;
 		
 		// Get the index of the servo in the servo array
 		uint8_t getServoIndex(uint8_t servo);
 		
 		// Reorder the pulses in ascending order
-		void reOrderPulses(uint8_t servoIndex, uint16_t oldValue);
-
-		// Reorder the pulses in ascending order
 		void reOrderPulses(uint8_t servoIndex);
+		
+		// Set the servo pulses used during the interrupt
+		void setServoPulses(uint8_t nbServos);
+		
+		// Set the pulse pin
+		void setFramePin(uint8_t framePin);
 };
 
-extern NIServoManager ServoManager;
+extern T1ServoManager ServoManager;
 
 #endif  /* LCD_PCD8544_H */
 

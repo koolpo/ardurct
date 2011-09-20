@@ -1,5 +1,6 @@
 /*
- * ServoManager - Running as many servos as there are pins with No Interrups 
+ * ServoManager - Running as many servos as there are pins with Timer1 Interrups 
+ *    This breaks pwm functions associated with timer 1: pin 9 and pin 10
  *
  * Copyright (c) 2011 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -29,6 +30,8 @@
 #define THROTTLE_COMMAND A0
 
 void setup() {
+    // Setup
+    ServoManager.setup();
     // Attach the THROTTLE servo to THROTTLE_SERVO_PIN
     ServoManager.attach(THROTTLE, THROTTLE_SERVO_PIN);
     // set it to 2000 microseconds
@@ -36,8 +39,6 @@ void setup() {
 }
 
 void loop() {
-    // run the servo manager: needs to be called at least once per 20ms (50Hz)
-    ServoManager.run();
     // wait between command reads
     delay(5);
     // adjust the servo position according to the command

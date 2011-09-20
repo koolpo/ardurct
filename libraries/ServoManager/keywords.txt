@@ -12,6 +12,7 @@ ServoManager	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
+setup	KEYWORD2
 attach	KEYWORD2
 detach	KEYWORD2
 set	KEYWORD2
@@ -20,8 +21,10 @@ setAngle	KEYWORD2
 getMicroseconds	KEYWORD2
 getAngle	KEYWORD2
 isAttached	KEYWORD2
-run	KEYWORD2
+isPulsing	KEYWORD2
 mapSet	KEYWORD2
+start	KEYWORD2
+stop	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
