@@ -32,6 +32,10 @@
 
 #include "XBee_Config.cpp"
 
+#define XBEE_BUFFER_LENGTH (8+2)
+
+#define XBEE_INVALID 0xFF
+
 class XBee : public Print {
 	public:
 		// constructor
@@ -41,7 +45,7 @@ class XBee : public Print {
 		void begin(HardwareSerial *serial, uint32_t baudrate = XBEE_DEFAULT_BAUD_RATE, uint16_t guardTime = XBEE_DEFAULT_GUARD_TIME);    
 		void begin(NewSoftSerial *nss, uint32_t baudrate = XBEE_DEFAULT_BAUD_RATE, uint16_t guardTime = XBEE_DEFAULT_GUARD_TIME);    
 
-		// Print superclass
+		// Print superclass requirement
 		virtual void write(uint8_t byte);
 		
 		// Returns the number of bytes available in the queue
@@ -50,22 +54,43 @@ class XBee : public Print {
 		// Returns the next character received
 		char read();
 		
-		// Sets the id of the module
-		void setId(uint8_t *id);
-
-		// RetrieveId retrieves the id from the XBee module. It will return immediately. 
-		// The value can be read after isInCommandMode returns false by getId
-		void retrieveId();
+		// Sets the id of the module, return false if it could not be set
+		bool setId(uint8_t *id);
 		
 		// Gets the id from the module, NULL if not yet valid
-		// retrieveId() should be called before
 		uint8_t *getId();
 		
-		// Sets the baudrate of the module
-		void setBaudrate(uint32_t baudrate);
+		// Sets the DHSL of the module, return false if it could not be set
+		bool setDHDL(uint8_t *dhdl);
+		
+		// Gets the DHDL from the module, NULL if not yet valid
+		uint8_t *getDHDL();
+		
+		// Gets the SHSL from the module, NULL if not yet valid
+		uint8_t *getSHSL();
 
+		// Gets the radio Db strength, 0xFF if not yet valid
+		uint8_t getRadioDb();
+		
+		// Sets the baudrate of the module
+		bool setBaudrate(uint32_t baudrate);
+
+		// Sets the guardtime of the module
+		bool setGuardTime(uint16_t guardTime);
+
+		// Enable 64bits addressing 
+		bool enable64BitsAdressing();
+		
+		// Enable 64bits adressing and set guardTime as 30ms
+		bool enable64BitsAdressingAndSet30msGuardTime();
+		
+		// Set DIO6 as RTS
+		bool setDIO6AsRTS();
+		
+		// Process the last received command
 		void processCommand();
 		
+		// True if the module is in command mode
 		bool isInCommandMode();
 			
 	private:
@@ -76,11 +101,15 @@ class XBee : public Print {
 		uint8_t _command;
 		uint32_t _waitUntilTime;
 		uint16_t _guardTime;
+		uint16_t _temp;
 		uint8_t _id[4];
-		uint8_t _buffer[10];
+		uint8_t _shsl[16];
+		uint8_t _dhdl[16];
+		uint8_t _buffer[XBEE_BUFFER_LENGTH];
 		uint8_t _counter;
 		uint32_t _baudrate;
-		bool _idIsValid;
+		uint8_t _radioDb;
+		uint8_t _valid;
 };
 
 #endif
