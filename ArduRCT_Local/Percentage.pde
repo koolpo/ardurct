@@ -31,3 +31,9 @@ uint8_t percentageGet(uint8_t channel) {
     }
     return 100 * value / 1023;
 }
+
+uint8_t percentagePositionGet(uint8_t channel, uint8_t positions) {
+    uint16_t pos = (uint16_t)percentageGet(channel) * positions / 100;
+    return pos
+}
+    

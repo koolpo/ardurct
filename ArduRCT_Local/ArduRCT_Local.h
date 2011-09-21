@@ -16,6 +16,8 @@
 #define PITCH 2
 #define ROLL 3
 #define ADJUST 4
+
+// analog    
 #define BATTERY 100
 
 #define ADJUST_POSITIONS 3
@@ -52,6 +54,7 @@ void gdUpdateDisplay();
 // Percentage
 void percentageSetup();
 uint8_t percentageGet(uint8_t channel);
+uint8_t percentagePositionGet(uint8_t channel, uint8_t positions);
 
 // Timer
 void timerStart();

@@ -57,14 +57,16 @@ void loop() {
 void updateChannels() {
     uint8_t pct = percentageGet(THROTTLE);
     if ((pct >= 60) && (channel[THROTTLE] < 100)) channel[THROTTLE] += (pct-50)/10;
-    else if ((pct <= 40) && (channel > 0)) channel[THROTTLE] -= (50-pct)/10;
+    else if ((pct <= 40) && (channel[THROTTLE] > 0)) channel[THROTTLE] -= (50-pct)/10;
     if (channel[THROTTLE] > 100) channel[THROTTLE] = 100;
 
-    for (int i=YAW; i<=ADJUST; i++) {
+    for (int i=YAW; i<ADJUST; i++) {
         pct = percentageGet(i);
         if (pct >= channel[i] + ANALOG_TOLERANCE) channel[i] = pct;
         else if ((channel[i] > ANALOG_TOLERANCE) && (pct <= channel[i] - ANALOG_TOLERANCE)) channel[i] = pct;
     }        
     
-    channel[ADJUST] = channel[ADJUST]*ADJUST_POSITIONS/100;
+    uint8_t adjust = percentagePositionGet(ADJUST, ADJUST_POSITIONS);
+    adjust = 
+    channel[ADJUST] = adjust*(100/ADJUST_POSITIONS);
 }

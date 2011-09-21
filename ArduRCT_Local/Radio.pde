@@ -27,8 +27,7 @@ void radioTransmitChannels() {
     for (uint8_t i=0; i<RADIO_REPEAT_FRAME_START; i++) radio.print(RADIO_FRAME_START);
     radio.print("S");
     for (uint8_t i=0; i<NB_CHANNELS; i++) {
-        if (channel[i] < 16) radio.print("0");
-        radio.print(channel[i], HEX);
+        radio.print(channel[i]);
         radioLastSentChannel[i] = channel[i];
     }
 }

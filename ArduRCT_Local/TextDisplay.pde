@@ -90,7 +90,7 @@ void tdRefreshChannels() {
     }
     if (channel[ADJUST] != tdAdjust) {
         tdAdjust = channel[ADJUST];
-        lcdT.drawToggleSwitch(2, ADJUST_LINE, 12, ADJUST_POSITIONS, tdAdjust);
+        lcdT.drawToggleSwitch(2, ADJUST_LINE, 12, ADJUST_POSITIONS, tdAdjust/(100/ADJUST_POSITIONS));
     }
 }
 
