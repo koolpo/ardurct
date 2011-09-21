@@ -25,6 +25,7 @@ isPulsing	KEYWORD2
 mapSet	KEYWORD2
 start	KEYWORD2
 stop	KEYWORD2
+synchronizeChangeRequests	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

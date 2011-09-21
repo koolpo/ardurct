@@ -44,17 +44,20 @@
 #define SERVO_MANAGER_NB_SERVOS 12
 
 // Default min max and medium pulse for the servos
-#define SERVO_MANAGER_MIN_PULSE 544
+#define SERVO_MANAGER_MIN_PULSE 600
 #define SERVO_MANAGER_MAX_PULSE 2400
 #define SERVO_MANAGER_DEFAULT_PULSE 1500
 
 // Defines the lack of framePin
 #define SERVO_MANAGER_NO_FRAME_PIN	0xFF
 
+// Synchronization: to apply all the changes at the same time rather than servo by servo
+#define SERVO_MANAGER_SYNCHRONIZE true
+#define SERVO_MANAGER_DON_T_SYNCHRONIZE false
+
 typedef struct {
 	uint8_t id;
-	uint8_t pinBitMask;
-	volatile uint8_t *pinPort;
+	uint8_t pin;
 	uint16_t value;
 	uint16_t min;
 	uint16_t max;
@@ -78,22 +81,25 @@ class T1ServoManager {
 		void setup(uint8_t framePin = SERVO_MANAGER_NO_FRAME_PIN);
 
 		// Attach a servo to a pin
-		bool attach(uint8_t servo, uint8_t pin, uint16_t min = SERVO_MANAGER_MIN_PULSE, uint16_t max = SERVO_MANAGER_MAX_PULSE);
+		bool attach(uint8_t servo, uint8_t pin, bool waitToSynchronize = SERVO_MANAGER_DON_T_SYNCHRONIZE);
+
+		// Attach a servo to a pin, with a min and a max
+		bool attach(uint8_t servo, uint8_t pin, uint16_t min, uint16_t max, bool waitToSynchronize = SERVO_MANAGER_DON_T_SYNCHRONIZE);
 		
 		// Detach a servo
-		void detach(uint8_t servo);
+		void detach(uint8_t servo, bool waitToSynchronize = SERVO_MANAGER_DON_T_SYNCHRONIZE);
 		
 		// Set the pulse to a value mapped between min and max
-		void mapSet(uint8_t servo, uint16_t value, int16_t min, int16_t max);
+		void mapSet(uint8_t servo, int16_t value, int16_t min, int16_t max, bool waitToSynchronize = SERVO_MANAGER_DON_T_SYNCHRONIZE);
 
 		// Set the pulse to value (if <= 180 setAngle, otherwise setMicroseconds)
-		void set(uint8_t servo, uint16_t value);
+		void set(uint8_t servo, uint16_t value, bool waitToSynchronize = SERVO_MANAGER_DON_T_SYNCHRONIZE);
 		
 		// Set the pulse to pulse microsecond for servo
-		void setMicroseconds(uint8_t servo, uint16_t value);
+		void setMicroseconds(uint8_t servo, uint16_t value, bool waitToSynchronize = SERVO_MANAGER_DON_T_SYNCHRONIZE);
 
 		// Set the pulse to angle degrees for servo
-		void setAngle(uint8_t servo, uint16_t angle);
+		void setAngle(uint8_t servo, uint8_t angle, bool waitToSynchronize = SERVO_MANAGER_DON_T_SYNCHRONIZE);
 
 		// Get the pulse for servo
 		uint16_t getMicroseconds(uint8_t servo);
@@ -113,6 +119,9 @@ class T1ServoManager {
 		// See if we are pulsing
 		bool isPulsing();
 		
+		// Apply the waitToSynchronized change requests
+		void synchronizeChangeRequests();
+		
 		// Start the servo pulses for this ServoManager
 		void start();
 		
@@ -130,7 +139,7 @@ class T1ServoManager {
 		uint8_t getServoIndex(uint8_t servo);
 		
 		// Reorder the pulses in ascending order
-		void reOrderPulses(uint8_t servoIndex);
+		void reOrderPulses(uint8_t servoIndex, bool waitToSynchronize);
 		
 		// Set the servo pulses used during the interrupt
 		void setServoPulses(uint8_t nbServos);
