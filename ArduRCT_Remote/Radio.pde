@@ -4,7 +4,6 @@
 uint8_t radioCounter;
 uint8_t radioState;
 
-uint8_t servoPosition[NB_CHANNELS];
 
 NewSoftSerial nss(XBEE_TX, XBEE_RX);
 XBee xBee;
@@ -13,8 +12,6 @@ void radioSetup() {
     radioCounter = 0;
     radioState = RADIO_IDLE;
     xBee.begin(&nss, XBEE_BAUDRATE, XBEE_GUARD_TIME);
-    pinMode(13, OUTPUT);
-    pinMode(12, OUTPUT);
 }
 
 
@@ -33,25 +30,23 @@ void radioProcessReceive() {
     if (radioState == RADIO_IDLE) {
         while (xBee.available() && (radioCounter < RADIO_REPEAT_FRAME_START)) {
             char val = xBee.read();
+Serial.print(val, BYTE);
             radioCounter ++;
-    radioDebugPulse(12, radioCounter*10);
             if (val != RADIO_FRAME_START) {
                 // release the trapped markers
                 for (uint8_t i=radioCounter; i>1; i--) Serial.print(RADIO_FRAME_START);
                 // write back the received character
                 Serial.print(val);
-                Serial.print(":");
-                Serial.println(val, BIN);
                 radioCounter = 0;
             } 
         }
         if (radioCounter < RADIO_REPEAT_FRAME_START) return;
         radioState = RADIO_IN_FRAME;
     }
-    radioDebugPulse(12, 80);
     if (radioState == RADIO_IN_FRAME) {
         if (!xBee.available()) return;
         char val = xBee.read();
+ Serial.print(val, BYTE);
         switch (val) {
             case RADIO_SERVO:
             case RADIO_MESURE:
@@ -70,22 +65,24 @@ void radioProcessReceive() {
     
     switch (radioState) {
         case RADIO_SERVO:
-            radioDebugPulse(13, 10);
-            while (xBee.available() && (radioCounter < NB_CHANNELS*2)) {
-                char val = xBee.read();
-                if (radioCounter % 2 == 0) servoPosition[radioCounter/2] = val;
-                else servoPosition[radioCounter/2] = servoPosition[radioCounter/2] * 16 + val;
-                radioCounter ++;
-                radioDebugPulse(13, radioCounter*2);
-            } 
-            if (radioCounter == NB_CHANNELS*2) {
-                radioDebugPulse(13, 5);
-                for (int i=0; i<NB_CHANNELS; i++) ServoManager.mapSet(i, servoPosition[i], 0, 100);
-                radioCounter = 0;
-                radioState = RADIO_IDLE;
-                xBee.print("#");
-                radioDebugPulse(13, 5);
+            // wait for the frame to arrive
+            if (xBee.available() < NB_CHANNELS) return;
+            // process the channels
+            Serial.print(" ");
+            for (int i=0; i<NB_CHANNELS; i++) {
+                uint8_t val = xBee.read();
+                ServoManager.mapSet(i, val, 0, 100, SERVO_MANAGER_SYNCHRONIZE);
+
+                Serial.print(i, DEC);
+                Serial.print(":");
+                Serial.print(val, DEC);
+                Serial.print(" ");
             }
+            Serial.println();
+            ServoManager.synchronizeChangeRequests();
+            ServoManager.debug();
+            radioState = RADIO_IDLE;
+            xBee.print("#");
             break;
             
         case RADIO_MESURE:

@@ -8,7 +8,7 @@
 #define RADIO_FRAME_START '#'
 #define RADIO_REPEAT_FRAME_START 2
 
-#define XBEE_BAUDRATE 38400
+#define XBEE_BAUDRATE 19200
 
 /* ---------------------------------- */
 
@@ -22,7 +22,7 @@
 #define XBEE_RX 3
 #define XBEE_TX 2
 #define XBEE_GUARD_TIME 50
-#define XBEE_RTS 19
+#define XBEE_RTS 14
 
 
 #endif
