@@ -1,0 +1,4 @@
+Project: 	ArduRCT			Ardu(ino) R(emote) C(ontrol) (and) T(elemetry)
+Products:	TouScrino		Tou(ch) Scr(een) (Ardu)ino
+			Remotino		Remot(e) (Ardu)ino
+			RCShield		R(emote) C(ontrol) Shield
