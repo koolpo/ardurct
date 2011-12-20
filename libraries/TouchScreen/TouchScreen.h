@@ -1,5 +1,5 @@
-#ifndef TOUCH_SCREEN_H
-#define TOUCH_SCREEN_H
+#ifndef TOUCHSCREEN_H
+#define TOUCHSCREEN_H
 
 #define BLACK 	0x0000
 #define WHITE	0xFFFF
@@ -7,28 +7,31 @@
 #define GREEN	(0x03F << 5) 
 #define BLUE	0x01F
 
+#define TOUSCRUINO_XM	A6
+#define TOUSCRUINO_XP	15
+#define TOUSCRUINO_YM	14
+#define TOUSCRUINO_YP	A7
 
 #include "S6D04H0.hpp"
 
 class TouchScreen: public S6D04H0 {
     
 	public:
-		void TouchScreen(uint8_t xm = A6, uint8_t xp = 15, uint8_t ym = 14, uint8_t yp = A7, 
-				uint8_t port = PB, uint8_t cd = 21, uint8_t wr = 22, uint8_t rd = 23, uint8_t cs = 0xFF, uint8_t reset = 0xFF);
+		TouchScreen(uint8_t port = TOUSCRUINO_PORT, uint8_t cd = TOUSCRUINO_CD, uint8_t wr = TOUSCRUINO_WR, uint8_t rd = TOUSCRUINO_RD, uint8_t cs = TOUSCRUINO_CS, uint8_t reset = TOUSCRUINO_RESET);
+		
+		void defineTouchPanelPins(uint8_t xm = TOUSCRUINO_XM, uint8_t xp = TOUSCRUINO_XP, uint8_t ym = TOUSCRUINO_YM, uint8_t yp = TOUSCRUINO_YP);
 
-		void TouchScreen(uint8_t port = PB, uint8_t cd = 21, uint8_t wr = 22, uint8_t rd = 23, uint8_t cs = 0xFF, uint8_t reset = 0xFF);
+		void begin(uint8_t fontSize = FONT_SMALL, uint16_t foregroundColor = WHITE, uint16_t backgroundColor = BLACK);
 
-		void TouchScreen:begin(uint8_t fontSize = 1, uint16_t foregroundColor = WHITE, uint16_t backgroundColor = BLACK) {
+		uint16_t create565Color(uint8_t r, uint8_t g, uint8_t b);
 
-		uint16_t get565Color(uint8_t r, uint8_t g, uint8_t b);
-
-		bool TouchScreen::getPressedPoint(uint16_t *x, uint16_t *y);
+		bool getPressedPoint(uint16_t *x, uint16_t *y);
 		
 	private:
 		uint8_t _xm;
 		uint8_t _xp;
 		uint8_t _ym;
 		uint8_t _yp;
-}
+};
 
 #endif

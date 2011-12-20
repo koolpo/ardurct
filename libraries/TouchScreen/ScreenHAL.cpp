@@ -1,9 +1,12 @@
 #include "ScreenHAL.hpp"
 
-ScreenHAL::ScreenHAL() {
+#include "fontBitmaps.hpp"
+
+ScreenHAL::ScreenHAL(void) {
 }
 
-void ScreenHAL::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset) {	
+
+void ScreenHAL::defineScreenPins(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset) {	
 	_outPort = portOutputRegister(port);
 	_inPort = portInputRegister(port);
 	_portMode = portModeRegister(port);
@@ -25,10 +28,10 @@ void ScreenHAL::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, ui
 	
 	// if we have no reset pin, the RD and WR have been OR'ed to create the reset
 	// they have to be on the same port for this to work
-	if (_reset = 0xFF) {
-		*rdPort &= ~(_rdBitMask | _wrBitMask);
+	if (reset == 0xFF) {
+		*_rdPort &= ~(_rdHigh | _wrHigh);
 		delay(100);
-		*rdPort |= (_rdBitMask | _wrBitMask);
+		*_rdPort |= (_rdHigh | _wrHigh);
 	} else {
 		digitalWrite(reset, LOW);
 		delay(100);
@@ -44,15 +47,9 @@ void ScreenHAL::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, ui
 }
 
 
-// virtual 
-void ScreenHAL::initScreen() {
-	// needs to be implemented by the class inheriting from this class
-}
-
-
 void ScreenHAL::setRotation(uint8_t rotation) {
 	_rotation = rotation;
-	if (_rotation > SCREEN_ROTATION_270) _rotation = 0;
+	if (_rotation > SCREEN_ROTATION_270) _rotation = SCREEN_ROTATION_0;
 	if ((_rotation == SCREEN_ROTATION_0) || (_rotation == SCREEN_ROTATION_180)) {
 		_width = 240;
 		_height = 320;
@@ -63,13 +60,8 @@ void ScreenHAL::setRotation(uint8_t rotation) {
 	rotate();
 }
 
-// virtual 
-void ScreenHAL::rotate() {
-	// needs to be implemented by the class inheriting from this class
-}
 
-
-void ScreenHAL::getRotation() {
+uint8_t ScreenHAL::getRotation() {
 	return _rotation;
 }
 
@@ -100,7 +92,7 @@ void ScreenHAL::setFontSize(uint8_t size) {
 	_fontSize = size;
 	if (_fontSize > 4) _fontSize = 4;
 	if (_fontSize == 0) _fontSize = 1;
-	_fontScale = (fs < 3 ? 1 : 2);
+	_fontScale = (_fontSize <= FONT_LAST ? 1 : 2);
 	_fontDef = &fontDefinition_small;
 	if ((_fontSize == 2) || (_fontSize == 4)) _fontDef = &fontDefinition_medium;
 }
@@ -112,37 +104,34 @@ void ScreenHAL::setCursor(uint8_t x, uint8_t y) {
 }
 
 
-uint16_t getWidth() {
+uint16_t ScreenHAL::getWidth() {
 	return _width;
 }
 
-uint16_t getHeight() {
+uint16_t ScreenHAL::getHeight() {
 	return _height;
 }
 
 
-void ScreenHAL::drawChar(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, boolean overlay, boolean grabAndRelease) {
-	uint8_t validFontSize = (fontSize > FONT_LAST*2 ? FONT_LAST*2, (fontSize < 1 ? 1 : fontSize));
-	uint8_t fontScale = (validFontSize < 3 ? 1 : 2);
+void ScreenHAL::drawChar(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, bool overlay, bool grabAndReleaseBus) {
+	uint8_t validFontSize = (fontSize > FONT_LAST*2 ? FONT_LAST*2 : (fontSize < 1 ? 1 : fontSize));
+	uint8_t fontScale = (validFontSize <= FONT_LAST ? 1 : 2);
 	fontDefinition_t *fontDef = &fontDefinition_small;
-	if ((validFontSize == 2) || (validFontSize == 4)) *fontDef = &fontDefinition_medium;
-	if ((chr < fontDef->firstChar) || (chr >= fontDef->lastChar)) return;
-	drawChar(chr, x, y, color, fontDef, fontScale, overlay, grabAndRelease);
-}
-
-// virtual 
-void ScreenHAL::drawChar(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, fontDefinition_t *fontDef, uint8_t fontScale, boolean overlay, boolean grabAndRelease) {
-	// needs to be implemented by the class inheriting from this class
+	if ((x + fontDef->width * fontScale >= _width) || (y + fontDef->height * fontScale >= _height)) return;
+	if ((validFontSize == 2) || (validFontSize == 4)) fontDef = &fontDefinition_medium;
+	if ((chr < fontDef->firstChar) || (chr > fontDef->lastChar)) return;
+	drawCharNoCheck(chr, x, y, color, validFontSize, fontDef, fontScale, overlay, grabAndReleaseBus);
 }
 
 
-void ScreenHAL::drawString(char *s, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, boolean overlay) {
-	uint8_t validFontSize = (fontSize > FONT_LAST*2 ? FONT_LAST*2, (fontSize < 1 ? 1 : fontSize));
-	uint8_t fontScale = (validFontSize < 3 ? 1 : 2);
+void ScreenHAL::drawString(char *s, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, bool overlay, bool grabAndReleaseBus) {
+	uint8_t validFontSize = (fontSize > FONT_LAST*2 ? FONT_LAST*2 : (fontSize < 1 ? 1 : fontSize));
+	uint8_t fontScale = (validFontSize <= FONT_LAST ? 1 : 2);
 	fontDefinition_t *fontDef = &fontDefinition_small;
-	if ((validFontSize == 2) || (validFontSize == 4)) *fontDef = &fontDefinition_medium;
+	if ((x + fontDef->width * fontScale >= _width) || (y + fontDef->height * fontScale >= _height)) return;
+	if ((validFontSize == 2) || (validFontSize == 4)) fontDef = &fontDefinition_medium;
 	
-	grabBus();
+	if (grabAndReleaseBus) grabBus();
 	while (s[0] != 0) {
 		if (s[0] == '\n') {
 			y += (fontDef->height + fontDef->lineSpacing) * fontScale;
@@ -153,8 +142,8 @@ void ScreenHAL::drawString(char *s, uint16_t x, uint16_t y, uint16_t color, uint
 			continue;
 		}
 		uint8_t validChr = s[0];
-		if ((validChr < ' ') || (validChr >= 0x80)) validChr = '?';
-		drawChar(chr, x, y, _foregroundColor, fontDef, fontScale, overlay);
+		if ((validChr < fontDef->firstChar) || (validChr > fontDef->lastChar)) validChr = '?';
+		drawCharNoCheck(validChr, x, y, _foregroundColor, validFontSize, fontDef, fontScale, overlay);
 		x += (fontDef->width + fontDef->charSpacing) * fontScale;
 		if (x > _width) {
 			x = 0;
@@ -163,7 +152,7 @@ void ScreenHAL::drawString(char *s, uint16_t x, uint16_t y, uint16_t color, uint
 		}
 		s++;
 	}
-	releaseBus();
+	if (grabAndReleaseBus) releaseBus();
 }
 
 
@@ -181,12 +170,12 @@ void ScreenHAL::write(uint8_t chr) {
 		return 1;
 	}
 	uint8_t validChr = chr;
-	if ((chr < ' ') || (chr >= 0x80)) validChr = '?';
-	drawChar(validChr, _x, _y, _foregroundColor, _fontDef, _fontScale, false, true);
+	if ((validChr < _fontDef->firstChar) || (validChr > _fontDef->lastChar)) validChr = '?';
+	drawCharNoCheck(validChr, _x, _y, _foregroundColor, _fontSize, _fontDef, _fontScale, false, true);
 	_x += (_fontDef->width + _fontDef->charSpacing) * _fontScale;
 	if (_x > _width) {
 		_x = 0;
-		_y += _(_fontDef->height + _fontDef->lineSpacing) * _fontScale;
+		_y += (_fontDef->height + _fontDef->lineSpacing) * _fontScale;
 		if (_y > _height) _y = 0;
 	}
 #if ARDUINO >= 100
@@ -196,52 +185,84 @@ void ScreenHAL::write(uint8_t chr) {
 
 
 // virtual 
-void ScreenHAL::drawPixel(uint16_t x, uint16_t y, uint16_t color) {
-	// needs to be implemented by the class inheriting from this class
+void ScreenHAL::drawPixel(uint16_t x, uint16_t y, uint16_t color, bool grabAndReleaseBus) {
+	if ((x >= _width) || (y >= _height)) return;
+	if (grabAndReleaseBus) grabBus();
+	drawPixelNoCheck(x, y, color);
+	if (grabAndReleaseBus) releaseBus();
 }
 
 
-void ScreenHAL::drawHorizontalLine(uint16_t x1, uint16_t x2, uint16_t y, uint16_t color, uint8_t thickness, boolean grabAndRelease) {
+void ScreenHAL::drawHorizontalLine(uint16_t x1, uint16_t x2, uint16_t y, uint16_t color, uint8_t thickness, bool grabAndReleaseBus) {
 	uint16_t lx = (x1 <= x2 ? x1 : x2);
+	if ((lx >= _width) || (y >= _height)) return;
 	uint16_t hx = (x1 <= x2 ? x2 : x1);
+	if (hx > _width) hx = _width-1;
 	int16_t ly = y - (thickness-1) / 2;
 	if (ly < 0) ly = 0;
-	if (grabAndRelaseBus) grabBus();
+	uint16_t hy = y + thickness/2;
+	if (hy >= _height) hy = _height-1;
+	if (grabAndReleaseBus) grabBus();
 	fillRectangleNoCheck(lx, ly, hx, hy, color);
-	if (grabAndRelaseBus) releaseBus();
+	if (grabAndReleaseBus) releaseBus();
 }
 
 
-void ScreenHAL::drawVerticalLine(uint16_t x, uint16_t y1, uint16_t y2, uint16_t color, uint8_t thickness, boolean grabAndRelease) {
+void ScreenHAL::drawVerticalLine(uint16_t x, uint16_t y1, uint16_t y2, uint16_t color, uint8_t thickness, bool grabAndReleaseBus) {
 	uint16_t ly = (y1 <= y2 ? y1 : y2);
+	if ((x >= _width) || (ly >= _height)) return;
 	uint16_t hy = (y1 <= y2 ? y2 : y1);
 	int16_t lx = x - (thickness-1) / 2;
 	if (lx < 0) lx = 0;
-	uint16_t hx = x + thickness / 2
-	if (grabAndRelaseBus) grabBus();
+	uint16_t hx = x + thickness / 2;
+	if (hx >= _width) hx = _width-1;
+	if (grabAndReleaseBus) grabBus();
 	fillRectangleNoCheck(lx, ly, hx, hy, color);
-	if (grabAndRelaseBus) releaseBus();
+	if (grabAndReleaseBus) releaseBus();
 }
 
 
-void ScreenHAL::drawRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t thickness) {
-	grabBus();
+void ScreenHAL::drawRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t thickness, bool grabAndReleaseBus) {
+	if (grabAndReleaseBus) grabBus();
 	drawHorizontalLine(x1, x2, y1, color, thickness, false);
 	drawHorizontalLine(x1, x2, y2, color, thickness, false);
 	drawHorizontalLine(x1, y1, y2, color, thickness, false);
 	drawHorizontalLine(x2, y1, y2, color, thickness, false);
-	releaseBus();
+	if (grabAndReleaseBus) releaseBus();
 }
 
 
-void ScreenHAL::fillRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) {
+void ScreenHAL::fillRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, bool grabAndReleaseBus) {
 	uint16_t lx = (x1 <= x2 ? x1 : x2);
-	uint16_t hx = (x1 <= x2 ? x2 : x1);
 	uint16_t ly = (y1 <= y2 ? y1 : y2);
+	if ((lx >= _width) || (ly >= _height)) return;
+	uint16_t hx = (x1 <= x2 ? x2 : x1);
 	uint16_t hy = (y1 <= y2 ? y2 : y1);
-	grabBus();
+	if (grabAndReleaseBus) grabBus();
 	fillRectangleNoCheck(lx, ly, hx, hy, color);
-	releaseBus();
+	if (grabAndReleaseBus) releaseBus();
+}
+
+/* ---------------- Protected functions ------------------------ */
+
+// virtual 
+void ScreenHAL::initScreen() {
+	// needs to be implemented by the class inheriting from this class
+}
+
+// virtual 
+void ScreenHAL::rotate() {
+	// needs to be implemented by the class inheriting from this class
+}
+
+// virtual 
+void ScreenHAL::drawCharNoCheck(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, fontDefinition_t *fontDef, uint8_t fontScale, bool overlay, bool grabAndRelease) {
+	// needs to be implemented by the class inheriting from this class
+}
+
+// virtual
+void ScreenHAL::drawPixelNoCheck(uint16_t x, uint16_t y, uint16_t color) {
+	// needs to be implemented by the class inheriting from this class
 }
 
 
@@ -261,7 +282,7 @@ void ScreenHAL::grabBus() {
 		_spiUsed = 1;
 	}
 	// set the direction to output
-	*_portDir = 0xFF;
+	*_portMode = 0xFF;
 	// select the screen
 	if (_cs != 0xFF) digitalWrite(_cs, LOW);
 	// put the screen in data mode
@@ -312,7 +333,7 @@ void ScreenHAL::write16bDataBuffer(uint16_t *data, uint32_t len) {
 }
 
 void ScreenHAL::read16bDataBuffer(uint16_t *data, uint32_t len) {
-	*_portDir = 0x00;	
+	*_portMode = 0x00;	
 	for (uint32_t i=0; i<len; i++) { 
 		*_rdPort &= _rdLow;
 		*_rdPort &= _rdLow;
@@ -324,5 +345,5 @@ void ScreenHAL::read16bDataBuffer(uint16_t *data, uint32_t len) {
 		data[i] |= *_inPort;
 		*_rdPort |= _rdHigh; 
 	}
-	*_portDir = 0xFF;
+	*_portMode = 0xFF;
 }

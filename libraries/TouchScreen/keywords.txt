@@ -1,0 +1,61 @@
+#######################################
+# Syntax Coloring Map For TouchScreen
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+TouchScreen	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+defineTouchPanelPins	KEYWORD2
+defineScreenPins	KEYWORD2
+begin	KEYWORD2
+getForegroundColor	KEYWORD2
+setForegroundColor	KEYWORD2
+getBackgroundColor	KEYWORD2
+setBackgroundColor	KEYWORD2
+getFontSize	KEYWORD2
+setFontSize	KEYWORD2
+getWidth	KEYWORD2
+getHeight	KEYWORD2
+getRotation	KEYWORD2
+setRotation	KEYWORD2
+setCursor	KEYWORD2
+drawPixel	KEYWORD2
+drawChar	KEYWORD2
+write	KEYWORD2
+drawString	KEYWORD2
+drawHorizontalLine	KEYWORD2
+drawVerticalLine	KEYWORD2
+drawRectangle	KEYWORD2
+fillRectangle	KEYWORD2
+create565Color	KEYWORD2
+getPressedPoint	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+BLACK	LITERAL1
+WHITE	LITERAL1
+RED	LITERAL1
+GREEN	LITERAL1
+BLUE	LITERAL1
+FONT_SMALL	LITERAL1
+FONT_MEDIUM	LITERAL1
+FONT_BIG	LITERAL1
+FONT_HUGE	LITERAL1
+TOUSCRUINO_PORT	LITERAL1
+TOUSCRUINO_CD	LITERAL1
+TOUSCRUINO_WR	LITERAL1
+TOUSCRUINO_RD	LITERAL1
+TOUSCRUINO_CS	LITERAL1
+TOUSCRUINO_RESET	LITERAL1
