@@ -12,10 +12,10 @@
 #define S6D04H0_R270	0x58
 
 const unsigned char PROGMEM S6D04H0_initialization_code[] = {
-	0, 	0x11,			/* SLPOFF */
-	0xFE,
-	0, 	0x13,			/* NORON */
-	0xFE,
+	0, 	0x11,			/* SLPOFF: SLeeP OFF */
+	0xFE,				/* delay(100) */
+	0, 	0x13,			/* NORON: NORmal mode ON */
+	0xFE,				/* delay(100) */
 	5, 	0xf3, 0x01, 0xff, 0x1f, 0x00, 0x03,
 	17, 0xf2, 0x28, 0x60, 0x7f, 0x08, 0x08, 0x00, 0x00, 0x15, 0x48, 0x00, 0x07, 0x01, 0x00, 0x00, 0x94, 0x08, 0x08,
 	20, 0xf4, 0x09, 0x00, 0x00, 0x00, 0x21, 0x47, 0x01, 0x02, 0x2A, 0x5D, 0x07, 0x2A, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -24,21 +24,21 @@ const unsigned char PROGMEM S6D04H0_initialization_code[] = {
 	4,	0xf7, 0x01, 0x00, 0x10, 0x00,
 	3,	0xf8, 0x99, 0x00, 0x00,
 	1,	0xf9, 0x01,
-	1, 	0x26, 0x02,		/* Gamma Set */
+	1, 	0x26, 0x02,		/* GASET: Gamma Set */
 	1, 	0x35, 0x00,		/* TEON: Tearing on */
-	1,	0x36, 0x08,		/* MADCTL : Memory Data Access Control, B7=0 => , B3=1 => BGR filter */
-	1, 	0x3a, 0x55, 	/* COLMOD: 16 bits/pixel */
-	4,	0x2a, 0x00, 0x00, 0x00, 0xef,	/* CASET: Column Address Set */
-	4,	0x2b, 0x00, 0x00, 0x01, 0x3f, 	/* PASET:Page Address Set */
-	0,	0x29, 			/* DISPON:	Display On */
-	0,	0x2c,			/* RAMWR: Memory write */
-	0xFE,
-	0xFF
+	1,	0x36, 0x00,		/* MADCTL: Memory ADdress ConTroL, B7,B6,B5=0 => no rotation, B3=0 => no BGR filter */
+	1, 	0x3a, 0x55, 	/* COLMOD: COLor MODe: 16 bits/pixel */
+	4,	0x2a, 0x00, 0x00, 0x00, 0xef,	/* CASET: Column Address SET */
+	4,	0x2b, 0x00, 0x00, 0x01, 0x3f, 	/* PASET:Page Address SET */
+	0,	0x29, 			/* DISPON:	DISplay ON */
+	0,	0x2c,			/* RAMWR: RAM WRite */
+	0xFE,				/* delay(100) */
+	0xFF				/* End initialization */
 };
 
 
 S6D04H0::S6D04H0(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset) {	
-	defineScreenPins(port, cd, wr, rd, cs, reset);
+	setupScreen(port, cd, wr, rd, cs, reset);
 }
  
 void S6D04H0::drawPixel(uint16_t x, uint16_t y, uint16_t color, boolean grabAndReleaseBus) {
@@ -50,52 +50,6 @@ void S6D04H0::drawPixel(uint16_t x, uint16_t y, uint16_t color, boolean grabAndR
 
 
 /* ---------------- Protected functions ------------------------ */
-
-// Fill the rectangle lx,ly -> hx, hy
-// this functions assumes that lx <= hx and ly <= hy
-void S6D04H0::fillRectangleNoCheck(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {
-	uint32_t nbPixels = (hx-lx+1)*(hy-ly+1);
-	_setClippingRectangleNoCheck(lx, hx, ly, hy);
-	writeCommand(S6D04H0_RAMWR);
-	while (nbPixels-- > 0) write16bData(color);
-}
-
-void S6D04H0::drawCharNoCheck(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, fontDefinition_t *fontDef, uint8_t fontScale, boolean overlay, boolean grabAndReleaseBus) {
-	uint8_t pattern[FONT_MAX_PATTERN];
-	uint16_t buffer[FONT_MAX_SPACE*4];
-
-	uint16_t charSpaceUsed = (fontDef->width+fontDef->charSpacing)*(fontDef->height+fontDef->lineSpacing)*fontScale*fontScale;
-	if (grabAndReleaseBus) grabBus();
-	_setClippingRectangleNoCheck(x, y, x+(fontDef->width+fontDef->charSpacing)*fontScale, y+(fontDef->height+fontDef->lineSpacing)*fontScale); 
-	if (overlay) {
-		writeCommand(S6D04H0_RAMRD);
-		read16bDataBuffer(buffer, charSpaceUsed);
-	}
-	if (fontSize == 1) memcpy_P(pattern, &font_small[chr - fontDef->firstChar], fontDef->orientation == 0 ? fontDef->height : fontDef->width);
-	else if (fontSize == 2) memcpy_P(pattern, &font_medium[chr - fontDef->firstChar], fontDef->orientation == 0 ? fontDef->height : fontDef->width);
-	if (!overlay) {
-		// prepare the horizontal line at bottom
-		for (uint8_t l=0; l<fontDef->lineSpacing; l++) {
-			for (uint8_t c=0; c<fontDef->width+fontDef->charSpacing; c++) _bufferScaledPixel(buffer, c, fontDef->height+l, fontDef->width+fontDef->charSpacing, _backgroundColor, fontScale);
-		}
-		// prepare the vertical line at right
-		for (uint8_t c=0; c<fontDef->charSpacing; c++) {
-			for (uint8_t l=0; l<8; l++) _bufferScaledPixel(buffer, fontDef->width+c, l, fontDef->width+fontDef->charSpacing, _backgroundColor, fontScale);
-		}
-	}
-	// prepare the dots
-	for (uint8_t l=0; l<7; l++) {
-		for (uint8_t c=0; c<5; c++) {
-			if (_charPixelIsOn(fontDef, pattern, l, c)) _bufferScaledPixel(buffer, c, l, fontDef->width+fontDef->charSpacing, color, fontScale);
-			else if (!overlay) _bufferScaledPixel(buffer, c, l, fontDef->width+fontDef->charSpacing, _backgroundColor, fontScale);
-		}
-	}
-	// draw the char 
-	writeCommand(S6D04H0_RAMWR);
-	write16bDataBuffer(buffer, charSpaceUsed);
-	if (grabAndReleaseBus) releaseBus();
-}
-
 
 void S6D04H0::initScreen(void) {
 	uint8_t buffer[32];
@@ -115,6 +69,48 @@ void S6D04H0::initScreen(void) {
 		i++;
 	}
 	releaseBus();
+}
+
+// Fill the rectangle lx,ly -> hx, hy
+// this functions assumes that lx <= hx and ly <= hy
+void S6D04H0::fillRectangleNoCheck(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {
+	uint32_t nbPixels = (hx-lx+1)*(hy-ly+1);
+	_setClippingRectangleNoCheck(lx, hx, ly, hy);
+	writeCommand(S6D04H0_RAMWR);
+	while (nbPixels-- > 0) write16bData(color);
+}
+
+void S6D04H0::drawCharNoCheck(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, fontDefinition_t *fontDef, uint8_t fontScale, boolean overlay, boolean grabAndReleaseBus) {
+	uint8_t pattern[FONT_MAX_PATTERN];
+	uint16_t buffer[FONT_MAX_SPACE*2*2];
+
+	uint16_t spaceUsed = fontDef->width*fontDef->height*fontScale*fontScale;
+	if (grabAndReleaseBus) grabBus();
+	_setClippingRectangleNoCheck(x, y, x+fontDef->width*fontScale, y+fontDef->height*fontScale); 
+	if (overlay) {
+		writeCommand(S6D04H0_RAMRD);
+		read16bDataBuffer(buffer, spaceUsed);
+	}
+	if (fontSize == 1) memcpy_P(pattern, &font_small[chr - fontDef->firstChar], fontDef->orientation == 0 ? fontDef->height : fontDef->width);
+	else if (fontSize == 2) memcpy_P(pattern, &font_medium[chr - fontDef->firstChar], fontDef->orientation == 0 ? fontDef->height : fontDef->width);
+	if (!overlay) {
+		// prepare the horizontal lines at bottom
+		fillRectangleNoCheck(x, y+fontDef->height*fontScale, x+(fontDef->width+fontDef->charSpacing-1)*fontScale, y+(fontDef->height+fontDef->lineSpacing-1)*fontScale, _backgroundColor); 
+		// prepare the vertical lines at right
+		fillRectangleNoCheck(x+fontDef->width*fontScale, y, x+(fontDef->width+fontDef->charSpacing-1)*fontScale, y+fontDef->height*fontScale, _backgroundColor); 
+		_setClippingRectangleNoCheck(x, y, x+fontDef->width*fontScale, y+fontDef->height*fontScale); 
+	}
+	// prepare the dots
+	for (uint8_t l=0; l<fontDef->height; l++) {
+		for (uint8_t c=0; c<fontDef->width; c++) {
+			if (_charPixelIsOn(fontDef, pattern, l, c)) _bufferScaledPixel(buffer, c, l, fontDef->width+fontDef->charSpacing, color, fontScale);
+			else if (!overlay) _bufferScaledPixel(buffer, c, l, fontDef->width+fontDef->charSpacing, _backgroundColor, fontScale);
+		}
+	}
+	// draw the char 
+	writeCommand(S6D04H0_RAMWR);
+	write16bDataBuffer(buffer, spaceUsed);
+	if (grabAndReleaseBus) releaseBus();
 }
 
 void S6D04H0::rotate() {

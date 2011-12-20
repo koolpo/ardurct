@@ -6,17 +6,17 @@ ScreenHAL::ScreenHAL(void) {
 }
 
 
-void ScreenHAL::defineScreenPins(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset) {	
+void ScreenHAL::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset) {	
 	_outPort = portOutputRegister(port);
 	_inPort = portInputRegister(port);
 	_portMode = portModeRegister(port);
-	_rdPort = portOutputRegister(digitalPinToPort(rd));;
+	_rdPort = portOutputRegister(digitalPinToPort(rd));
 	_rdHigh = digitalPinToBitMask(rd);
 	_rdLow = ~_rdHigh;
-	_wrPort = portOutputRegister(digitalPinToPort(wr));;
+	_wrPort = portOutputRegister(digitalPinToPort(wr));
 	_wrHigh = digitalPinToBitMask(wr);
 	_wrLow = ~_wrHigh;
-	_cdPort = portOutputRegister(digitalPinToPort(cd));;
+	_cdPort = portOutputRegister(digitalPinToPort(cd));
 	_cdBitMask = digitalPinToBitMask(cd);
 	_cs = cs;
 	
@@ -65,6 +65,15 @@ uint8_t ScreenHAL::getRotation() {
 	return _rotation;
 }
 
+uint16_t ScreenHAL::create565Color(uint8_t r, uint8_t g, uint8_t b) {
+	uint16_t color;
+	color = r >> 3;
+	color <<= 6;
+	color |= g >> 2;
+	color <<= 5;
+	color |= b >> 3;
+	return color;
+}
 
 uint16_t ScreenHAL::getForegroundColor() {
 	return _foregroundColor;

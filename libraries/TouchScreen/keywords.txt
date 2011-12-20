@@ -12,8 +12,8 @@ TouchScreen	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
-defineTouchPanelPins	KEYWORD2
-defineScreenPins	KEYWORD2
+setupTouchPanel	KEYWORD2
+setupScreen	KEYWORD2
 begin	KEYWORD2
 getForegroundColor	KEYWORD2
 setForegroundColor	KEYWORD2
@@ -35,7 +35,11 @@ drawVerticalLine	KEYWORD2
 drawRectangle	KEYWORD2
 fillRectangle	KEYWORD2
 create565Color	KEYWORD2
-getPressedPoint	KEYWORD2
+getTouchPanelX	KEYWORD2
+getTouchPanelY	KEYWORD2
+getTouchPanelZ	KEYWORD2
+getTouchPanelXYZ	KEYWORD2
+isTouchPanelZValid	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)

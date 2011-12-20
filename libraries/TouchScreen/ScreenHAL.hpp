@@ -33,13 +33,21 @@ class ScreenHAL: public Print {
 		// CAN BE implemented by the class inheriting from this class
 		virtual void drawPixel(uint16_t x, uint16_t y, uint16_t color, bool grabAndReleaseBus = true);
 
-		void defineScreenPins(uint8_t port = PB, uint8_t cd = 21, uint8_t wr = 22, uint8_t rd = 23, uint8_t cs = 0xFF, uint8_t reset = 0xFF);
+		void setupScreen(uint8_t port = TOUSCRUINO_PORT, uint8_t cd = TOUSCRUINO_CD, uint8_t wr = TOUSCRUINO_WR, uint8_t rd = TOUSCRUINO_RD, uint8_t cs = TOUSCRUINO_CS, uint8_t reset = TOUSCRUINO_RESET);
 
 		uint16_t getForegroundColor();
 
+		void setForegroundColor(uint16_t color);		
+
 		uint16_t getBackgroundColor();
 
+		void setBackgroundColor(uint16_t color);
+
+		uint16_t create565Color(uint8_t r, uint8_t g, uint8_t b);
+
 		uint8_t getFontSize();
+
+		void setFontSize(uint8_t size);
 
 		uint16_t getWidth();
 
@@ -48,12 +56,6 @@ class ScreenHAL: public Print {
 		void setRotation(uint8_t rotation);
 		
 		uint8_t getRotation();
-
-		void setForegroundColor(uint16_t color);
-		
-		void setBackgroundColor(uint16_t color);
-
-		void setFontSize(uint8_t size);
 
 		void setCursor(uint8_t x, uint8_t y);
 
