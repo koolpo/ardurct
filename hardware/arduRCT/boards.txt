@@ -3,12 +3,12 @@
 TouScruino_1284_8.name=TouScruino (3.3V, 8 MHz) w/ ATmega1284
 
 TouScruino_1284_8.upload.protocol=stk500
-TouScruino_1284_8.upload.maximum_size=126976
-TouScruino_1284_8.upload.speed=57600		
+TouScruino_1284_8.upload.maximum_size=131072
+TouScruino_1284_8.upload.speed=19200
 
-TouScruino_1284_8.bootloader.low_fuses=0xff
-TouScruino_1284_8.bootloader.high_fuses=0xda
-TouScruino_1284_8.bootloader.extended_fuses=0x05
+TouScruino_1284_8.bootloader.low_fuses=0xFD
+TouScruino_1284_8.bootloader.high_fuses=0xDA
+TouScruino_1284_8.bootloader.extended_fuses=0xFD
 TouScruino_1284_8.bootloader.path=atmega
 TouScruino_1284_8.bootloader.file=ATmegaBOOT_atmega1284_8MHz.hex
 TouScruino_1284_8.bootloader.unlock_bits=0x3F
@@ -24,12 +24,12 @@ TouScruino_1284_8.build.variant=standard
 TouScruino_1284_11.name=TouScruino (3.3V, 11.0592 MHz) w/ ATmega1284
 
 TouScruino_1284_11.upload.protocol=stk500
-TouScruino_1284_11.upload.maximum_size=126976
-TouScruino_1284_11.upload.speed=57600		
+TouScruino_1284_8.upload.maximum_size=131072
+TouScruino_1284_8.upload.speed=38400
 
-TouScruino_1284_11.bootloader.low_fuses=0xff
-TouScruino_1284_11.bootloader.high_fuses=0xda
-TouScruino_1284_11.bootloader.extended_fuses=0x05
+TouScruino_1284_8.bootloader.low_fuses=0xFF
+TouScruino_1284_8.bootloader.high_fuses=0xDA
+TouScruino_1284_8.bootloader.extended_fuses=0xFD
 TouScruino_1284_11.bootloader.path=atmega
 TouScruino_1284_11.bootloader.file=ATmegaBOOT_atmega1284_11MHz.hex
 TouScruino_1284_11.bootloader.unlock_bits=0x3F
@@ -48,9 +48,9 @@ Remotuino_324_16.upload.protocol=stk500
 Remotuino_324_16.upload.maximum_size=30720
 Remotuino_324_16.upload.speed=57600	
 	
-Remotuino_324_16.bootloader.low_fuses=0xff
-Remotuino_324_16.bootloader.high_fuses=0xda
-Remotuino_324_16.bootloader.extended_fuses=0x05
+Remotuino_324_16.bootloader.low_fuses=0xFF
+Remotuino_324_16.bootloader.high_fuses=0xDA
+Remotuino_324_16.bootloader.extended_fuses=0xFD
 Remotuino_324_16.bootloader.path=atmega
 Remotuino_324_16.bootloader.file=ATmegaBOOT_atmega324_16MHz.hex
 Remotuino_324_16.bootloader.unlock_bits=0x3F
@@ -69,9 +69,9 @@ Remotuino_164_16.upload.protocol=stk500
 Remotuino_164_16.upload.maximum_size=14336
 Remotuino_164_16.upload.speed=57600		
 
-Remotuino_164_16.bootloader.low_fuses=0xff
-Remotuino_164_16.bootloader.high_fuses=0xda
-Remotuino_164_16.bootloader.extended_fuses=0x05
+Remotuino_164_16.bootloader.low_fuses=0xFF
+Remotuino_164_16.bootloader.high_fuses=0xDA
+Remotuino_164_16.bootloader.extended_fuses=0xFD
 Remotuino_164_16.bootloader.path=atmega
 Remotuino_164_16.bootloader.file=ATmegaBOOT_atmega164_16MHz.hex
 Remotuino_164_16.bootloader.unlock_bits=0x3F

@@ -31,11 +31,20 @@
 // the whole number of milliseconds per timer0 overflow
 #define MILLIS_INC (MICROSECONDS_PER_TIMER0_OVERFLOW / 1000)
 
+#if F_CPU == 11059200L
+// LWX: the fractional number of milliseconds per timer0 overflow.
+// less generic but more exact...
+// 11059200/64/256 = 675 ticks per second
+// 1 ms = 1000/675 = 1 + 13/27
+#define FRACT_INC 13
+#define FRACT_MAX 27
+#else
 // the fractional number of milliseconds per timer0 overflow. we shift right
 // by three to fit these numbers into a byte. (for the clock speeds we care
 // about - 8 and 16 MHz - this doesn't lose precision.)
 #define FRACT_INC ((MICROSECONDS_PER_TIMER0_OVERFLOW % 1000) >> 3)
 #define FRACT_MAX (1000 >> 3)
+#endif
 
 volatile unsigned long timer0_overflow_count = 0;
 volatile unsigned long timer0_millis = 0;

@@ -127,7 +127,6 @@
 
 
 /* onboard LED is used to indicate, that the bootloader was entered (3x flashing) */
-/* if monitor functions are included, LED goes on after monitor was entered */
 #if defined __AVR_ATmega128__ || defined __AVR_ATmega1280__ || defined __AVR_ATmega164P__ || defined __AVR_ATmega324P__ || defined __AVR_ATmega1284P__
 /* Onboard LED is connected to pin PB7 (e.g. Crumb128, PROBOmega128, Savvy128, Arduino Mega) */
 #define LED_DDR  DDRB
@@ -141,12 +140,6 @@
 #define LED_PORT PORTB
 #define LED_PIN  PINB
 #define LED      PINB5
-#endif
-
-
-/* monitor functions will only be compiled when using ATmega128, due to bootblock size constraints */
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-#define MONITOR 1
 #endif
 
  
@@ -332,7 +325,7 @@ int main(void)
 	}
 #endif
 
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega1284P__)
+#if defined(__AVR_ATmega1280__)  || defined __AVR_ATmega1284P__
 	/* these chips have four serial ports ... we could eventually use any of them, or not? */
 	/* however, we don't wanna confuse people, to avoid making a mess, we will stick to RXD0, TXD0 */
 	bootuart = 1;
@@ -364,7 +357,7 @@ int main(void)
 
 
 	/* initialize UART(s) depending on CPU defined */
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega1284P__)
+#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)  || defined __AVR_ATmega1284P__
 	if(bootuart == 1) {
 		UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
 		UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
@@ -384,7 +377,7 @@ int main(void)
 	UBRRHI = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
 	UCSRA = 0x00;
 	UCSRB = _BV(TXEN)|_BV(RXEN);	
-#elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
+#elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__)
 
 #ifdef DOUBLE_SPEED
 	UCSR0A = (1<<U2X0); //Double speed mode USART0
@@ -433,7 +426,7 @@ int main(void)
 
 
 	/* flash onboard LED to signal entering of bootloader */
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega1284P__)
+#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)  || defined(__AVR_ATmega1284P__)
 	// 4x for UART0, 5x for UART1
 	flash_led(NUM_LED_FLASHES + bootuart);
 #else
@@ -573,7 +566,7 @@ int main(void)
 			if (flags.eeprom) {		                //Write to EEPROM one byte at a time
 				address.word <<= 1;
 				for(w=0;w<length.word;w++) {
-#if defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega1284P__)
+#if defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__)
 					while(EECR & (1<<EEPE));
 					EEAR = (uint16_t)(void *)address.word;
 					EEDR = buff[w];
@@ -595,7 +588,7 @@ int main(void)
 				/* if ((length.byte[0] & 0x01) == 0x01) length.word++;	//Even up an odd number of bytes */
 				if ((length.byte[0] & 0x01)) length.word++;	//Even up an odd number of bytes
 				cli();					//Disable interrupts, just to be sure
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__)|| defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega1284P__)
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega1284P__)
 				while(bit_is_set(EECR,EEPE));			//Wait for previous EEPROM writes to complete
 #else
 				while(bit_is_set(EECR,EEWE));			//Wait for previous EEPROM writes to complete
@@ -727,7 +720,7 @@ int main(void)
 			putch(0x14);
 			for (w=0;w < length.word;w++) {		        // Can handle odd and even lengths okay
 				if (flags.eeprom) {	                        // Byte access EEPROM read
-#if defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)|| defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega1284P__)
+#if defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)|| defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) 
 					while(EECR & (1<<EEPE));
 					EEAR = (uint16_t)(void *)address.word;
 					EECR |= (1<<EERE);
@@ -773,118 +766,6 @@ int main(void)
 	}
 
 
-#if defined MONITOR 
-
-	/* here come the extended monitor commands by Erik Lins */
-
-	/* check for three times exclamation mark pressed */
-	else if(ch=='!') {
-		ch = getch();
-		if(ch=='!') {
-		ch = getch();
-		if(ch=='!') {
-			PGM_P welcome = "";
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-			uint16_t extaddr;
-#endif
-			uint8_t addrl, addrh;
-
-#ifdef CRUMB128
-			welcome = "ATmegaBOOT / Crumb128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
-#elif defined PROBOMEGA128
-			welcome = "ATmegaBOOT / PROBOmega128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
-#elif defined SAVVY128
-			welcome = "ATmegaBOOT / Savvy128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
-#elif defined __AVR_ATmega1280__ 
-			welcome = "ATmegaBOOT / Arduino Mega - (C) Arduino LLC - 090930\n\r";
-#endif
-
-			/* turn on LED */
-			LED_DDR |= _BV(LED);
-			LED_PORT &= ~_BV(LED);
-
-			/* print a welcome message and command overview */
-			for(i=0; welcome[i] != '\0'; ++i) {
-				putch(welcome[i]);
-			}
-
-			/* test for valid commands */
-			for(;;) {
-				putch('\n');
-				putch('\r');
-				putch(':');
-				putch(' ');
-
-				ch = getch();
-				putch(ch);
-
-				/* toggle LED */
-				if(ch == 't') {
-					if(bit_is_set(LED_PIN,LED)) {
-						LED_PORT &= ~_BV(LED);
-						putch('1');
-					} else {
-						LED_PORT |= _BV(LED);
-						putch('0');
-					}
-				} 
-
-				/* read byte from address */
-				else if(ch == 'r') {
-					ch = getch(); putch(ch);
-					addrh = gethex();
-					addrl = gethex();
-					putch('=');
-					ch = *(uint8_t *)((addrh << 8) + addrl);
-					puthex(ch);
-				}
-
-				/* write a byte to address  */
-				else if(ch == 'w') {
-					ch = getch(); putch(ch);
-					addrh = gethex();
-					addrl = gethex();
-					ch = getch(); putch(ch);
-					ch = gethex();
-					*(uint8_t *)((addrh << 8) + addrl) = ch;
-				}
-
-				/* read from uart and echo back */
-				else if(ch == 'u') {
-					for(;;) {
-						putch(getch());
-					}
-				}
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-				/* external bus loop  */
-				else if(ch == 'b') {
-					putch('b');
-					putch('u');
-					putch('s');
-					MCUCR = 0x80;
-					XMCRA = 0;
-					XMCRB = 0;
-					extaddr = 0x1100;
-					for(;;) {
-						ch = *(volatile uint8_t *)extaddr;
-						if(++extaddr == 0) {
-							extaddr = 0x1100;
-						}
-					}
-				}
-#endif
-
-				else if(ch == 'j') {
-					app_start();
-				}
-
-			} /* end of monitor functions */
-
-		}
-		}
-	}
-	/* end of monitor */
-#endif
 	else if (++error_count == MAX_ERROR_COUNT) {
 		app_start();
 	}
@@ -934,7 +815,7 @@ void puthex(char ch) {
 
 void putch(char ch)
 {
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega1284P__)
+#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1284P__)
 	if(bootuart == 1) {
 		while (!(UCSR0A & _BV(UDRE0)));
 		UDR0 = ch;
@@ -943,7 +824,7 @@ void putch(char ch)
 		while (!(UCSR1A & _BV(UDRE1)));
 		UDR1 = ch;
 	}
-#elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
+#elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__)
 	while (!(UCSR0A & _BV(UDRE0)));
 	UDR0 = ch;
 #else
@@ -956,7 +837,7 @@ void putch(char ch)
 
 char getch(void)
 {
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega1284P__)
+#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1284P__)
 	uint32_t count = 0;
 	if(bootuart == 1) {
 		while(!(UCSR0A & _BV(RXC0))) {
@@ -981,7 +862,7 @@ char getch(void)
 		return UDR1;
 	}
 	return 0;
-#elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
+#elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__)
 	uint32_t count = 0;
 	while(!(UCSR0A & _BV(RXC0))){
 		/* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
@@ -1009,7 +890,7 @@ char getch(void)
 void getNch(uint8_t count)
 {
 	while(count--) {
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega1284P__)
+#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)  || defined(__AVR_ATmega1284P__)
 		if(bootuart == 1) {
 			while(!(UCSR0A & _BV(RXC0)));
 			UDR0;
@@ -1018,8 +899,10 @@ void getNch(uint8_t count)
 			while(!(UCSR1A & _BV(RXC1)));
 			UDR1;
 		}
-#elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
+/*		
+#elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega1284P__)
 		getch();
+*/
 #else
 		/* m8,16,32,169,8515,8535,163 */
 		/* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
