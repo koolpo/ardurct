@@ -20,8 +20,8 @@
  * THE SOFTWARE.
  */
 
-#ifndef FONT_BITMAPS_H
-#define FONT_BITMAPS_H
+#ifndef FONT_BITMAPS_HPP
+#define FONT_BITMAPS_HPP
 
 #include "fonts.hpp"
 

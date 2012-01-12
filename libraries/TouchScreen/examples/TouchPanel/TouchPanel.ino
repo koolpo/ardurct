@@ -11,14 +11,15 @@ void setup() {
 void loop() {
     uint16_t x, y, z;
     
-    if (touchscreen.getTouchPanelXYZ(&x, &y, &z)) {
+    if (touchscreen.getTouchedXYZ(&x, &y, &z) != TOUCHSCREEN_NO_TOUCH) {
         Serial.print("x=");
         Serial.print(x);
         Serial.print(", y=");
         Serial.print(y);
         Serial.print(", z=");
         Serial.println(z);
-        touchscreen.fillRectangle(x-10, y-10, x+10, y+10, WHITE);
+		uint16_t size = z/2;
+        touchscreen.fillRectangle(x-size, y-size, x+size, y+size, WHITE);
     }
     delay(50);
 }

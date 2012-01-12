@@ -2,23 +2,24 @@
 #define TOUCHSCREEN_H
 
 #define BLACK 	0x0000
-#define WHITE	0xFFFF
 #define RED		(0x01F << 11) 
 #define GREEN	(0x03F << 5) 
 #define BLUE	0x01F
+#define CYAN    (GREEN+BLUE)
+#define MAGENTA	(RED+BLUE)
+#define YELLOW	(RED+GREEN)
+#define WHITE	0xFFFF
 
-#define TOUSCRUINO_XM	A6
-#define TOUSCRUINO_XP	15
-#define TOUSCRUINO_YM	14
-#define TOUSCRUINO_YP	A7
+#define TOUCHSCREEN_EQUAL 5
+#define TOUCHSCREEN_NO_TOUCH 0xFFFF
 
-#define TOUSCRUINO_PRESSURE_THRESHOLD 10
-#define TOUSCRUINO_X_PLANE_RESISTANCE 300
+#define isTouched() getTouchedXYZ(0, 0, 0)
 
 #include "S6D04H0.hpp"
+#include "TouScruino.hpp"
 
 // TouchScreen extends the implementation of ScreenHAL, here it is S6D04H0
-// To change the COG of your screen, point to another header and replace S6D04H0 by your COG  
+// To change the COG of your screen, include another header and replace S6D04H0 by your COG  
 class TouchScreen: public S6D04H0 {
     
 	public:
@@ -30,15 +31,13 @@ class TouchScreen: public S6D04H0 {
 
 		void begin(uint8_t fontSize = FONT_SMALL, uint16_t foregroundColor = WHITE, uint16_t backgroundColor = BLACK);
 
-		uint16_t getTouchPanelX();
+		uint16_t getTouchedX();
 		
-		uint16_t getTouchPanelY();
+		uint16_t getTouchedY();
 		
-		uint16_t getTouchPanelZ();
+		uint16_t getTouchedZ();
 		
-		uint16_t getTouchPanelXYZ(uint16_t *x, uint16_t *y, uint16_t *z = 0);
-
-		bool isTouchPanelZValid(uint16_t z);
+		uint16_t getTouchedXYZ(uint16_t *x, uint16_t *y, uint16_t *z);
 		
 	private:
 		uint8_t _xm;

@@ -1,5 +1,5 @@
-#ifndef FONTS_H
-#define FONTS_H
+#ifndef FONTS_HPP
+#define FONTS_HPP
 
 #include <avr/pgmspace.h>
 
@@ -10,7 +10,7 @@
 
 #define FONT_LAST 2
 
-#define FONT_MAX_SPACE		(7*12)		/* width * height of the biggest font */
+#define FONT_MAX_SPACE		(8*14)		/* width x height of the biggest font including the charSpacing and lineSpacing */
 #define FONT_MAX_PATTERN	12			/* max bytes one character definition can take */
 
 /** Display fill direction
@@ -23,13 +23,9 @@
  *     | /|
  *     |/ |
  *
- *  2 (PAGE)
- *     |/|/|
- *     |/|/|
  **/
 #define FONT_ORIENTATION_HORIZONTAL 0
 #define FONT_ORIENTATION_VERTICAL 1
-#define FONT_ORIENTATION_PAGE 2
 
 typedef struct {
 	uint8_t width;

@@ -34,30 +34,28 @@ void TouchScreen::setupTouchPanel(uint8_t xm, uint8_t xp, uint8_t ym, uint8_t yp
 }
 
 
-uint16_t TouchScreen::getTouchPanelX() {
+uint16_t TouchScreen::getTouchedX() {
 	uint16_t x;
-	if (getTouchPanelXYZ(&x, 0)) return x;
-	return 0xFFFF;
+	return getTouchedXYZ(&x, 0, 0);
 }
 
 
-uint16_t TouchScreen::getTouchPanelY() {
+uint16_t TouchScreen::getTouchedY() {
 	uint16_t y;
-	if (getTouchPanelXYZ(0, &y)) return y;
-	return 0xFFFF;
+	return getTouchedXYZ(0, &y, 0);
 }
 
 
-uint16_t TouchScreen::getTouchPanelZ() {
-	return getTouchPanelXYZ(0, 0);
+uint16_t TouchScreen::getTouchedZ() {
+	return getTouchedXYZ(0, 0, 0);
 }
 
 
-uint16_t TouchScreen::getTouchPanelXYZ(uint16_t *x, uint16_t *y, uint16_t *z) {
+uint16_t TouchScreen::getTouchedXYZ(uint16_t *x, uint16_t *y, uint16_t *z) {
 	if (_xm == 0xFF) return 0;
 	
 	uint16_t val1, val2;
-	uint16_t X;
+	uint16_t X, Y;
 	
 	// measure X
 	pinMode(_yp, INPUT);
@@ -70,9 +68,8 @@ uint16_t TouchScreen::getTouchPanelXYZ(uint16_t *x, uint16_t *y, uint16_t *z) {
 	*_xmPort &= ~_xmBitMask;
 	val1 = analogRead(_yp);
 	val2 = analogRead(_yp);
-	if (val1 != val2) return 0;
+	if (abs(val1-val2) > TOUCHSCREEN_EQUAL) return TOUCHSCREEN_NO_TOUCH;
 	X = (1023 - (val1 + val2)/2);
-	if (x != 0) *x = X;
 	
 	// measure Y
 	pinMode(_xp, INPUT);
@@ -81,12 +78,10 @@ uint16_t TouchScreen::getTouchPanelXYZ(uint16_t *x, uint16_t *y, uint16_t *z) {
 	pinMode(_yp, OUTPUT);
 	pinMode(_ym, OUTPUT);
 	*_ypPort |= _ypBitMask;
-	if (y != 0) {
-		val1 = analogRead(_xm);
-		val2 = analogRead(_xm);
-		if (val1 != val2) return 0;
-		*y = (1023 - (val1 + val2)/2);
-	}
+	val1 = analogRead(_xm);
+	val2 = analogRead(_xm);
+	if (abs(val1-val2) > TOUCHSCREEN_EQUAL) return TOUCHSCREEN_NO_TOUCH;
+	Y = (1023 - (val1 + val2)/2);
 	
 	// Measure Z
 	pinMode(_xp, OUTPUT);
@@ -100,10 +95,14 @@ uint16_t TouchScreen::getTouchPanelXYZ(uint16_t *x, uint16_t *y, uint16_t *z) {
 	Z -= 1;
 	Z *= X *_xPlaneResistance / 1024;
 	if (z != 0) *z = Z; 
-	return Z;
-}
-
-
-bool TouchScreen::isTouchPanelZValid(uint16_t z) {
-	return (z > _pressureThreshold);
+	
+	if (Z >= _pressureThreshold) {
+		getTransformedXY(&X, &Y, 1024, 1024, getRotation());
+		if (x != 0) *x = X;
+		if (y != 0) *y = Y;
+		if ((y == 0) && (z == 0)) return X;
+		if ((x == 0) && (z == 0)) return Y;
+		return Z;
+	}
+	return TOUCHSCREEN_NO_TOUCH;
 }
