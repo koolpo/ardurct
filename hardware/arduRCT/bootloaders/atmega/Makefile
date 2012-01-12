@@ -22,9 +22,10 @@ PROGRAM    = ATmegaBOOT
 # enter the parameters for the avrdude isp tool
 ISPTOOL	   = usbtiny
 ISPPORT	   = usb
-ISPSPEED   = -b 115200
+ISPSPEED   = -b 19200
 
-MCU_TARGET = atmega168
+MCU_TARGET = atmega1284p
+TARGET_SPEED = 8
 LDSECTION  = --section-start=.text=0x3800
 
 AVRDUDE_CONF = C:\Software\Arduino-1.0\hardware\tools\avr\etc\avrdude.conf
@@ -40,14 +41,16 @@ AVRDUDE_CONF = C:\Software\Arduino-1.0\hardware\tools\avr\etc\avrdude.conf
 # unused, avrdude would get confused.
 
 ISPFUSES    = avrdude -c $(ISPTOOL) -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
--e -u -U efuse:w:0x$(EFUSE):m -U hfuse:w:0x$(HFUSE):m -U lfuse:w:0x$(LFUSE):m -C $(AVRDUDE_CONF) -U lock:w:0x3f:m 
+-e -u -U efuse:w:0x$(EFUSE):m -U hfuse:w:0x$(HFUSE):m -U lfuse:w:0x$(LFUSE):m -C $(AVRDUDE_CONF) 
+#-U lock:w:0x3f:m 
 ISPFLASH    = avrdude -c $(ISPTOOL) -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
--U flash:w:$(PROGRAM)_$(TARGET).hex -C $(AVRDUDE_CONF) -U lock:w:0x0f:m -B 1
+-U flash:w:$(PROGRAM)_$(TARGET).hex -C $(AVRDUDE_CONF) 
+#-U lock:w:0x0f:m -v
 
-STK500 = "C:\Program Files\Atmel\AVR Tools\STK500\Stk500.exe"
-STK500-1 = $(STK500) -e -d$(MCU_TARGET) -pf -vf -if$(PROGRAM)_$(TARGET).hex \
--lFF -LFF -f$(HFUSE)$(LFUSE) -EF8 -ms -q -cUSB -I200kHz -s -wt
-STK500-2 = $(STK500) -d$(MCU_TARGET) -ms -q -lCF -LCF -cUSB -I200kHz -s -wt
+STK500 = "C:\Software\AVRStudio4\STK500\Stk500.exe"
+STK500-1 = $(STK500) -e -d$(MCU_TARGET) -pf -vf -if$(PROGRAM)_$(TARGET)_$(TARGET_SPEED).hex \
+-lFF -LFF -f$(HFUSE)$(LFUSE) -EF8 -ms -q -cCOM2 -I200kHz -s -wt
+STK500-2 = $(STK500) -d$(MCU_TARGET) -ms -q -lCF -LCF -cCOM2 -I200kHz -s -wt
 
 
 OBJ        = $(PROGRAM).o
@@ -186,64 +189,64 @@ atmega328_pro8_isp: isp
 #########################################################################################
 # Added for ArduRCT
 #########################################################################################
-atmega164_16: TARGET = atmega164_16MHz
-atmega164_16: MCU_TARGET = atmega164p
-atmega164_16: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600
-atmega164_16: AVR_FREQ = 16000000L 
-atmega164_16: $(PROGRAM)_atmega164_16MHz.hex
+atmega164p_16: TARGET = atmega164p_16MHz
+atmega164p_16: MCU_TARGET = atmega164p
+atmega164p_16: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600
+atmega164p_16: AVR_FREQ = 16000000L 
+atmega164p_16: $(PROGRAM)_atmega164p_16MHz.hex
 
-atmega164_16_isp: atmega164_16
-atmega164_16_isp: TARGET = atmega164_16MHz
-atmega164_16_isp: MCU_TARGET = atmega164p
-atmega164_16_isp: LFUSE = FF
-atmega164_16_isp: HFUSE = DA
-atmega164_16_isp: EFUSE = FD
-atmega164_16_isp: isp
+atmega164p_16_isp: atmega164p_16
+atmega164p_16_isp: TARGET = atmega164p_16MHz
+atmega164p_16_isp: MCU_TARGET = atmega164p
+atmega164p_16_isp: LFUSE = FF
+atmega164p_16_isp: HFUSE = DA
+atmega164p_16_isp: EFUSE = FD
+atmega164p_16_isp: isp
 
-atmega324_16: TARGET = atmega324_16MHz
-atmega324_16: MCU_TARGET = atmega324p
-atmega324_16: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600
-atmega324_16: AVR_FREQ = 16000000L 
-atmega324_16: LDSECTION  = --section-start=.text=0x7800
-atmega324_16: $(PROGRAM)_atmega324_16MHz.hex
+atmega324p_16: TARGET = atmega324p_16MHz
+atmega324p_16: MCU_TARGET = atmega324p
+atmega324p_16: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600
+atmega324p_16: AVR_FREQ = 16000000L 
+atmega324p_16: LDSECTION  = --section-start=.text=0x7800
+atmega324p_16: $(PROGRAM)_atmega324p_16MHz.hex
 
-atmega324_16_isp: atmega324_16
-atmega324_16_isp: TARGET = atmega324_16MHz
-atmega324_16_isp: MCU_TARGET = atmega324p
-atmega324_16_isp: LFUSE = FF
-atmega324_16_isp: HFUSE = DA
-atmega324_16_isp: EFUSE = FD
-atmega324_16_isp: isp
+atmega324p_16_isp: atmega324p_16
+atmega324p_16_isp: TARGET = atmega324p_16MHz
+atmega324p_16_isp: MCU_TARGET = atmega324p
+atmega324p_16_isp: LFUSE = FF
+atmega324p_16_isp: HFUSE = DA
+atmega324p_16_isp: EFUSE = FD
+atmega324p_16_isp: isp
 
-atmega1284_8: TARGET = atmega1284_8MHz
-atmega1284_8: MCU_TARGET = atmega1284p
-atmega1284_8: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' -DBAUD_RATE=19200
-atmega1284_8: AVR_FREQ = 8000000L 
-atmega1284_8: LDSECTION  = --section-start=.text=0x1F000
-atmega1284_8: $(PROGRAM)_atmega1284_8MHz.hex
+atmega1284p_8: TARGET = atmega1284p_8MHz
+atmega1284p_8: MCU_TARGET = atmega1284p
+atmega1284p_8: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' -DBAUD_RATE=57600 -DDOUBLE_SPEED
+atmega1284p_8: AVR_FREQ = 8000000L 
+atmega1284p_8: LDSECTION  = --section-start=.text=0x1F000
+atmega1284p_8: $(PROGRAM)_atmega1284p_8MHz.hex
 
-atmega1284_8_isp: atmega1284_8
-atmega1284_8_isp: TARGET = atmega1284_8MHz
-atmega1284_8_isp: MCU_TARGET = atmega1284p
-atmega1284_8_isp: LFUSE = FD
-atmega1284_8_isp: HFUSE = DA
-atmega1284_8_isp: EFUSE = FF
-atmega1284_8_isp: isp
+atmega1284p_8_isp: atmega1284p_8
+atmega1284p_8_isp: TARGET = atmega1284p_8MHz
+atmega1284p_8_isp: MCU_TARGET = atmega1284p
+atmega1284p_8_isp: LFUSE = FF
+atmega1284p_8_isp: HFUSE = DA
+atmega1284p_8_isp: EFUSE = FD
+atmega1284p_8_isp: isp
 
-atmega1284_11: TARGET = atmega1284_11MHz
-atmega1284_11: MCU_TARGET = atmega1284p
-atmega1284_11: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' -DBAUD_RATE=38400
-atmega1284_11: AVR_FREQ = 11059200L 
-atmega1284_11: LDSECTION  = --section-start=.text=0x1F000
-atmega1284_11: $(PROGRAM)_atmega1284_11MHz.hex
+atmega1284p_11: TARGET = atmega1284p_11MHz
+atmega1284p_11: MCU_TARGET = atmega1284p
+atmega1284p_11: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=3' -DBAUD_RATE=57600
+atmega1284p_11: AVR_FREQ = 11059200L 
+atmega1284p_11: LDSECTION  = --section-start=.text=0x1F000
+atmega1284p_11: $(PROGRAM)_atmega1284_11MHz.hex
 
-atmega1284_11_isp: atmega1284_11
-atmega1284_11_isp: TARGET = atmega1284_11MHz
-atmega1284_11_isp: MCU_TARGET = atmega1284p
-atmega1284_11_isp: LFUSE = FF
-atmega1284_11_isp: HFUSE = DA
-atmega1284_11_isp: EFUSE = FF
-atmega1284_11_isp: isp
+atmega1284p_11_isp: atmega1284p_11
+atmega1284p_11_isp: TARGET = atmega1284p_11MHz
+atmega1284p_11_isp: MCU_TARGET = atmega1284p
+atmega1284p_11_isp: LFUSE = FF
+atmega1284p_11_isp: HFUSE = DA
+atmega1284p_11_isp: EFUSE = FD
+atmega1284p_11_isp: isp
 
 #########################################################################################
 
