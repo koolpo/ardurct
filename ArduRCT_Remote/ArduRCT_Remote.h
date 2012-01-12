@@ -1,10 +1,9 @@
 #ifndef ARDURCT_REMOTE_H
 #define ARDURCT_REMOTE_H
 
-#include <WProgram.h>
+#include <Arduino.h>
 #include <inttypes.h>
 #include <pins_arduino.h>
-
 
 #include "ArduRCT_Remote_Config.h"
 #include "Radio.h"
