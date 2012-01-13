@@ -238,7 +238,7 @@ atmega1284p_11: MCU_TARGET = atmega1284p
 atmega1284p_11: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600
 atmega1284p_11: AVR_FREQ = 11059200L 
 atmega1284p_11: LDSECTION  = --section-start=.text=0x1F000
-atmega1284p_11: $(PROGRAM)_atmega1284_11MHz.hex
+atmega1284p_11: $(PROGRAM)_atmega1284p_11MHz.hex
 
 atmega1284p_11_isp: atmega1284p_11
 atmega1284p_11_isp: TARGET = atmega1284p_11MHz
