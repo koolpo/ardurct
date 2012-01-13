@@ -4,7 +4,7 @@ TouScruino_1284_8.name=TouScruino (3.3V, 8 MHz) w/ ATmega1284
 
 TouScruino_1284_8.upload.protocol=stk500
 TouScruino_1284_8.upload.maximum_size=131072
-TouScruino_1284_8.upload.speed=19200
+TouScruino_1284_8.upload.speed=57600
 
 TouScruino_1284_8.bootloader.low_fuses=0xFD
 TouScruino_1284_8.bootloader.high_fuses=0xDA
