@@ -1,6 +1,8 @@
 #ifndef TOUCHSCREEN_H
 #define TOUCHSCREEN_H
 
+#include "TouScruino.hpp"
+
 #define BLACK 	0x0000
 #define RED		(0x01F << 11) 
 #define GREEN	(0x03F << 5) 
@@ -13,10 +15,9 @@
 #define TOUCHSCREEN_EQUAL 5
 #define TOUCHSCREEN_NO_TOUCH 0xFFFF
 
-#define isTouched() getTouchedXYZ(0, 0, 0)
+#define isTouched() (getTouchedXYZ(0, 0, 0) != TOUCHSCREEN_NO_TOUCH)
 
 #include "S6D04H0.hpp"
-#include "TouScruino.hpp"
 
 // TouchScreen extends the implementation of ScreenHAL, here it is S6D04H0
 // To change the COG of your screen, include another header and replace S6D04H0 by your COG  
@@ -31,6 +32,8 @@ class TouchScreen: public S6D04H0 {
 
 		void begin(uint8_t fontSize = FONT_SMALL, uint16_t foregroundColor = WHITE, uint16_t backgroundColor = BLACK);
 
+		void setBacklight(uint8_t value, uint8_t pin = TOUSCRUINO_BACKLIGHT);
+		
 		uint16_t getTouchedX();
 		
 		uint16_t getTouchedY();

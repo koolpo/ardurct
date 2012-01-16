@@ -17,24 +17,31 @@ void ScreenHAL::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, ui
 	_wrLow = ~_wrHigh;
 	_cdPort = portOutputRegister(digitalPinToPort(cd));
 	_cdBitMask = digitalPinToBitMask(cd);
+	_rd = rd;
+	_wr = wr;
+	_cd = cd;
 	_cs = cs;
-	
-	pinMode(rd, OUTPUT);
-	pinMode(wr, OUTPUT);
-	pinMode(cd, OUTPUT);
-	if (cs != 0xFF) pinMode(cs, OUTPUT);
-	if (reset != 0xFF) pinMode(reset, OUTPUT);
+	_reset = reset;
+}
+
+
+void ScreenHAL::initScreen() {
+	pinMode(_rd, OUTPUT);
+	pinMode(_wr, OUTPUT);
+	pinMode(_cd, OUTPUT);
+	if (_cs != 0xFF) pinMode(_cs, OUTPUT);
 	
 	// if we have no reset pin, the RD and WR have been OR'ed to create the reset
 	// they have to be on the same port for this to work
-	if (reset == 0xFF) {
+	if (_reset == 0xFF) {
 		*_rdPort &= ~(_rdHigh | _wrHigh);
-		delay(100);
+		delay(200);
 		*_rdPort |= (_rdHigh | _wrHigh);
 	} else {
-		digitalWrite(reset, LOW);
-		delay(100);
-		digitalWrite(reset, HIGH);
+		pinMode(_reset, OUTPUT);
+		digitalWrite(_reset, LOW);
+		delay(200);
+		digitalWrite(_reset, HIGH);
 	}
 	
 	_width = getWidthImpl();
@@ -43,10 +50,6 @@ void ScreenHAL::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, ui
 	_busTaken = 0;
 	_rotation = 0;
 	setFontSize(1);
-}
-
-
-void ScreenHAL::initScreen() {
 	_grabBus();
 	initScreenImpl();
 	_releaseBus();
@@ -240,9 +243,8 @@ void ScreenHAL::write(uint8_t chr) {
 
 
 void ScreenHAL::drawPixel(uint16_t x, uint16_t y, uint16_t color, bool grabAndReleaseBus) {
-	if ((x >= _width) || (y >= _height)) return;
 	if (grabAndReleaseBus) _grabBus();
-	drawPixelImpl(x, y, color);
+	_drawBoundedPixel(x, y, color);
 	if (grabAndReleaseBus) _releaseBus();
 }
 
@@ -255,7 +257,7 @@ void ScreenHAL::drawBitmap(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t wi
 }
 
 
-void ScreenHAL::drawScaledPattern(uint8_t *pattern, uint8_t orientation, uint16_t x, uint16_t y, uint8_t width, uint8_t height, 
+void ScreenHAL::drawPattern(uint8_t *pattern, uint8_t orientation, uint16_t x, uint16_t y, uint8_t width, uint8_t height, 
 		uint16_t color, uint16_t backColor, uint8_t scale, bool overlay, bool grabAndReleaseBus) {
 	uint16_t buffer[SCREENHAL_MAX_BITMAP_SIZE];
 	uint8_t unpacked[SCREENHAL_MAX_BITMAP_SIZE];
@@ -274,30 +276,15 @@ void ScreenHAL::drawScaledPattern(uint8_t *pattern, uint8_t orientation, uint16_
 
 
 void ScreenHAL::drawHorizontalLine(uint16_t x1, uint16_t x2, uint16_t y, uint16_t color, uint8_t thickness, bool grabAndReleaseBus) {
-	uint16_t lx = (x1 <= x2 ? x1 : x2);
-	if ((lx >= _width) || (y >= _height)) return;
-	uint16_t hx = (x1 <= x2 ? x2 : x1);
-	if (hx > _width) hx = _width-1;
-	int16_t ly = y - (thickness-1) / 2;
-	if (ly < 0) ly = 0;
-	uint16_t hy = y + thickness/2;
-	if (hy >= _height) hy = _height-1;
 	if (grabAndReleaseBus) _grabBus();
-	fillRectangleImpl(lx, ly, hx, hy, color);
+	_fillBoundedRectangle(x1, y-(thickness-1)/2, x2, y+thickness/2, color);
 	if (grabAndReleaseBus) _releaseBus();
 }
 
 
 void ScreenHAL::drawVerticalLine(uint16_t x, uint16_t y1, uint16_t y2, uint16_t color, uint8_t thickness, bool grabAndReleaseBus) {
-	uint16_t ly = (y1 <= y2 ? y1 : y2);
-	if ((x >= _width) || (ly >= _height)) return;
-	uint16_t hy = (y1 <= y2 ? y2 : y1);
-	int16_t lx = x - (thickness-1) / 2;
-	if (lx < 0) lx = 0;
-	uint16_t hx = x + thickness / 2;
-	if (hx >= _width) hx = _width-1;
 	if (grabAndReleaseBus) _grabBus();
-	fillRectangleImpl(lx, ly, hx, hy, color);
+	_fillBoundedRectangle(x-(thickness-1)/2, y1, x+thickness/2, y2, color);
 	if (grabAndReleaseBus) _releaseBus();
 }
 
@@ -313,13 +300,8 @@ void ScreenHAL::drawRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2
 
 
 void ScreenHAL::fillRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, bool grabAndReleaseBus) {
-	uint16_t lx = (x1 <= x2 ? x1 : x2);
-	uint16_t ly = (y1 <= y2 ? y1 : y2);
-	if ((lx >= _width) || (ly >= _height)) return;
-	uint16_t hx = (x1 <= x2 ? x2 : x1);
-	uint16_t hy = (y1 <= y2 ? y2 : y1);
 	if (grabAndReleaseBus) _grabBus();
-	fillRectangleImpl(lx, ly, hx, hy, color);
+	_fillBoundedRectangle(x1, y1, x2, y2, color);
 	if (grabAndReleaseBus) _releaseBus();
 }
 
@@ -350,17 +332,7 @@ void ScreenHAL::drawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uin
 	if (grabAndReleaseBus) _grabBus();	
 	while (1) {
 		if (thickness == 1) drawPixelImpl(x1, y1, color);
-		else {
-			int16_t lx = x1-d1;
-			if (lx < 0) lx = 0;
-			int16_t ly = y1-d1;
-			if (ly < 0) ly = 0;
-			uint16_t hx = x1+d2;
-			if (hx >= _width) hx = _width-1;
-			uint16_t hy = y1+d2;
-			if (hy >= _height) hy = _height-1;
-			fillRectangleImpl((uint16_t)lx, (uint16_t)ly, hx, hy, color);
-		}
+		else _fillBoundedRectangle(x1-d1, y1-d1, x1+d1, y1+d2, color);
 		if ((x1 == x2) && (y1 == y2)) break;
 		int16_t e2 = 2 * err;
 		if (e2 > -dy) {
@@ -418,16 +390,75 @@ void ScreenHAL::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int
 	// Render scanlines 
 	if (grabAndReleaseBus) _grabBus();	
 	if (dx1 > dx2) {
-		for (; sy<=y1; sy++, sx1+=dx2, sx2+=dx1) fillRectangleImpl(sx1/1000, sy, sx2/1000, sy, color);
+		for (; sy<=y1; sy++, sx1+=dx2, sx2+=dx1) _fillBoundedRectangle(sx1/1000, sy, sx2/1000, sy, color);
 		sx2 = x1 * 1000;
 		sy = y1;
-		for (; sy<=y2; sy++, sx1+=dx2, sx2+=dx3) fillRectangleImpl(sx1/1000, sy, sx2/1000, sy, color);
+		for (; sy<=y2; sy++, sx1+=dx2, sx2+=dx3) _fillBoundedRectangle(sx1/1000, sy, sx2/1000, sy, color);
 	} else {
-		for (; sy<=y1; sy++, sx1+=dx1, sx2+=dx2) fillRectangleImpl(sx1/1000, sy, sx2/1000, sy, color);
+		for (; sy<=y1; sy++, sx1+=dx1, sx2+=dx2) _fillBoundedRectangle(sx1/1000, sy, sx2/1000, sy, color);
 		sx1 = x1*1000;
 		sy = y1;
-		for (; sy<=y2; sy++, sx1+=dx3, sx2+=dx2) fillRectangleImpl(sx1/1000, sy, sx2/1000, sy, color);
+		for (; sy<=y2; sy++, sx1+=dx3, sx2+=dx2) _fillBoundedRectangle(sx1/1000, sy, sx2/1000, sy, color);
 	}
+	if (grabAndReleaseBus) _releaseBus();
+}
+
+
+void ScreenHAL::drawArc(uint16_t x0, uint16_t y0, uint16_t r, uint8_t arc, uint16_t color, uint8_t thickness, bool grabAndReleaseBus) {
+	if (grabAndReleaseBus) _grabBus();	
+	_drawOrFillArc(x0, y0, r, color, arc, thickness, false);
+	if (grabAndReleaseBus) _releaseBus();
+}
+
+
+void ScreenHAL::fillArc(uint16_t x0, uint16_t y0, uint16_t r, uint8_t arc, uint16_t color, bool grabAndReleaseBus) {
+	if (grabAndReleaseBus) _grabBus();	
+	_drawOrFillArc(x0, y0, r, color, arc, 0, true);
+	if (grabAndReleaseBus) _releaseBus();
+}
+
+
+void ScreenHAL::drawCircle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t color, uint8_t thickness, bool grabAndReleaseBus) {
+	if (grabAndReleaseBus) _grabBus();	
+	_drawOrFillArc(x0, y0, r, color, SCREEN_ARC_ALL, thickness, false);
+	if (grabAndReleaseBus) _releaseBus();
+}
+
+
+void ScreenHAL::fillCircle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t color, bool grabAndReleaseBus) {
+	if (grabAndReleaseBus) _grabBus();	
+	_drawOrFillArc(x0, y0, r, color, SCREEN_ARC_ALL, 0, true);
+	if (grabAndReleaseBus) _releaseBus();
+}
+
+
+void ScreenHAL::drawRoundedRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t r, uint16_t color, uint8_t thickness, bool grabAndReleaseBus) {
+	if (x2 > x1) swap(x1, x2);
+	if (y2 > y1) swap(y1, y2);
+	if (grabAndReleaseBus) _grabBus();	
+	_drawOrFillArc(x1+r, y1+r, r, color, SCREEN_ARC_NW, thickness, false);
+	drawHorizontalLine(x1+r, x2-r, y1, color, thickness, false);
+	_drawOrFillArc(x2-r, y1+r, r, color, SCREEN_ARC_NE, thickness, false);
+	drawVerticalLine(x2, y1+r, y2-r, color, thickness, false);
+	_drawOrFillArc(x1+r, y2-r, r, color, SCREEN_ARC_SW, thickness, false);
+	drawHorizontalLine(x1+r, x2-r, y2, color, thickness, false);
+	_drawOrFillArc(x2-r, y2-r, r, color, SCREEN_ARC_SE, thickness, false);
+	drawVerticalLine(x1, y1+r, y2-r, color, thickness, false);
+	if (grabAndReleaseBus) _releaseBus();
+}
+
+
+void ScreenHAL::fillRoundedRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t r, uint16_t color, bool grabAndReleaseBus) {
+	if (x2 > x1) swap(x1, x2);
+	if (y2 > y1) swap(y1, y2);
+	if (grabAndReleaseBus) _grabBus();	
+	_drawOrFillArc(x1+r, y1+r, r, color, SCREEN_ARC_NW, 0, true);
+	_drawOrFillArc(x2-r, y1+r, r, color, SCREEN_ARC_NE, 0, true);
+	_drawOrFillArc(x1+r, y2-r, r, color, SCREEN_ARC_SW, 0, true);
+	_drawOrFillArc(x2-r, y2-r, r, color, SCREEN_ARC_SE, 0, true);
+	_fillBoundedRectangle(x1, y1+r, x2, y2-r, color);
+	_fillBoundedRectangle(x1+r, y1, x2-r, y1+r, color);
+	_fillBoundedRectangle(x1+r, y2-r, x2-r, y2, color);
 	if (grabAndReleaseBus) _releaseBus();
 }
 
@@ -471,7 +502,7 @@ uint16_t ScreenHAL::getHeightImpl() {
 
 /* ---------------- End of virtual functions --------------------- */
 
-#define pulseWR() { *_wrPort &= _wrLow; *_wrPort |= _wrHigh; *_wrPort |= _wrHigh; }
+#define pulseWR() { *_wrPort &= _wrLow; *_wrPort |= _wrHigh; }
 
 void ScreenHAL::writeCommand(uint8_t command) {
 	// set command mode
@@ -489,9 +520,9 @@ void ScreenHAL::writeData(uint8_t data) {
 }
 
 void ScreenHAL::write16bData(uint16_t data) {
-	*_outPort = (uint8_t) (data >> 8);
+	*_outPort = data >> 8;
 	pulseWR();
-	*_outPort = (uint8_t) (data & 0x0FF);
+	*_outPort = data;
 	pulseWR();
 }
 
@@ -506,16 +537,22 @@ void ScreenHAL::write16bDataBuffer(uint16_t *data, uint32_t len) {
 
 void ScreenHAL::read16bDataBuffer(uint16_t *data, uint32_t len) {
 	*_portMode = 0x00;	
+	// one dummy read
+	*_rdPort &= _rdLow;
+	*_rdPort &= _rdLow;
+	*_rdPort |= _rdHigh; 
+	data[0] = *_inPort;
+	// then read the data
 	for (uint32_t i=0; i<len; i++) { 
 		*_rdPort &= _rdLow;
 		*_rdPort &= _rdLow;
-		data[i] = *_inPort;
 		*_rdPort |= _rdHigh; 
+		data[i] = *_inPort;
 		data[i] = data[i] << 8;
 		*_rdPort &= _rdLow;
 		*_rdPort &= _rdLow;
-		data[i] |= *_inPort;
 		*_rdPort |= _rdHigh; 
+		data[i] |= *_inPort;
 	}
 	*_portMode = 0xFF;
 }
@@ -595,3 +632,79 @@ void ScreenHAL::_scaleAndColorizeUnpackedPattern(uint8_t *unpacked, uint16_t *sc
 		}
 	}
 }
+
+
+void ScreenHAL::_fillBoundedRectangle(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
+	if (x2 < x1) swap(x1, x2);
+	if (y2 < y1) swap(y1, y2);
+	if (x1 < 0) x1 = 0;
+	if (x1 >= _width) return;
+	if (x2 >= _width) x2 = _width-1;
+	if (y1 < 0) y1 = 0;
+	if (y1 >= _height) return;
+	if (y2 >= _height) y2 = _height-1;
+	fillRectangleImpl(x1, y1, x2, y2, color);
+}
+
+
+void ScreenHAL::_drawBoundedPixel(int16_t x, int16_t y, uint16_t color) {
+	if ((x < 0) || (x >= _width)) return;
+	if ((y < 0) || (y >= _height)) return;
+	drawPixelImpl(x, y, color);
+}
+
+/*
+ * From Wikipedia: Andres arc drawing algorithm
+ */	
+void ScreenHAL::_drawOrFillArc(uint16_t x0, uint16_t y0, uint16_t r, uint8_t arc, uint16_t color, uint8_t thickness, bool fill) {
+	if ((x0 >= _width) || (y0 >= _height)) return;
+
+	int16_t x = 0;
+	int16_t y = r;
+	int16_t d = r - 1;
+	uint8_t t1 = (thickness-1)/2;
+	uint8_t t2 = thickness/2;
+	
+	while (y >= x) {
+		if (fill) {
+			if (arc & SCREEN_ARC_NNE) _fillBoundedRectangle(x0, y0+y, x0+x, y0+y, color);
+			if (arc & SCREEN_ARC_NEE) _fillBoundedRectangle(x0, y0+x, x0+y, y0+x, color);
+			if (arc & SCREEN_ARC_NNW) _fillBoundedRectangle(x0, y0+y, x0-x, y0+y, color);
+			if (arc & SCREEN_ARC_NWW) _fillBoundedRectangle(x0, y0+x, x0-y, y0+x, color);
+			if (arc & SCREEN_ARC_SSE) _fillBoundedRectangle(x0, y0-y, x0+x, y0-y, color);
+			if (arc & SCREEN_ARC_SEE) _fillBoundedRectangle(x0, y0-x, x0+y, y0-x, color);
+			if (arc & SCREEN_ARC_SSW) _fillBoundedRectangle(x0, y0-y, x0-x, y0-y, color);
+			if (arc & SCREEN_ARC_SWW) _fillBoundedRectangle(x0, y0-x, x0-y, y0-x, color);		
+		} else if (thickness != 1) {
+			if (arc & SCREEN_ARC_NNE) _fillBoundedRectangle(x0+x-t1, y0+y-t1, x0+x+t2, y0+y+t2, color);
+			if (arc & SCREEN_ARC_NEE) _fillBoundedRectangle(x0+y-t1, y0+x-t1, x0+y+t2, y0+x+t2, color);
+			if (arc & SCREEN_ARC_NNW) _fillBoundedRectangle(x0-x-t1, y0+y-t1, x0-x+t2, y0+y+t2, color);
+			if (arc & SCREEN_ARC_NWW) _fillBoundedRectangle(x0-y-t1, y0+x-t1, x0-y+t2, y0+x+t2, color);
+			if (arc & SCREEN_ARC_SSE) _fillBoundedRectangle(x0+x-t1, y0-y-t1, x0+x+t2, y0-y+t2, color);
+			if (arc & SCREEN_ARC_SEE) _fillBoundedRectangle(x0+y-t1, y0-x-t1, x0+y+t2, y0-x+t2, color);
+			if (arc & SCREEN_ARC_SSW) _fillBoundedRectangle(x0-x-t1, y0-y-t1, x0-x+t2, y0-y+t2, color);
+			if (arc & SCREEN_ARC_SWW) _fillBoundedRectangle(x0-y-t1, y0-x-t1, x0-y+t2, y0-x+t2, color);		
+		} else {
+			if (arc & SCREEN_ARC_NNE) _drawBoundedPixel(x0+x, y0+y, color);
+			if (arc & SCREEN_ARC_NEE) _drawBoundedPixel(x0+y, y0+x, color);
+			if (arc & SCREEN_ARC_NNW) _drawBoundedPixel(x0-x, y0+y, color);
+			if (arc & SCREEN_ARC_NWW) _drawBoundedPixel(x0-y, y0+x, color);
+			if (arc & SCREEN_ARC_SSE) _drawBoundedPixel(x0+x, y0-y, color);
+			if (arc & SCREEN_ARC_SEE) _drawBoundedPixel(x0+y, y0-x, color);
+			if (arc & SCREEN_ARC_SSW) _drawBoundedPixel(x0-x, y0-y, color);
+			if (arc & SCREEN_ARC_SWW) _drawBoundedPixel(x0-y, y0-x, color);
+		}
+		if (d >= 2*x) {
+			d = d - 2*x - 1;
+			x = x + 1;
+		} else if (d <= 2*(r-y)) {
+			d = d + 2*y -1;
+			y = y - 1;
+		} else {
+			d = d + 2*(y-x-1);
+			y = y - 1;
+			x = x + 1;
+		}
+	}
+}
+

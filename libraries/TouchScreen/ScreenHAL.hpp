@@ -13,7 +13,27 @@
 #define SCREEN_ROTATION_180	2
 #define SCREEN_ROTATION_270	3
 
-#include 
+#define SCREEN_ARC_NNE (1 << 0)
+#define SCREEN_ARC_NEE (1 << 1)
+#define SCREEN_ARC_SEE (1 << 2)
+#define SCREEN_ARC_SSE (1 << 3)
+#define SCREEN_ARC_SSW (1 << 4)
+#define SCREEN_ARC_SWW (1 << 5)
+#define SCREEN_ARC_NWW (1 << 6)
+#define SCREEN_ARC_NNW (1 << 7)
+
+#define SCREEN_ARC_NE (SCREEN_ARC_NNE+SCREEN_ARC_NEE)
+#define SCREEN_ARC_SE (SCREEN_ARC_SSE+SCREEN_ARC_SEE)
+#define SCREEN_ARC_SW (SCREEN_ARC_SSW+SCREEN_ARC_SWW)
+#define SCREEN_ARC_NW (SCREEN_ARC_NNW+SCREEN_ARC_NWW)
+
+#define SCREEN_ARC_N (SCREEN_ARC_NE+SCREEN_ARC_NW)
+#define SCREEN_ARC_S (SCREEN_ARC_SE+SCREEN_ARC_SW)
+#define SCREEN_ARC_E (SCREEN_ARC_SE+SCREEN_ARC_NE)
+#define SCREEN_ARC_W (SCREEN_ARC_NW+SCREEN_ARC_SW)
+
+#define SCREEN_ARC_ALL (SCREEN_ARC_N+SCREEN_ARC_S)
+
 class ScreenHAL: public Print {
     
 	public:
@@ -64,20 +84,36 @@ class ScreenHAL: public Print {
 
 		void drawPixel(uint16_t x, uint16_t y, uint16_t color, bool grabAndReleaseBus = true);
 
-		void drawBitmap(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool hasTransparency = false, uint16_t transparentColor = 0xFFFF, bool grabAndReleaseBus = true);
-
-		void drawScaledPattern(uint8_t *pattern, uint8_t orientation, uint16_t x, uint16_t y, uint8_t width, uint8_t height, uint16_t color, uint16_t backColor, uint8_t scale = 1, bool overlay = false, bool grabAndReleaseBus = true);
-		
 		void drawHorizontalLine(uint16_t x1, uint16_t x2, uint16_t y, uint16_t color, uint8_t thickness = 1, bool grabAndReleaseBus = true);
+
+		void drawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t thickness = 1, bool grabAndReleaseBus = true);
 
 		void drawVerticalLine(uint16_t x, uint16_t y1, uint16_t y2, uint16_t color, uint8_t thickness = 1, bool grabAndReleaseBus = true);
 
 		void drawRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t thickness = 1, bool grabAndReleaseBus = true);
 		
 		void fillRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, bool grabAndReleaseBus = true);
+				
+		void drawTriangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t thickness = 1, bool grabAndReleaseBus = true);
+	
+		void fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color, bool grabAndReleaseBus = true);
 		
-		void drawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t thickness = 1, bool grabAndReleaseBus = true)
+		void drawArc(uint16_t x0, uint16_t y0, uint16_t r, uint8_t arc, uint16_t color, uint8_t thickness = 1, bool grabAndReleaseBus = true);
+
+		void fillArc(uint16_t x0, uint16_t y0, uint16_t r, uint8_t arc, uint16_t color, bool grabAndReleaseBus = true);
+
+		void drawCircle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t color, uint8_t thickness = 1, bool grabAndReleaseBus = true);
+
+		void fillCircle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t color, bool grabAndReleaseBus = true);
 		
+		void drawRoundedRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t r, uint16_t color, uint8_t thickness = 1, bool grabAndReleaseBus = true);
+	
+		void fillRoundedRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t r, uint16_t color, bool grabAndReleaseBus = true);
+		
+		void drawBitmap(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool hasTransparency = false, uint16_t transparentColor = 0xFFFF, bool grabAndReleaseBus = true);
+
+		void drawPattern(uint8_t *pattern, uint8_t orientation, uint16_t x, uint16_t y, uint8_t width, uint8_t height, uint16_t color, uint16_t backColor, uint8_t scale = 1, bool overlay = false, bool grabAndReleaseBus = true);
+
 	protected:
 		volatile uint8_t *_outPort;
 		volatile uint8_t *_inPort;
@@ -85,7 +121,11 @@ class ScreenHAL: public Print {
 		volatile uint8_t *_rdPort;
 		volatile uint8_t *_wrPort;
 		volatile uint8_t *_cdPort;
+		uint8_t _rd;
+		uint8_t _wr;
+		uint8_t _cd;		
 		uint8_t _cs;
+		uint8_t _reset;
 		uint8_t _rdHigh;
 		uint8_t _rdLow;
 		uint8_t _wrHigh;
@@ -117,7 +157,7 @@ class ScreenHAL: public Print {
 		virtual void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
 
 		// NEEDS TO BE implemented by the class inheriting from this class
-		void drawBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool hasTransparency = false, uint16_t transparentColor = 0xFFFF);
+		virtual void drawBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool hasTransparency = false, uint16_t transparentColor = 0xFFFF);
 
 		// NEEDS TO BE implemented by the class inheriting from this class
 		virtual uint16_t getWidthImpl();
@@ -145,6 +185,12 @@ class ScreenHAL: public Print {
 		void _unpackPattern(uint8_t *pattern, uint8_t *unpacked, uint8_t width, uint8_t height, uint8_t borderRight, uint8_t borderBottom, uint8_t orientation);
 		
 		void _scaleAndColorizeUnpackedPattern(uint8_t *unpacked, uint16_t *scaled, uint16_t onColor, uint16_t offColor, uint8_t width, uint8_t height, uint8_t scale);
+		
+		void _fillBoundedRectangle(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+
+		void _drawBoundedPixel(int16_t x, int16_t y, uint16_t color);
+
+		void _drawOrFillArc(uint16_t x0, uint16_t y0, uint16_t r, uint8_t arc, uint16_t color, uint8_t thickness, bool fill);
 
 };
 

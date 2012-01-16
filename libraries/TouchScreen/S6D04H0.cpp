@@ -6,10 +6,10 @@
 #define S6D04H0_RAMRD	0x2e
 #define S6D04H0_MADCTL	0x36
 
-#define S6D04H0_R0		0x08
-#define S6D04H0_R90		0x38
-#define S6D04H0_R180	0x68
-#define S6D04H0_R270	0x58
+#define S6D04H0_R0		0x48
+#define S6D04H0_R90		0x28
+#define S6D04H0_R180	0x88
+#define S6D04H0_R270	0xE8
 
 const unsigned char PROGMEM S6D04H0_initialization_code[] = {
 	0, 	0x11,			/* SLPOFF: SLeeP OFF */
@@ -26,7 +26,7 @@ const unsigned char PROGMEM S6D04H0_initialization_code[] = {
 	1,	0xf9, 0x01,
 	1, 	0x26, 0x02,		/* GASET: Gamma Set */
 	1, 	0x35, 0x00,		/* TEON: Tearing on */
-	1,	0x36, 0x00,		/* MADCTL: Memory ADdress ConTroL, B7,B6,B5=0 => no rotation, B3=0 => no BGR filter */
+	1,	0x36, 0x48,		/* MADCTL: Memory ADdress ConTroL, B7,B6,B5=0 => no rotation, B3=1 => BGR filter */
 	1, 	0x3a, 0x55, 	/* COLMOD: COLor MODe: 16 bits/pixel */
 	4,	0x2a, 0x00, 0x00, 0x00, 0xef,	/* CASET: Column Address SET */
 	4,	0x2b, 0x00, 0x00, 0x01, 0x3f, 	/* PASET:Page Address SET */
@@ -50,7 +50,7 @@ void S6D04H0::initScreenImpl(void) {
 	while (1) {
 		memcpy_P(buffer, &(S6D04H0_initialization_code[i]), 32);
 		if (buffer[0] == 0xFF) break;
-		if (buffer[0] == 0xFE) delay(100);
+		else if (buffer[0] == 0xFE) delay(200);
 		else {
 			writeCommand(buffer[1]);
 			for (uint8_t j=0; j<buffer[0]; j++) writeData(buffer[2+j]);
@@ -75,8 +75,9 @@ void S6D04H0::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
 // Fill the rectangle lx,ly -> hx, hy
 // this functions assumes that lx <= hx and ly <= hy
 void S6D04H0::fillRectangleImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {
-	uint32_t nbPixels = (hx-lx+1)*(hy-ly+1);
-	_setClippingRectangle(lx, hx, ly, hy);
+	uint32_t nbPixels = hx - lx + 1;
+	nbPixels *= hy - ly + 1;
+	_setClippingRectangle(lx, ly, hx, hy);
 	writeCommand(S6D04H0_RAMWR);
 	while (nbPixels-- > 0) write16bData(color);
 }
@@ -110,10 +111,10 @@ void S6D04H0::setRotationImpl() {
 		writeData(S6D04H0_R90);
 	} else if (_rotation == SCREEN_ROTATION_180) {
 		writeCommand(S6D04H0_MADCTL);
-		writeData(S6D04H0_R90);		
+		writeData(S6D04H0_R180);		
 	} else if (_rotation == SCREEN_ROTATION_270) {
 		writeCommand(S6D04H0_MADCTL);
-		writeData(S6D04H0_R90);
+		writeData(S6D04H0_R270);
 	}
 }
 

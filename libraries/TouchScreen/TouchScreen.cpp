@@ -15,6 +15,12 @@ void TouchScreen::begin(uint8_t fontSize, uint16_t foregroundColor, uint16_t bac
 }
 
 
+void TouchScreen::setBacklight(uint8_t value, uint8_t pin) {
+	pinMode(pin, OUTPUT);
+	analogWrite(pin, value);
+}
+
+
 void TouchScreen::setupTouchPanel(uint8_t xm, uint8_t xp, uint8_t ym, uint8_t yp, uint16_t xPlaneResistance, uint16_t pressureThreshold) {
 	_xm = xm;
 	_ym = ym;

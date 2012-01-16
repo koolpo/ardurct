@@ -18,7 +18,7 @@ void loop() {
         Serial.print(y);
         Serial.print(", z=");
         Serial.println(z);
-		uint16_t size = z/2;
+        uint16_t size = z/2;
         touchscreen.fillRectangle(x-size, y-size, x+size, y+size, WHITE);
     }
     delay(50);
