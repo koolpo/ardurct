@@ -130,7 +130,7 @@ const unsigned char PROGMEM font_small[][5] = {
 };
 
 // a 7x12 font occupying 8x14 space per char
-fontDefinition_t fontDefinition_medium = { 7, 12, 1, 2, 0x20, 0x7d, 0 };
+fontDefinition_t fontDefinition_medium = { 7, 12, 2, 2, 0x20, 0x7d, 0 };
 
 const unsigned char PROGMEM font_medium[][12] = {
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },		/*   - 0x20 - 32 */

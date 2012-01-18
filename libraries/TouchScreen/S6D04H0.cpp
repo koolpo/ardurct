@@ -11,11 +11,20 @@
 #define S6D04H0_R180	0x88
 #define S6D04H0_R270	0xE8
 
+#define _pulseWR() { *_wrPort &= _wrLow; *_wrPort |= _wrHigh; }
+
+#define _writeCommand(cmd) { *_cdPort &= ~_cdBitMask; *_outPort = cmd; *_wrPort &= _wrLow; *_wrPort |= _wrHigh; *_cdPort |= _cdBitMask; }
+
+#define _writeData(data8b) { *_outPort = data8b; *_wrPort &= _wrLow; *_wrPort |= _wrHigh; }
+
+#define _write16bData(data16b) { *_outPort = data16b >> 8; *_wrPort &= _wrLow; *_wrPort |= _wrHigh; *_outPort = data16b; *_wrPort &= _wrLow; *_wrPort |= _wrHigh; }
+
 const unsigned char PROGMEM S6D04H0_initialization_code[] = {
+	0xFE,				/* delay(150) */
 	0, 	0x11,			/* SLPOFF: SLeeP OFF */
-	0xFE,				/* delay(100) */
+	0xFE,				/* delay(150) */
 	0, 	0x13,			/* NORON: NORmal mode ON */
-	0xFE,				/* delay(100) */
+	0xFE,				/* delay(150) */
 	5, 	0xf3, 0x01, 0xff, 0x1f, 0x00, 0x03,
 	17, 0xf2, 0x28, 0x60, 0x7f, 0x08, 0x08, 0x00, 0x00, 0x15, 0x48, 0x00, 0x07, 0x01, 0x00, 0x00, 0x94, 0x08, 0x08,
 	20, 0xf4, 0x09, 0x00, 0x00, 0x00, 0x21, 0x47, 0x01, 0x02, 0x2A, 0x5D, 0x07, 0x2A, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -32,7 +41,7 @@ const unsigned char PROGMEM S6D04H0_initialization_code[] = {
 	4,	0x2b, 0x00, 0x00, 0x01, 0x3f, 	/* PASET:Page Address SET */
 	0,	0x29, 			/* DISPON:	DISplay ON */
 	0,	0x2c,			/* RAMWR: RAM WRite */
-	0xFE,				/* delay(100) */
+	0xFE,				/* delay(150) */
 	0xFF				/* End initialization */
 };
 
@@ -50,25 +59,35 @@ void S6D04H0::initScreenImpl(void) {
 	while (1) {
 		memcpy_P(buffer, &(S6D04H0_initialization_code[i]), 32);
 		if (buffer[0] == 0xFF) break;
-		else if (buffer[0] == 0xFE) delay(200);
+		else if (buffer[0] == 0xFE) delay(120);
 		else {
-			writeCommand(buffer[1]);
-			for (uint8_t j=0; j<buffer[0]; j++) writeData(buffer[2+j]);
+			_writeCommand(buffer[1]);
+			for (uint8_t j=0; j<buffer[0]; j++) _writeData(buffer[2+j]);
 			i += buffer[0]+1;
 		}
 		i++;
 	}
 }
 
+// draw a single pixel
+// we inline the function to go as fast as possible
 void S6D04H0::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
-	writeCommand(S6D04H0_CASET);
-	write16bData(x);
-	write16bData(x);
-	writeCommand(S6D04H0_PASET);
-	write16bData(y);
-	write16bData(y);	
-	writeCommand(S6D04H0_RAMWR);
-	write16bData(color);
+	uint8_t xh = x >> 8;
+	uint8_t xl = x;
+	uint8_t yh = y >> 8;
+	uint8_t yl = y;
+	_writeCommand(S6D04H0_CASET);
+	_writeData(xh);
+	_writeData(xl);
+	_writeData(xh);
+	_writeData(xl);
+	_writeCommand(S6D04H0_PASET);
+	_writeData(yh);
+	_writeData(yl);
+	_writeData(yh);
+	_writeData(yl);
+	_writeCommand(S6D04H0_RAMWR);
+	_write16bData(color);
 }
 
 
@@ -76,27 +95,32 @@ void S6D04H0::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
 // this functions assumes that lx <= hx and ly <= hy
 void S6D04H0::fillRectangleImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {
 	uint32_t nbPixels = hx - lx + 1;
-	nbPixels *= hy - ly + 1;
+	nbPixels *= (hy - ly + 1);
+	uint8_t colH = color >> 8;
+	uint8_t colL = color;
 	_setClippingRectangle(lx, ly, hx, hy);
-	writeCommand(S6D04H0_RAMWR);
-	while (nbPixels-- > 0) write16bData(color);
+	_writeCommand(S6D04H0_RAMWR);
+	while (nbPixels-- > 0) {
+		_writeData(colH);
+		_writeData(colL);
+	}
 }
 
 
 void S6D04H0::drawBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool hasTransparency, uint16_t transparentColor) {
 	uint16_t buffer[SCREENHAL_MAX_BITMAP_SIZE];
 	
-	_setClippingRectangle(x, y, x+width, y+width); 
+	_setClippingRectangle(x, y, x+width-1, y+height-1); 
 	if (hasTransparency) {
 		// avoid buffer overflows...
 		if (width * height > SCREENHAL_MAX_BITMAP_SIZE) return;
-		writeCommand(S6D04H0_RAMRD);
-		read16bDataBuffer(buffer, width * height);
+		_writeCommand(S6D04H0_RAMRD);
+		read16bDataBuffer(buffer, width * height, false);
 		for (uint16_t i=0; i<width*height; i++) {
 			if (bitmap[i] != transparentColor) buffer[i] = bitmap[i];
 		}
 	}
-	writeCommand(S6D04H0_RAMWR);
+	_writeCommand(S6D04H0_RAMWR);
 	if (hasTransparency) write16bDataBuffer(buffer, width * height);
 	else write16bDataBuffer(bitmap, width * height);
 }
@@ -104,17 +128,17 @@ void S6D04H0::drawBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t 
 
 void S6D04H0::setRotationImpl() {
 	if (_rotation == SCREEN_ROTATION_0) {
-		writeCommand(S6D04H0_MADCTL);
-		writeData(S6D04H0_R0);
+		_writeCommand(S6D04H0_MADCTL);
+		_writeData(S6D04H0_R0);
 	} else if (_rotation == SCREEN_ROTATION_90) {
-		writeCommand(S6D04H0_MADCTL);
-		writeData(S6D04H0_R90);
+		_writeCommand(S6D04H0_MADCTL);
+		_writeData(S6D04H0_R90);
 	} else if (_rotation == SCREEN_ROTATION_180) {
-		writeCommand(S6D04H0_MADCTL);
-		writeData(S6D04H0_R180);		
+		_writeCommand(S6D04H0_MADCTL);
+		_writeData(S6D04H0_R180);		
 	} else if (_rotation == SCREEN_ROTATION_270) {
-		writeCommand(S6D04H0_MADCTL);
-		writeData(S6D04H0_R270);
+		_writeCommand(S6D04H0_MADCTL);
+		_writeData(S6D04H0_R270);
 	}
 }
 
@@ -131,11 +155,11 @@ uint16_t S6D04H0::getHeightImpl() {
 
 // define the zone we are going to write to
 void S6D04H0::_setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy) {
-	writeCommand(S6D04H0_CASET);
-	write16bData(lx);
-	write16bData(hx);
-	writeCommand(S6D04H0_PASET);
-	write16bData(ly);
-	write16bData(hy);
+	_writeCommand(S6D04H0_CASET);
+	_write16bData(lx);
+	_write16bData(hx);
+	_writeCommand(S6D04H0_PASET);
+	_write16bData(ly);
+	_write16bData(hy);
 }
 

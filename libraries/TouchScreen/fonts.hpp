@@ -8,9 +8,12 @@
 #define FONT_BIG 3
 #define FONT_HUGE 4
 
-#define FONT_LAST 2
+#define FONT_PLAIN false
+#define FONT_BOLD true
 
-#define FONT_MAX_SPACE		(8*14)		/* width x height of the biggest font including the charSpacing and lineSpacing */
+#define FONT_LAST_DEF 2					/* last definition */
+
+#define FONT_MAX_SPACE		(9*14)		/* width x height of the biggest font including the charSpacing and lineSpacing */
 #define FONT_MAX_PATTERN	12			/* max bytes one character definition can take */
 
 /** Display fill direction
