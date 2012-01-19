@@ -3,13 +3,13 @@
 #######################################
 
 #######################################
-# Datatypes (KEYWORD1)
+# Datatypes	(KEYWORD1)
 #######################################
 
 TouchScreen	KEYWORD1
 
 #######################################
-# Methods and Functions (KEYWORD2)
+# Methods and Functions	(KEYWORD2)
 #######################################
 
 setupTouchPanel	KEYWORD2
@@ -48,20 +48,13 @@ drawBitmap	KEYWORD2
 drawPattern	KEYWORD2
 
 #######################################
-# Instances (KEYWORD2)
+#	Instances	(KEYWORD2)
 #######################################
 
 #######################################
-# Constants (LITERAL1)
+#	Constants	(LITERAL1)
 #######################################
-BLACK	LITERAL1
-WHITE	LITERAL1
-RED	LITERAL1
-GREEN	LITERAL1
-BLUE	LITERAL1
-CYAN	LITERAL1
-MAGENTA	LITERAL1
-YELLOW	LITERAL1
+
 FONT_SMALL	LITERAL1
 FONT_MEDIUM	LITERAL1
 FONT_BIG	LITERAL1
@@ -103,3 +96,24 @@ TOUSCRUINO_YM	LITERAL1
 TOUSCRUINO_YP	LITERAL1
 TOUSCRUINO_X_PLANE_RESISTANCE	LITERAL1
 TOUSCRUINO_PRESSURE_THRESHOLD	LITERAL1
+
+BLACK	LITERAL1
+RED	LITERAL1
+GREEN	LITERAL1
+BLUE	LITERAL1
+CYAN	LITERAL1
+MAGENTA	LITERAL1
+YELLOW	LITERAL1
+WHITE	LITERAL1
+LIGHT_GREY	LITERAL1
+GREY	LITERAL1
+DARK_GREY	LITERAL1
+ORANGE	LITERAL1
+FUSCHIA	LITERAL1
+VIOLET	LITERAL1
+BROWN	LITERAL1
+DARK_GREEN	LITERAL1
+DARK_BLUE	LITERAL1
+DARK_RED	LITERAL1
+DARK_CYAN	LITERAL1
+

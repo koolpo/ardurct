@@ -108,12 +108,12 @@ void S6D04H0::fillRectangleImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t 
 
 
 void S6D04H0::drawBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool hasTransparency, uint16_t transparentColor) {
-	uint16_t buffer[SCREENHAL_MAX_BITMAP_SIZE];
+	uint16_t buffer[SCREENHAL_MAX_BITMAP_SPACE];
 	
 	_setClippingRectangle(x, y, x+width-1, y+height-1); 
 	if (hasTransparency) {
 		// avoid buffer overflows...
-		if (width * height > SCREENHAL_MAX_BITMAP_SIZE) return;
+		if (width * height > SCREENHAL_MAX_BITMAP_SPACE) return;
 		_writeCommand(S6D04H0_RAMRD);
 		read16bDataBuffer(buffer, width * height, false);
 		for (uint16_t i=0; i<width*height; i++) {

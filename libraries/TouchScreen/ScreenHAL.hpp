@@ -6,7 +6,10 @@
 
 #include "fonts.hpp"
 
-#define SCREENHAL_MAX_BITMAP_SIZE (FONT_MAX_SPACE*2*2)		/* RAM taken is twice this, so beware, here around 1K */
+// Max space that a pattern or a bitmap that needs to be overlaid can occupy
+// minimum is FONT_MAX_SPACE
+// RAM taken can be up to 5 times this, so beware! 
+#define SCREENHAL_MAX_BITMAP_SPACE (32*32)		
 
 #define SCREEN_ROTATION_0	0
 #define SCREEN_ROTATION_90	1
@@ -57,8 +60,6 @@ class ScreenHAL: public Print {
 		uint16_t getBackgroundColor();
 
 		void setBackgroundColor(uint16_t color);
-
-		uint16_t create565Color(uint8_t r, uint8_t g, uint8_t b);
 
 		uint8_t getFontSize();
 		

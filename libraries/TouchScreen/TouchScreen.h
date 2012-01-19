@@ -5,35 +5,32 @@
 // To change the COG of your screen, include another header and replace S6D04H0 by your COG  
 #include "S6D04H0.hpp"
 
+#include "colors.hpp"
 #include "TouScruino.hpp"
 
-#define BLACK 	0x0000
-#define RED		(0x01F << 11) 
-#define GREEN	(0x03F << 5) 
-#define BLUE	0x01F
-#define CYAN    (GREEN+BLUE)
-#define MAGENTA	(RED+BLUE)
-#define YELLOW	(RED+GREEN)
-#define WHITE	0xFFFF
-
 #define TOUCHSCREEN_EQUAL 20
+#define TOUCHSCREEN_MAX_PRESSURE 1000
 #define TOUCHSCREEN_NO_TOUCH 0xFFFF
 
-#define TOUCHSCREEN_EEPROM_CALIBRATED 0x0000		/* the address in the eeprom where the calibration matrix is stored */
-#define TOUCHSCREEN_EEPROM_AX (TOUCHSCREEN_EEPROM_CALIBRATED+1)
-
-#define isTouched() (getTouchXYZ(0, 0, 0) != TOUCHSCREEN_NO_TOUCH)
+// the address in the eeprom where the calibration matrix is stored 
+// 25 bytes are taken in descending order
+#define TOUCHSCREEN_CALIBRATED_EEPROM_ADDRESS 	E2END
+#define TOUCHSCREEN_X_A_EEPROM_ADDRESS 			(E2END-1)
+#define TOUCHSCREEN_X_B_EEPROM_ADDRESS 			(E2END-5)
+#define TOUCHSCREEN_X_DIVIDER_EEPROM_ADDRESS 	(E2END-9)
+#define TOUCHSCREEN_Y_A_EEPROM_ADDRESS 			(E2END-13)
+#define TOUCHSCREEN_Y_B_EEPROM_ADDRESS 			(E2END-17)
+#define TOUCHSCREEN_Y_DIVIDER_EEPROM_ADDRESS 	(E2END-21)
 
 typedef struct {
-	int32_t Ax;
-	int32_t Bx;
-	int32_t Dx;
-	int32_t Ay;
-	int32_t By;
-	int32_t Dy;
-} tsCalibrationMatrix_t;
-	
+	int32_t a;
+	int32_t b;
+	int32_t divider;
+} tsCalibrationFactors_t;
 
+#define fillScreen(color) fillRectangle(0, 0, getWidth(), getHeight(), color)
+
+extern uint16_t get565Color(uint8_t r, uint8_t g, uint8_t b);
 
 class TouchScreen: public S6D04H0 {
     
@@ -46,7 +43,7 @@ class TouchScreen: public S6D04H0 {
 
 		void begin(uint16_t foregroundColor = WHITE, uint16_t backgroundColor = BLACK, uint8_t fontSize = FONT_SMALL, bool fontBold = false);
 
-		void setupBacklight(uint8_t backlightPin);
+		void setupBacklight(uint8_t backlightPin = TOUSCRUINO_BACKLIGHT);
 		
 		void setBacklight(uint8_t value);
 		
@@ -54,6 +51,8 @@ class TouchScreen: public S6D04H0 {
 		
 		uint16_t getTouchX();
 		
+		bool isTouched();
+
 		uint16_t getTouchY();
 		
 		uint16_t getTouchZ();
@@ -79,7 +78,8 @@ class TouchScreen: public S6D04H0 {
 		uint8_t _ypBitMask;
 		uint16_t _xPlaneResistance;
 		uint16_t _pressureThreshold;	
-		tsCalibrationMatrix_t _calibrationMatrix;
+		tsCalibrationFactors_t _xCalibrationFactors;
+		tsCalibrationFactors_t _yCalibrationFactors;
 		
 		bool _calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tsX, int32_t *tsY);
 		

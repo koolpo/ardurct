@@ -100,17 +100,6 @@ bool ScreenHAL::isVertical() {
 	return ((_rotation == SCREEN_ROTATION_0) || (_rotation == SCREEN_ROTATION_180));
 }
 
-
-uint16_t ScreenHAL::create565Color(uint8_t r, uint8_t g, uint8_t b) {
-	uint16_t color;
-	color = r >> 3;
-	color <<= 6;
-	color |= g >> 2;
-	color <<= 5;
-	color |= b >> 3;
-	return color;
-}
-
 uint16_t ScreenHAL::getForegroundColor() {
 	return _foregroundColor;
 }
@@ -265,11 +254,11 @@ void ScreenHAL::drawBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t widt
 
 void ScreenHAL::drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, int16_t y, uint8_t width, uint8_t height, 
 		uint16_t color, uint16_t backColor, uint8_t scale, bool overlay, bool grabAndReleaseBus) {
-	uint16_t buffer[SCREENHAL_MAX_BITMAP_SIZE];
-	uint8_t unpacked[SCREENHAL_MAX_BITMAP_SIZE];
+	uint16_t buffer[SCREENHAL_MAX_BITMAP_SPACE];
+	uint8_t unpacked[SCREENHAL_MAX_BITMAP_SPACE];
 
 	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
-	if (width * height * scale > SCREENHAL_MAX_BITMAP_SIZE) return;
+	if (width * height * scale > SCREENHAL_MAX_BITMAP_SPACE) return;
 	// unpack the pattern
 	_unpackPattern(pattern, unpacked, width, height, 0, 0, orientation);
 	// scale and colorize it
@@ -580,6 +569,14 @@ void ScreenHAL::_grabBus() {
 	*_portMode = 0xFF;
 	// select the screen
 	if (_cs != 0xFF) digitalWrite(_cs, LOW);
+	/*
+	else {
+		// we had to keep wr down not to influence the bus
+		// so we have to complete a NOP operation
+		*_outPort = 0;
+		*_wrPort |= _wrHigh;
+	}
+	*/
 	// put the screen in data mode
 	*_cdPort |= _cdBitMask;
 	_busTaken = 1;
@@ -590,6 +587,12 @@ void ScreenHAL::_releaseBus() {
 	if (_spiUsed) SPCR |= _BV(SPE);
 	// unselect the screen
 	if (_cs != 0xFF) digitalWrite(_cs, HIGH);
+	/*
+	else {
+		// we have to keep wr down not to influence the bus
+		*_wrPort &= _wrLow;
+	}
+	*/
 	_busTaken = 0;
 }
 
@@ -657,12 +660,12 @@ void ScreenHAL::_scaleShiftAndColorizeUnpackedPattern(uint8_t *unpacked, uint16_
 
 void ScreenHAL::_fillBoundedArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
 	if (x2 < x1) swap(x1, x2);
-	if (y2 < y1) swap(y1, y2);
-	if (x1 < 0) x1 = 0;
 	if (x1 >= _width) return;
+	if (y2 < y1) swap(y1, y2);
+	if (y1 >= _height) return;
+	if (x1 < 0) x1 = 0;
 	if (x2 >= _width) x2 = _width-1;
 	if (y1 < 0) y1 = 0;
-	if (y1 >= _height) return;
 	if (y2 >= _height) y2 = _height-1;
 	fillRectangleImpl(x1, y1, x2, y2, color);
 }
@@ -675,25 +678,31 @@ void ScreenHAL::_drawBoundedPixel(int16_t x, int16_t y, uint16_t color) {
 }
 
 /*
- * From Wikipedia: Andres arc drawing algorithm
+ * From Wikipedia: Andres arc drawing algorithm, extended to 
+ * 	- draw thick lines and 
+ * 	- fill with optimal use of horizontal lines
  */	
 void ScreenHAL::_drawOrFillOctant(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, int8_t thickness, bool fill) {
 	int16_t x = 0;
 	int16_t y = r;
 	int16_t d = r - 1;
-	uint8_t t1 = (thickness-1)/2;
-	uint8_t t2 = thickness/2;
+	int8_t t1 = (thickness-1)/2;
+	int8_t t2 = thickness/2;
 	
 	while (y >= x) {
 		if (fill) {
-			if (octant & SCREEN_ARC_SSE) _fillBoundedArea(x0, y0+y, x0+x, y0+y, color);
-			if (octant & SCREEN_ARC_SEE) _fillBoundedArea(x0, y0+x, x0+y, y0+x, color);
-			if (octant & SCREEN_ARC_SSW) _fillBoundedArea(x0, y0+y, x0-x, y0+y, color);
-			if (octant & SCREEN_ARC_SWW) _fillBoundedArea(x0, y0+x, x0-y, y0+x, color);
-			if (octant & SCREEN_ARC_NNE) _fillBoundedArea(x0, y0-y, x0+x, y0-y, color);
-			if (octant & SCREEN_ARC_NEE) _fillBoundedArea(x0, y0-x, x0+y, y0-x, color);
-			if (octant & SCREEN_ARC_NNW) _fillBoundedArea(x0, y0-y, x0-x, y0-y, color);
-			if (octant & SCREEN_ARC_NWW) _fillBoundedArea(x0, y0-x, x0-y, y0-x, color);		
+			if (octant & (SCREEN_ARC_SSW | SCREEN_ARC_SSE)) _fillBoundedArea(x0-x, y0+y, x0+x, y0+y, color);
+			else if (octant & SCREEN_ARC_SSW) _fillBoundedArea(x0, y0+y, x0-x, y0+y, color);
+			else if (octant & SCREEN_ARC_SSE) _fillBoundedArea(x0, y0+y, x0+x, y0+y, color);
+			if (octant & (SCREEN_ARC_SWW | SCREEN_ARC_SEE)) _fillBoundedArea(x0-y, y0+x, x0+y, y0+x, color);
+			else if (octant & SCREEN_ARC_SWW) _fillBoundedArea(x0, y0+x, x0-y, y0+x, color);
+			else if (octant & SCREEN_ARC_SEE) _fillBoundedArea(x0, y0+x, x0+y, y0+x, color);
+			if (octant & (SCREEN_ARC_NNW | SCREEN_ARC_NNE)) _fillBoundedArea(x0-x, y0-y, x0+x, y0-y, color);
+			else if (octant & SCREEN_ARC_NNW) _fillBoundedArea(x0, y0-y, x0-x, y0-y, color);
+			else if (octant & SCREEN_ARC_NNE) _fillBoundedArea(x0, y0-y, x0+x, y0-y, color);
+			if (octant & (SCREEN_ARC_NWW | SCREEN_ARC_NEE)) _fillBoundedArea(x0-y, y0-x, x0+y, y0-x, color);		
+			else if (octant & SCREEN_ARC_NWW) _fillBoundedArea(x0, y0-x, x0-y, y0-x, color);		
+			else if (octant & SCREEN_ARC_NEE) _fillBoundedArea(x0, y0-x, x0+y, y0-x, color);
 		} else if (thickness != 1) {
 			if (octant & SCREEN_ARC_SSE) _fillBoundedArea(x0+x-t1, y0+y-t1, x0+x+t2, y0+y+t2, color);
 			if (octant & SCREEN_ARC_SEE) _fillBoundedArea(x0+y-t1, y0+x-t1, x0+y+t2, y0+x+t2, color);

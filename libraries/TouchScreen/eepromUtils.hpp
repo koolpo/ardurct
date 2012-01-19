@@ -13,7 +13,17 @@ typedef union
 } packed_int32_t;
 
 
-static uint32_t eeprom_read_int32_t(uint16_t address) {
+static uint8_t eeprom_read_uint8_t(uint16_t address) {
+	return eeprom_read_byte((const uint8_t *)address);
+}
+
+
+static void eeprom_write_uint8_t(uint16_t address, uint8_t value) {
+    eeprom_write_byte((uint8_t *)address, value);
+}
+
+
+static int32_t eeprom_read_int32_t(uint16_t address) {
 	packed_int32_t x;
 
     x.unpacked.byte0 = eeprom_read_byte((const uint8_t *)address);
@@ -24,7 +34,7 @@ static uint32_t eeprom_read_int32_t(uint16_t address) {
 }
 
 
-static void eeprom_write_int32_t(uint16_t address, uint32_t value) {
+static void eeprom_write_int32_t(uint16_t address, int32_t value) {
 	packed_int32_t x;
 
 	x.packed = value;
