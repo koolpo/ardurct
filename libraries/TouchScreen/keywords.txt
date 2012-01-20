@@ -7,6 +7,7 @@
 #######################################
 
 TouchScreen	KEYWORD1
+COLOR_565	KEYWORD1
 
 #######################################
 # Methods and Functions	(KEYWORD2)
@@ -44,7 +45,8 @@ drawCircle	KEYWORD2
 fillCircle	KEYWORD2
 drawRoundedRectangle	KEYWORD2
 fillRoundedRectangle	KEYWORD2
-drawBitmap	KEYWORD2
+retrieveBitmap	KEYWORD2
+pasteBitmap	KEYWORD2
 drawPattern	KEYWORD2
 
 #######################################

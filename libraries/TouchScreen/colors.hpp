@@ -1,6 +1,8 @@
 #ifndef COLORS_HPP
 #define COLORS_HPP
 
+#include <inttypes.h>
+
 /*		NAME		RGB565			RGB	  */
 
 #define BLACK 		0x0000		/* 000000 */
@@ -22,5 +24,7 @@
 #define DARK_BLUE 	0x000F 		/* 00007F */
 #define DARK_RED 	0x7800 		/* 7F0000 */
 #define DARK_CYAN 	0x03EF 		/* 007F7F */
+
+#define COLOR_565(r, g, b) ((((((uint16_t)(r)) & 0x0FF) >> 3) << 11) | (((((uint16_t)(g)) & 0x0FF) >> 2) << 5) | ((((uint16_t)(b)) & 0x0FF) >> 3))
 
 #endif

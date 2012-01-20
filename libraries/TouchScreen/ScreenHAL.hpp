@@ -4,6 +4,9 @@
 #include <Arduino.h>
 #include <inttypes.h>
 
+// Comment this if you don't want to use macros to draw on the screen
+#define SCREEN_MACROS 1
+
 #include "fonts.hpp"
 
 // Max space that a pattern or a bitmap that needs to be overlaid can occupy
@@ -36,6 +39,9 @@
 #define SCREEN_ARC_W (SCREEN_ARC_NW+SCREEN_ARC_SW)
 
 #define SCREEN_ARC_ALL (SCREEN_ARC_N+SCREEN_ARC_S)
+
+#define PATTERN_ORIENTATION_HORIZONTAL 0
+#define PATTERN_ORIENTATION_VERTICAL 1
 
 class ScreenHAL: public Print {
     
@@ -113,7 +119,9 @@ class ScreenHAL: public Print {
 	
 		void fillRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t r, uint16_t color, bool grabAndReleaseBus = true);
 		
-		void drawBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool hasTransparency = false, uint16_t transparentColor = 0xFFFF, bool grabAndReleaseBus = true);
+		uint16_t *retrieveBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool grabAndReleaseBus = true);
+
+		void pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool hasTransparency = false, uint16_t transparentColor = 0xFFFF, bool grabAndReleaseBus = true);
 
 		void drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, int16_t y, uint8_t width, uint8_t height, uint16_t color, uint16_t backColor, uint8_t scale = 1, bool overlay = false, bool grabAndReleaseBus = true);
 
@@ -127,41 +135,29 @@ class ScreenHAL: public Print {
 		uint8_t _rd;
 		uint8_t _wr;
 		uint8_t _cd;		
-		uint8_t _cs;
-		uint8_t _reset;
 		uint8_t _rdHigh;
 		uint8_t _rdLow;
 		uint8_t _wrHigh;
 		uint8_t _wrLow;
 		uint8_t _cdBitMask;
-		uint8_t _spiUsed;
-		uint8_t _busTaken;
-		uint16_t _width;
-		uint16_t _height;
-		uint16_t _x;
-		uint16_t _y;
-		uint8_t _fontSize;
-		uint16_t _backgroundColor;
-		uint16_t _foregroundColor;
-		fontDefinition_t *_fontDef;
-		uint8_t _fontScale;
-		bool _isFontBold;
-		uint8_t _rotation;
 		
 		// NEEDS TO BE implemented by the class inheriting from this class
 		virtual void initScreenImpl(void);		
 
 		// NEEDS TO BE implemented by the class inheriting from this class
-		virtual void setRotationImpl(void);
+		virtual void setRotationImpl(uint8_t rotation);
 		
 		// NEEDS TO BE implemented by the class inheriting from this class
-		virtual void fillRectangleImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);	
+		virtual void fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);	
 
 		// NEEDS TO BE implemented by the class inheriting from this class
 		virtual void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
 
 		// NEEDS TO BE implemented by the class inheriting from this class
-		virtual void drawBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool hasTransparency = false, uint16_t transparentColor = 0xFFFF);
+		virtual void pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+
+		// NEEDS TO BE implemented by the class inheriting from this class
+		virtual void retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 
 		// NEEDS TO BE implemented by the class inheriting from this class
 		virtual uint16_t getWidthImpl();
@@ -177,9 +173,26 @@ class ScreenHAL: public Print {
 
 		void write16bDataBuffer(uint16_t *data, uint32_t len);
 
-		void read16bDataBuffer(uint16_t *data, uint32_t len, bool hasDummy);
+		uint8_t readData();
 
 	private:
+		uint8_t _cs;
+		uint8_t _reset;
+		uint8_t _spiUsed;
+		uint8_t _busTaken;
+		uint16_t _width;
+		uint16_t _height;
+		uint16_t _x;
+		uint16_t _y;
+		uint8_t _fontSize;
+		uint16_t _backgroundColor;
+		uint16_t _foregroundColor;
+		fontDefinition_t *_fontDef;
+		uint8_t _fontScale;
+		bool _isFontBold;
+		uint8_t _rotation;
+		int16_t _thickness;
+
 		void _grabBus();
 		
 		void _releaseBus();
@@ -188,7 +201,7 @@ class ScreenHAL: public Print {
 
 		void _unpackPattern(uint8_t *pattern, uint8_t *unpacked, uint8_t width, uint8_t height, uint8_t borderRight, uint8_t borderBottom, uint8_t orientation);
 		
-		void _scaleShiftAndColorizeUnpackedPattern(uint8_t *unpacked, uint16_t *scaled, uint16_t onColor, uint16_t offColor, uint8_t width, uint8_t height, uint8_t scale, 
+		void _scaleShiftAndColorizeUnpackedPattern(uint8_t *unpacked, uint16_t *result, uint16_t onColor, uint16_t offColor, uint8_t width, uint8_t height, uint8_t scale, 
 			uint8_t xShift = 0, uint8_t yShift = 0, bool blankFirst = true);
 		
 		void _fillBoundedArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);

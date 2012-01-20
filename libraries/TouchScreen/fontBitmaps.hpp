@@ -28,7 +28,9 @@
 // Basic character set
 //  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}
 
-// a 5x7 font occupying 6x8 space per char
+// a 5x7 font occupying 6x8 space per char (1px between chars and 1px between lines)
+// starts at ascii code 0x20 and finishes at 0x7e
+// each byte represents a VERTICAL line in the pattern
 fontDefinition_t fontDefinition_small = { 5, 7, 1, 1, 0x20, 0x7e, 1 };
 
 const unsigned char PROGMEM font_small[][5] = {
@@ -129,7 +131,9 @@ const unsigned char PROGMEM font_small[][5] = {
 	{ 0x10, 0x08, 0x08, 0x10, 0x08 },		/* ~ - 0x7e - 126 */
 };
 
-// a 7x12 font occupying 8x14 space per char
+// a 7x12 font occupying 9x14 space per char, (2px between chars and 2px between lines)
+// starts at ascii code 0x20 and finishes at 0x7d
+// each byte represents a HORIZONTAL line in the pattern
 fontDefinition_t fontDefinition_medium = { 7, 12, 2, 2, 0x20, 0x7d, 0 };
 
 const unsigned char PROGMEM font_medium[][12] = {

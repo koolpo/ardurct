@@ -67,7 +67,7 @@ void ScreenHAL::setRotation(uint8_t rotation) {
 		_height = getWidthImpl();
 	}
 	_grabBus();
-	setRotationImpl();
+	setRotationImpl(_rotation);
 	_releaseBus();
 }
 
@@ -178,20 +178,20 @@ void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_
 	while (s[0] != 0) {
 		if (s[0] == '\n') {
 			y += (fontDef->height + fontDef->lineSpacing) * fontScale;
-			if (y >= _height) return;
+			if (y >= _height) break;
 			x = 0;
 		} else if (s[0] == '\r') {
 			// skip the character
-			continue;
-		}
-		uint8_t validChr = s[0];
-		if ((validChr < fontDef->firstChar) || (validChr > fontDef->lastChar)) validChr = '?';
-		_drawValidChar(validChr, x, y, color, validFontSize, fontDef, fontScale, isBold, overlay);
-		x += (fontDef->width + fontDef->charSpacing) * fontScale;
-		if (x > _width) {
-			x = 0;
-			y += (fontDef->height + fontDef->lineSpacing) * fontScale;
-			if (y > _height) return;
+		} else {
+			uint8_t validChr = s[0];
+			if ((validChr < fontDef->firstChar) || (validChr > fontDef->lastChar)) validChr = '?';
+			_drawValidChar(validChr, x, y, color, validFontSize, fontDef, fontScale, isBold, overlay);
+			x += (fontDef->width + fontDef->charSpacing) * fontScale;
+			if (x > _width) {
+				x = 0;
+				y += (fontDef->height + fontDef->lineSpacing) * fontScale;
+				if (y >= _height) break;
+			}
 		}
 		s++;
 	}
@@ -204,33 +204,25 @@ size_t ScreenHAL::write(uint8_t chr) {
 #else
 void ScreenHAL::write(uint8_t chr) {
 #endif
+	_grabBus();
 	if (chr == '\n') {
 		_y += (_fontDef->height + _fontDef->lineSpacing) * _fontScale;
 		if (_y > _height) _y = 0;
 		_x = 0;
-#if ARDUINO >= 100
-		return 1;
-#else
-		return;
-#endif
-	}
-	if (chr == '\r') {
+	} else if (chr == '\r') {
 		// skip the character
-#if ARDUINO >= 100
-		return 1;
-#else
-		return;
-#endif
+	} else {
+		uint8_t validChr = chr;
+		if ((validChr < _fontDef->firstChar) || (validChr > _fontDef->lastChar)) validChr = '?';
+		_drawValidChar(validChr, _x, _y, _foregroundColor, _fontSize, _fontDef, _fontScale, _isFontBold, false);
+		_x += (_fontDef->width + _fontDef->charSpacing) * _fontScale;
+		if (_x > _width) {
+			_x = 0;
+			_y += (_fontDef->height + _fontDef->lineSpacing) * _fontScale;
+			if (_y > _height) _y = 0;
+		}
 	}
-	uint8_t validChr = chr;
-	if ((validChr < _fontDef->firstChar) || (validChr > _fontDef->lastChar)) validChr = '?';
-	_drawValidChar(validChr, _x, _y, _foregroundColor, _fontSize, _fontDef, _fontScale, _isFontBold, false);
-	_x += (_fontDef->width + _fontDef->charSpacing) * _fontScale;
-	if (_x > _width) {
-		_x = 0;
-		_y += (_fontDef->height + _fontDef->lineSpacing) * _fontScale;
-		if (_y > _height) _y = 0;
-	}
+	_releaseBus();
 #if ARDUINO >= 100
 	return 1;
 #endif
@@ -240,32 +232,6 @@ void ScreenHAL::write(uint8_t chr) {
 void ScreenHAL::drawPixel(int16_t x, int16_t y, uint16_t color, bool grabAndReleaseBus) {
 	if (grabAndReleaseBus) _grabBus();
 	_drawBoundedPixel(x, y, color);
-	if (grabAndReleaseBus) _releaseBus();
-}
-
-
-void ScreenHAL::drawBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool hasTransparency, uint16_t transparentColor, bool grabAndReleaseBus) {
-	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
-	if (grabAndReleaseBus) _grabBus();
-	drawBitmapImpl(bitmap, x, y, width, height, hasTransparency, transparentColor);
-	if (grabAndReleaseBus) _releaseBus();
-}
-
-
-void ScreenHAL::drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, int16_t y, uint8_t width, uint8_t height, 
-		uint16_t color, uint16_t backColor, uint8_t scale, bool overlay, bool grabAndReleaseBus) {
-	uint16_t buffer[SCREENHAL_MAX_BITMAP_SPACE];
-	uint8_t unpacked[SCREENHAL_MAX_BITMAP_SPACE];
-
-	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
-	if (width * height * scale > SCREENHAL_MAX_BITMAP_SPACE) return;
-	// unpack the pattern
-	_unpackPattern(pattern, unpacked, width, height, 0, 0, orientation);
-	// scale and colorize it
-	_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, backColor, width, height, scale);
-	// draw it
-	if (grabAndReleaseBus) _grabBus();
-	drawBitmapImpl(buffer, x, y, width*scale, height*scale, overlay, backColor);
 	if (grabAndReleaseBus) _releaseBus();
 }
 
@@ -455,6 +421,56 @@ void ScreenHAL::fillRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint1
 	if (grabAndReleaseBus) _releaseBus();
 }
 
+
+uint16_t *ScreenHAL::retrieveBitmap(uint16_t *buffer, int16_t x, int16_t y, uint16_t width, uint16_t height, bool grabAndReleaseBus) {
+	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height) || (width*height > SCREENHAL_MAX_BITMAP_SPACE)) return 0;
+	if (grabAndReleaseBus) _grabBus();
+	retrieveBitmapImpl(buffer, x, y, width, height);
+	if (grabAndReleaseBus) _releaseBus();
+	return buffer;
+}
+
+
+void ScreenHAL::pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool hasTransparency, uint16_t transparentColor, bool grabAndReleaseBus) {
+	uint16_t buffer[SCREENHAL_MAX_BITMAP_SPACE];
+
+	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
+	// check for overflow
+	if (hasTransparency && (width * height > SCREENHAL_MAX_BITMAP_SPACE)) return;
+	if (grabAndReleaseBus) _grabBus();
+	if (hasTransparency) {
+		// get the background image
+		retrieveBitmapImpl(buffer, x, y, width, height);
+		// set all non transparent pixels of the bitmap in the buffer
+		for (uint32_t i=0; i<((uint32_t)width)*height; i++) {
+			if (bitmap[i] != transparentColor) buffer[i] = bitmap[i];
+		}
+		pasteBitmapImpl(buffer, x, y, width, height);
+	} else pasteBitmapImpl(bitmap, x, y, width, height);
+	if (grabAndReleaseBus) _releaseBus();
+}
+
+
+void ScreenHAL::drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, int16_t y, uint8_t width, uint8_t height, 
+		uint16_t color, uint16_t backColor, uint8_t scale, bool overlay, bool grabAndReleaseBus) {
+	uint16_t buffer[SCREENHAL_MAX_BITMAP_SPACE];
+	uint8_t unpacked[SCREENHAL_MAX_BITMAP_SPACE];
+
+	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
+	if (width * height * scale * scale > SCREENHAL_MAX_BITMAP_SPACE) return;
+	// unpack the pattern
+	_unpackPattern(pattern, unpacked, width, height, 0, 0, orientation);
+	if (grabAndReleaseBus) _grabBus();
+	// if overlay, get the bitmap from the screen
+	if (overlay) retrieveBitmapImpl(buffer, x, y, width*scale, height*scale);
+	// scale and colorize it, setting a background color if no need to overlay
+	_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, backColor, width, height, scale, 0, 0, overlay != true);
+	// draw it
+	pasteBitmapImpl(buffer, x, y, width*scale, height*scale);
+	if (grabAndReleaseBus) _releaseBus();
+}
+
+
 /* ---------------- Protected functions ------------------------ */
 
 /* ---------------- Virtual functions -------------------------- */
@@ -464,7 +480,7 @@ void ScreenHAL::initScreenImpl() {
 	// needs to be implemented by the class inheriting from this class
 }
 
-void ScreenHAL::setRotationImpl() {
+void ScreenHAL::setRotationImpl(uint8_t rotation) {
 	// needs to be implemented by the class inheriting from this class
 }
 
@@ -472,15 +488,18 @@ void ScreenHAL::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
 	// needs to be implemented by the class inheriting from this class
 }
 
-// Fills the rectangle lx,ly -> hx, hy
+// Fills the area lx,ly -> hx, hy
 // this function assumes that lx <= hx and ly <= hy
-void ScreenHAL::fillRectangleImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {
+void ScreenHAL::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {
 	// needs to be implemented by the class inheriting from this class
 }
 
 // Draws the bitmap
-// if hasTransparency, replaces the transparentColor in the bitmap by the existing color on the screen at the pixel place
-void ScreenHAL::drawBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool hasTransparency, uint16_t transparentColor) {
+void ScreenHAL::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
+}
+
+// retrieves a bitmap from the screen
+void ScreenHAL::retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
 }
 
 // returns the width of the non rotated screen
@@ -528,33 +547,16 @@ void ScreenHAL::write16bDataBuffer(uint16_t *data, uint32_t len) {
 	}
 }
 
-void ScreenHAL::read16bDataBuffer(uint16_t *data, uint32_t len, bool hasDummy) {
+uint8_t ScreenHAL::readData() {
+	uint8_t data;
 	*_portMode = 0x00;
-	if (hasDummy) {
-		// one dummy read
-		*_rdPort &= _rdLow;
-		*_rdPort &= _rdLow;
-		*_rdPort |= _rdHigh; 
-		data[0] = *_inPort;
-		*_rdPort |= _rdHigh; 
-	}
-	// then read the data
-	for (uint32_t i=0; i<len; i++) { 
-		*_rdPort &= _rdLow;
-		*_rdPort &= _rdLow;
-		*_rdPort |= _rdHigh; 
-		data[i] = *_inPort;
-		*_rdPort |= _rdHigh; 
-		data[i] = data[i] << 8;
-		*_rdPort &= _rdLow;
-		*_rdPort &= _rdLow;
-		*_rdPort |= _rdHigh; 
-		data[i] |= *_inPort;
-		*_rdPort |= _rdHigh; 
-	}
+	*_rdPort &= _rdLow;
+	*_rdPort &= _rdLow;
+	data = *_inPort;
+	*_rdPort |= _rdHigh; 
 	*_portMode = 0xFF;
+	return data;
 }
-
 
 /* ---------------- Private functions ------------------------ */
 
@@ -571,7 +573,7 @@ void ScreenHAL::_grabBus() {
 	if (_cs != 0xFF) digitalWrite(_cs, LOW);
 	/*
 	else {
-		// we had to keep wr down not to influence the bus
+		// we had to keep WR down not to influence the bus
 		// so we have to complete a NOP operation
 		*_outPort = 0;
 		*_wrPort |= _wrHigh;
@@ -583,16 +585,24 @@ void ScreenHAL::_grabBus() {
 }
 
 void ScreenHAL::_releaseBus() {
-	// restore the SPI if it was active
-	if (_spiUsed) SPCR |= _BV(SPE);
 	// unselect the screen
 	if (_cs != 0xFF) digitalWrite(_cs, HIGH);
 	/*
 	else {
-		// we have to keep wr down not to influence the bus
+		// we have to keep WR down not to influence the bus
+		*_cdPort &= ~_cdBitMask;
+		*_wrPort |= _wrHigh;
 		*_wrPort &= _wrLow;
 	}
 	*/
+	// restore the SPI if it was active
+	if (_spiUsed) {
+		// we have to set SS as an output to enable SPI
+		pinMode(SS, OUTPUT);
+		// we always restore the master mode
+		SPCR |= _BV(MSTR);
+		SPCR |= _BV(SPE);
+	}
 	_busTaken = 0;
 }
 
@@ -602,28 +612,32 @@ void ScreenHAL::_drawValidChar(uint8_t chr, uint16_t x, uint16_t y, uint16_t col
 	uint8_t unpacked[FONT_MAX_SPACE];
 	uint16_t buffer[FONT_MAX_SPACE*2*2];
 
-	if ((fontSize % 2) == 1) memcpy_P(pattern, &font_small[chr - fontDef->firstChar], fontDef->orientation == FONT_ORIENTATION_HORIZONTAL ? fontDef->height : fontDef->width);
-	else if ((fontSize % 2) == 0) memcpy_P(pattern, &font_medium[chr - fontDef->firstChar], fontDef->orientation == FONT_ORIENTATION_HORIZONTAL ? fontDef->height : fontDef->width);
+	if ((fontSize % 2) == 1) memcpy_P(pattern, &font_small[chr - fontDef->firstChar], fontDef->orientation == PATTERN_ORIENTATION_HORIZONTAL ? fontDef->height : fontDef->width);
+	else if ((fontSize % 2) == 0) memcpy_P(pattern, &font_medium[chr - fontDef->firstChar], fontDef->orientation == PATTERN_ORIENTATION_HORIZONTAL ? fontDef->height : fontDef->width);
 	// unpack the pattern
-	_unpackPattern(pattern, unpacked, fontDef->width, fontDef->height, fontDef->charSpacing, fontDef->lineSpacing, fontDef->orientation);		
+	_unpackPattern(pattern, unpacked, fontDef->width, fontDef->height, fontDef->charSpacing, fontDef->lineSpacing, fontDef->orientation);	
+	// if overlay, get the bitmap from the screen
+	if (overlay) retrieveBitmapImpl(buffer, x, y, (fontDef->width+fontDef->charSpacing)*fontScale, (fontDef->height+fontDef->lineSpacing)*fontScale);
 	// scale and colorize it
-	_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, _backgroundColor, fontDef->width+fontDef->charSpacing, fontDef->height+fontDef->lineSpacing, fontScale);
+	_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, _backgroundColor, fontDef->width+fontDef->charSpacing, fontDef->height+fontDef->lineSpacing, fontScale, 0, 0, overlay != true);
 	if (isBold) {
 		_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, _backgroundColor, fontDef->width+fontDef->charSpacing, fontDef->height+fontDef->lineSpacing, fontScale, 1, 0, false);
 		_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, _backgroundColor, fontDef->width+fontDef->charSpacing, fontDef->height+fontDef->lineSpacing, fontScale, 0, 1, false);
 	}
 	// draw it
-	drawBitmapImpl(buffer, x, y, (fontDef->width+fontDef->charSpacing)*fontScale, (fontDef->height+fontDef->lineSpacing)*fontScale, overlay, _backgroundColor);
+	pasteBitmapImpl(buffer, x, y, (fontDef->width+fontDef->charSpacing)*fontScale, (fontDef->height+fontDef->lineSpacing)*fontScale);
 }
 
-
+// Unpacks the bits contained in pattern into unpacked: each byte of unpacked is a bit of pattern
+// the bits of the pattern can be stored horizontaly of verticaly
+// we can add a border on the right and on the bottom
 void ScreenHAL::_unpackPattern(uint8_t *pattern, uint8_t *unpacked, uint8_t width, uint8_t height, uint8_t borderRight, uint8_t borderBottom, uint8_t orientation) {
 	for (uint16_t i=0; i<(width+borderRight)*(height+borderBottom); i++) unpacked[i] = 0;
 	for (uint8_t l=0; l<height; l++) {
 		for (uint8_t c=0; c<width; c++) {
 			uint8_t patternByte;
 			uint8_t mask;
-			if (orientation == FONT_ORIENTATION_HORIZONTAL) {
+			if (orientation == PATTERN_ORIENTATION_HORIZONTAL) {
 				patternByte = pattern[l*(1+width/8)+c/8];
 				mask = 0x01 << (c & 0x07);
 				unpacked[l*(width+borderRight)+c] = patternByte & mask;
@@ -636,20 +650,22 @@ void ScreenHAL::_unpackPattern(uint8_t *pattern, uint8_t *unpacked, uint8_t widt
 	}
 }
 
-
-void ScreenHAL::_scaleShiftAndColorizeUnpackedPattern(uint8_t *unpacked, uint16_t *scaled, uint16_t onColor, uint16_t offColor, uint8_t width, uint8_t height, uint8_t scale,
+// draws an unpacked pattern into the buffer, replacing all the result pixels by onColor if the corresponding byte is not null in unpacked
+// can scale and shift the unpacked pattern before setting the pixels in the result
+// can also fill the result with offColor before replacing
+void ScreenHAL::_scaleShiftAndColorizeUnpackedPattern(uint8_t *unpacked, uint16_t *result, uint16_t onColor, uint16_t offColor, uint8_t width, uint8_t height, uint8_t scale,
 	uint8_t xShift, uint8_t yShift, bool blankFirst) {
 	if (blankFirst) {
-		for (uint16_t i=0; i<(width*height)*scale*scale; i++) scaled[i] = offColor;
+		for (uint16_t i=0; i<(width*height)*scale*scale; i++) result[i] = offColor;
 	}
 	for (uint8_t l=0; l<height; l++) {
 		for (uint8_t c=0; c<width; c++) {
 			if (scale == 1) {
-				if (unpacked[l*width+c]) scaled[(l+yShift)*width+(c+xShift)] = onColor;
+				if (unpacked[l*width+c]) result[(l+yShift)*width+(c+xShift)] = onColor;
 			} else {
 				for (uint8_t pl=0; pl<scale; pl++) {
 					for (uint8_t pc=0; pc<scale; pc++) {
-						if (unpacked[l*width+c]) scaled[(l*scale+pl+yShift)*width*scale+c*scale+pc+xShift] = onColor;
+						if (unpacked[l*width+c]) result[(l*scale+pl+yShift)*width*scale+c*scale+pc+xShift] = onColor;
 					}
 				}
 			}
@@ -667,7 +683,7 @@ void ScreenHAL::_fillBoundedArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
 	if (x2 >= _width) x2 = _width-1;
 	if (y1 < 0) y1 = 0;
 	if (y2 >= _height) y2 = _height-1;
-	fillRectangleImpl(x1, y1, x2, y2, color);
+	fillAreaImpl(x1, y1, x2, y2, color);
 }
 
 

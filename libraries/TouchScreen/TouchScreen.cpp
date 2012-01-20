@@ -1,15 +1,5 @@
 #include "TouchScreen.h"
 #include "eepromUtils.hpp"
-
-uint16_t get565Color(uint8_t r, uint8_t g, uint8_t b) {
-	uint16_t color;
-	color = r >> 3;
-	color <<= 6;
-	color |= g >> 2;
-	color <<= 5;
-	color |= b >> 3;
-	return color;
-}
 	
 TouchScreen::TouchScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
 	setupScreen(port, cd, wr, rd, cs, reset);
@@ -67,16 +57,16 @@ void TouchScreen::setupTouchPanel(uint8_t xm, uint8_t xp, uint8_t ym, uint8_t yp
 	_xPlaneResistance = xPlaneResistance;
 	_pressureThreshold = pressureThreshold;
 	// calibrate the touch panel if required
-	_xCalibrationFactors.divider = 0;
+	_xCalibrationEquation.divider = 0;
 	if (!calibrateTouchPanel()) return;
 	// read the matrix from eeprom if not already set by calibrateTouchPanel
-	if (_xCalibrationFactors.divider == 0) {
-		_xCalibrationFactors.a = eeprom_read_int32_t(TOUCHSCREEN_X_A_EEPROM_ADDRESS);
-		_xCalibrationFactors.b = eeprom_read_int32_t(TOUCHSCREEN_X_B_EEPROM_ADDRESS);
-		_xCalibrationFactors.divider = eeprom_read_int32_t(TOUCHSCREEN_X_DIVIDER_EEPROM_ADDRESS);
-		_yCalibrationFactors.a = eeprom_read_int32_t(TOUCHSCREEN_Y_A_EEPROM_ADDRESS);
-		_yCalibrationFactors.b = eeprom_read_int32_t(TOUCHSCREEN_Y_B_EEPROM_ADDRESS);
-		_yCalibrationFactors.divider = eeprom_read_int32_t(TOUCHSCREEN_Y_DIVIDER_EEPROM_ADDRESS);
+	if (_xCalibrationEquation.divider == 0) {
+		_xCalibrationEquation.a = eeprom_read_int32_t(TOUCHSCREEN_X_A_EEPROM_ADDRESS);
+		_xCalibrationEquation.b = eeprom_read_int32_t(TOUCHSCREEN_X_B_EEPROM_ADDRESS);
+		_xCalibrationEquation.divider = eeprom_read_int32_t(TOUCHSCREEN_X_DIVIDER_EEPROM_ADDRESS);
+		_yCalibrationEquation.a = eeprom_read_int32_t(TOUCHSCREEN_Y_A_EEPROM_ADDRESS);
+		_yCalibrationEquation.b = eeprom_read_int32_t(TOUCHSCREEN_Y_B_EEPROM_ADDRESS);
+		_yCalibrationEquation.divider = eeprom_read_int32_t(TOUCHSCREEN_Y_DIVIDER_EEPROM_ADDRESS);
 	}
 }
 
@@ -161,6 +151,9 @@ uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	Z *= X *_xPlaneResistance / 1024;
 	*z = Z; 
 	
+	// we leave with XP and YM as outputs
+	// and XM and YP as inputs
+	
 	if ((*z >= _pressureThreshold) && (*z < TOUCHSCREEN_MAX_PRESSURE)) {
 		_getDisplayXY(&X, &Y);
 		*x = X;
@@ -215,22 +208,22 @@ bool TouchScreen::calibrateTouchPanel(bool force) {
 			divider = TPm - TPn
 	* ---------------------------------------------------------------------- */
 	// use the points with the biggest X difference: 0 and 2
-	_xCalibrationFactors.a = dX2 - dX0;
-	_xCalibrationFactors.b = dX0 * (tpX2 - tpX0) - tpX0 * (dX2 - dX0);
-	_xCalibrationFactors.divider = tpX2 - tpX0;
+	_xCalibrationEquation.a = dX2 - dX0;
+	_xCalibrationEquation.b = dX0 * (tpX2 - tpX0) - tpX0 * (dX2 - dX0);
+	_xCalibrationEquation.divider = tpX2 - tpX0;
 	// use the points with the biggest Y difference: 0 and 1
-	_yCalibrationFactors.a = dY1 - dY0;
-	_yCalibrationFactors.b = dY0 * (tpY1 - tpY0) - tpY0 * (dY1 - dY0);
-	_yCalibrationFactors.divider = tpY1 - tpY0;
+	_yCalibrationEquation.a = dY1 - dY0;
+	_yCalibrationEquation.b = dY0 * (tpY1 - tpY0) - tpY0 * (dY1 - dY0);
+	_yCalibrationEquation.divider = tpY1 - tpY0;
 	
     // persist the calibration factors to EEPROM
     eeprom_write_uint8_t(TOUCHSCREEN_CALIBRATED_EEPROM_ADDRESS, 1);
-    eeprom_write_int32_t(TOUCHSCREEN_X_A_EEPROM_ADDRESS, _xCalibrationFactors.a);
-    eeprom_write_int32_t(TOUCHSCREEN_X_B_EEPROM_ADDRESS, _xCalibrationFactors.b);
-    eeprom_write_int32_t(TOUCHSCREEN_X_DIVIDER_EEPROM_ADDRESS, _xCalibrationFactors.divider);
-    eeprom_write_int32_t(TOUCHSCREEN_Y_A_EEPROM_ADDRESS, _yCalibrationFactors.a);
-    eeprom_write_int32_t(TOUCHSCREEN_Y_B_EEPROM_ADDRESS, _yCalibrationFactors.b);
-    eeprom_write_int32_t(TOUCHSCREEN_Y_DIVIDER_EEPROM_ADDRESS, _yCalibrationFactors.divider);
+    eeprom_write_int32_t(TOUCHSCREEN_X_A_EEPROM_ADDRESS, _xCalibrationEquation.a);
+    eeprom_write_int32_t(TOUCHSCREEN_X_B_EEPROM_ADDRESS, _xCalibrationEquation.b);
+    eeprom_write_int32_t(TOUCHSCREEN_X_DIVIDER_EEPROM_ADDRESS, _xCalibrationEquation.divider);
+    eeprom_write_int32_t(TOUCHSCREEN_Y_A_EEPROM_ADDRESS, _yCalibrationEquation.a);
+    eeprom_write_int32_t(TOUCHSCREEN_Y_B_EEPROM_ADDRESS, _yCalibrationEquation.b);
+    eeprom_write_int32_t(TOUCHSCREEN_Y_DIVIDER_EEPROM_ADDRESS, _yCalibrationEquation.divider);
 	
 	return true;
 }
@@ -267,14 +260,14 @@ bool TouchScreen::_calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tpX
 }
 
 void TouchScreen::_getDisplayXY(int16_t *x, int16_t *y) {
-	if (_xCalibrationFactors.divider != 0) {
+	if (_xCalibrationEquation.divider != 0) {
 		int32_t X = *x;
 		int32_t Y = *y;		
-		X = (_xCalibrationFactors.a * X + _xCalibrationFactors.b) / _xCalibrationFactors.divider;
-		Y = (_yCalibrationFactors.a * X + _yCalibrationFactors.b) / _yCalibrationFactors.divider;
+		X = (_xCalibrationEquation.a * X + _xCalibrationEquation.b) / _xCalibrationEquation.divider;
+		Y = (_yCalibrationEquation.a * Y + _yCalibrationEquation.b) / _yCalibrationEquation.divider;
 		*x = X;
 		*y = Y;
 	}
-	getRotatedXY(x, y, _rotation);
+	getRotatedXY(x, y, getRotation());
 }
 

@@ -26,11 +26,9 @@ typedef struct {
 	int32_t a;
 	int32_t b;
 	int32_t divider;
-} tsCalibrationFactors_t;
+} tsCalibrationEquation_t;
 
 #define fillScreen(color) fillRectangle(0, 0, getWidth(), getHeight(), color)
-
-extern uint16_t get565Color(uint8_t r, uint8_t g, uint8_t b);
 
 class TouchScreen: public S6D04H0 {
     
@@ -78,8 +76,8 @@ class TouchScreen: public S6D04H0 {
 		uint8_t _ypBitMask;
 		uint16_t _xPlaneResistance;
 		uint16_t _pressureThreshold;	
-		tsCalibrationFactors_t _xCalibrationFactors;
-		tsCalibrationFactors_t _yCalibrationFactors;
+		tsCalibrationEquation_t _xCalibrationEquation;
+		tsCalibrationEquation_t _yCalibrationEquation;
 		
 		bool _calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tsX, int32_t *tsY);
 		

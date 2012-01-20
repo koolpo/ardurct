@@ -27,8 +27,6 @@
  *     |/ |
  *
  **/
-#define FONT_ORIENTATION_HORIZONTAL 0
-#define FONT_ORIENTATION_VERTICAL 1
 
 typedef struct {
 	uint8_t width;

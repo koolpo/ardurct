@@ -16,16 +16,16 @@ class S6D04H0: public ScreenHAL {
 		void initScreenImpl(void);
 		
 		// required by the ScreenHAL superclass
-		void fillRectangleImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);
+		void fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);
 
 		// required by the ScreenHAL superclass
-		void drawCharImpl(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, fontDefinition_t *fontDef, uint8_t fontScale, boolean overlay = false);
+		void retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 
 		// required by the ScreenHAL superclass
-		void drawBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool hasTransparency = false, uint16_t transparentColor = 0xFFFF);
+		void pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 
 		// required by the ScreenHAL superclass
-		void setRotationImpl(void);
+		void setRotationImpl(uint8_t rotation);
 		
 		// required by the ScreenHAL superclass
 		void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
