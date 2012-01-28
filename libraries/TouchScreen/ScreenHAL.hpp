@@ -43,6 +43,9 @@
 #define PATTERN_ORIENTATION_HORIZONTAL 0
 #define PATTERN_ORIENTATION_VERTICAL 1
 
+#define OVERLAY true
+#define NO_OVERLAY false
+
 class ScreenHAL: public Print {
     
 	public:
@@ -67,11 +70,17 @@ class ScreenHAL: public Print {
 
 		void setBackgroundColor(uint16_t color);
 
+		uint16_t getMargin();
+
+		void setMargin(uint16_t color);
+
 		uint8_t getFontSize();
 		
 		bool isFontBold();
+		
+		bool isFontOverlay();
 
-		void setFont(uint8_t size, bool isBold);
+		void setFont(uint8_t size, bool isBold = false, bool isOverlay = false);
 
 		uint16_t getWidth();
 
@@ -184,6 +193,7 @@ class ScreenHAL: public Print {
 		uint16_t _height;
 		uint16_t _x;
 		uint16_t _y;
+		uint16_t _margin;
 		uint8_t _fontSize;
 		uint16_t _backgroundColor;
 		uint16_t _foregroundColor;
@@ -192,6 +202,7 @@ class ScreenHAL: public Print {
 		bool _isFontBold;
 		uint8_t _rotation;
 		int16_t _thickness;
+		bool _isFontOverlay;
 
 		void _grabBus();
 		

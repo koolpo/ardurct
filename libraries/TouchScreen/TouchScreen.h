@@ -39,7 +39,7 @@ class TouchScreen: public S6D04H0 {
 		void setupTouchPanel(uint8_t xm = TOUSCRUINO_XM, uint8_t xp = TOUSCRUINO_XP, uint8_t ym = TOUSCRUINO_YM, uint8_t yp = TOUSCRUINO_YP, 
 				uint16_t xPlaneResistance = TOUSCRUINO_X_PLANE_RESISTANCE, uint16_t pressureThreshold = TOUSCRUINO_PRESSURE_THRESHOLD);
 
-		void begin(uint16_t foregroundColor = WHITE, uint16_t backgroundColor = BLACK, uint8_t fontSize = FONT_SMALL, bool fontBold = false);
+		void begin(uint16_t foregroundColor = WHITE, uint16_t backgroundColor = BLACK, uint8_t fontSize = FONT_SMALL, bool fontBold = false, bool fontOverlay = false);
 
 		void setupBacklight(uint8_t backlightPin = TOUSCRUINO_BACKLIGHT);
 		

@@ -8,10 +8,10 @@ TouchScreen::TouchScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8
 }
 
 
-void TouchScreen::begin(uint16_t foregroundColor, uint16_t backgroundColor, uint8_t fontSize, bool fontBold) {
+void TouchScreen::begin(uint16_t foregroundColor, uint16_t backgroundColor, uint8_t fontSize, bool fontBold, bool fontOverlay) {
 	initScreen();
 	if (_backlightPin != 0xFF) setupBacklight(_backlightPin);
-	setFont(fontSize, fontBold);
+	setFont(fontSize, fontBold, fontOverlay);
 	setBackgroundColor(backgroundColor);
 	setForegroundColor(foregroundColor);
 	if (_backlightPin != 0xFF) setBacklight(0);

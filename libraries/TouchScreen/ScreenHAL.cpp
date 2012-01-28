@@ -49,7 +49,8 @@ void ScreenHAL::initScreen() {
 	_spiUsed = 0;
 	_busTaken = 0;
 	_rotation = 0;
-	setFont(1, FONT_PLAIN);
+	_margin = 0;
+	setFont(1, FONT_PLAIN, NO_OVERLAY);
 	_grabBus();
 	initScreenImpl();
 	_releaseBus();
@@ -118,6 +119,15 @@ void ScreenHAL::setBackgroundColor(uint16_t color) {
 }
 
 
+uint16_t ScreenHAL::getMargin() {
+	return _margin;
+}
+
+void ScreenHAL::setMargin(uint16_t margin) {
+	_margin = margin;
+}
+
+
 uint8_t ScreenHAL::getFontSize() {
 	return _fontSize;
 }
@@ -126,9 +136,14 @@ bool ScreenHAL::isFontBold() {
 	return _isFontBold;
 }
 
-void ScreenHAL::setFont(uint8_t size, bool bold) {
+bool ScreenHAL::isFontOverlay() {
+	return _isFontOverlay;
+}
+
+void ScreenHAL::setFont(uint8_t size, bool bold, bool overlay) {
 	_fontSize = size;
 	_isFontBold = bold;
+	_isFontOverlay = overlay;
 	if (_fontSize > FONT_LAST_DEF*2) _fontSize = FONT_LAST_DEF*2;
 	if (_fontSize == 0) _fontSize = 1;
 	_fontScale = (_fontSize <= FONT_LAST_DEF ? 1 : 2);
@@ -177,7 +192,7 @@ void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_
 	if (grabAndReleaseBus) _grabBus();
 	while (s[0] != 0) {
 		if (s[0] == '\n') {
-			y += (fontDef->height + fontDef->lineSpacing) * fontScale;
+			y += (fontDef->height + fontDef->lineSpacing + (isBold ? 1 : 0)) * fontScale;
 			if (y >= _height) break;
 			x = 0;
 		} else if (s[0] == '\r') {
@@ -189,7 +204,7 @@ void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_
 			x += (fontDef->width + fontDef->charSpacing) * fontScale;
 			if (x > _width) {
 				x = 0;
-				y += (fontDef->height + fontDef->lineSpacing) * fontScale;
+				y += (fontDef->height + fontDef->lineSpacing + (isBold ? 1 : 0)) * fontScale;
 				if (y >= _height) break;
 			}
 		}
@@ -206,20 +221,20 @@ void ScreenHAL::write(uint8_t chr) {
 #endif
 	_grabBus();
 	if (chr == '\n') {
-		_y += (_fontDef->height + _fontDef->lineSpacing) * _fontScale;
-		if (_y > _height) _y = 0;
+		_y += (_fontDef->height + _fontDef->lineSpacing + (_isFontBold ? 1 : 0)) * _fontScale;
+		if (_y > _height - 2*_margin) _y = 0;
 		_x = 0;
 	} else if (chr == '\r') {
 		// skip the character
 	} else {
 		uint8_t validChr = chr;
 		if ((validChr < _fontDef->firstChar) || (validChr > _fontDef->lastChar)) validChr = '?';
-		_drawValidChar(validChr, _x, _y, _foregroundColor, _fontSize, _fontDef, _fontScale, _isFontBold, false);
+		_drawValidChar(validChr, _x + _margin, _y + _margin, _foregroundColor, _fontSize, _fontDef, _fontScale, _isFontBold, _isFontOverlay);
 		_x += (_fontDef->width + _fontDef->charSpacing) * _fontScale;
-		if (_x > _width) {
+		if (_x > _width - 2*_margin) {
 			_x = 0;
-			_y += (_fontDef->height + _fontDef->lineSpacing) * _fontScale;
-			if (_y > _height) _y = 0;
+			_y += (_fontDef->height + _fontDef->lineSpacing + (_isFontBold ? 1 : 0)) * _fontScale;
+			if (_y > _height-2*_margin) _y = 0;
 		}
 	}
 	_releaseBus();
