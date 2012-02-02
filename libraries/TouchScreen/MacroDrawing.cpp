@@ -97,7 +97,7 @@
 #define SCREEN_MACRO_CMD_GROUP_STRING		0x70
 #define SCREEN_MACRO_CMD_GROUP_EXECUTE		0xF0
 
-#define SCREEN_MACRO_COS45_LSH16	46340
+#define SCREEN_MACRO_COS45_LSH16	46341
 
 #define SCREEN_MACRO_CMD_LINKED_FLAG	0x08
 
@@ -130,9 +130,9 @@ extern void eeprom_write_uint8_t(uint16_t address, uint8_t value);
 void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool grabAndReleaseBus) {
 	macroCommand_t mc;
 	bool drawMode = true;
-	int wBuffer[] = new int[256];
-	int wBufferPtr = 0;
-	int wBufferNb = 0;
+	uint8_t wBuffer[256];
+	uint16_t wBufferPtr = 0;
+	uint8_t wBufferNb = 0;
 	
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
@@ -254,12 +254,12 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 					} 
 					if (s[i+1] != ' ') return;
 				} else if (s[i+1] == 'C') {
-					int len = _parseHexColor(s, i+2, mc);
+					int8_t len = _parseHexColor(s, i+2, &mc);
 					if (len == SCREEN_MACRO_FORMAT_ERROR) return;
 					i += len+1;
 					mc.cmd = SCREEN_MACRO_CMD_PRESET_FOREGROUND;
 				} else if (s[i+1] == 'B') {
-					int len = _parseHexColor(s, i+2, mc);
+					int8_t len = _parseHexColor(s, i+2, &mc);
 					if (len == SCREEN_MACRO_FORMAT_ERROR) return;
 					i += len+1;
 					mc.cmd = SCREEN_MACRO_CMD_PRESET_BACKGROUND;
@@ -295,7 +295,7 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 		mc.nbParams = 0;
 		int len = 0;
 		while (true) {
-			len = _parseParameter(s, i, mc, mc.nbParams);
+			len = _parseParameter(s, i, &mc, mc.nbParams);
 			if (len == SCREEN_MACRO_FORMAT_ERROR) break;
 			i += len;
 			mc.nbParams ++;
@@ -321,7 +321,7 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 
 		
 		// Execute the command
-		if (drawMode) drawMacroCommand(mc, x, y, scaleMul, scaleDiv, isScaleThickness, true, grabAndReleaseBus);
+		if (drawMode) executeMacroCommand(&mc, x, y, scaleMul, scaleDiv, true, grabAndReleaseBus);
 		else if (mc.cmd == SCREEN_MACRO_CMD_WRITE) {
 			wBufferNb = mc.param[SCREEN_MACRO_PARAM_MACRO_NUMBER];
 			if (wBufferNb > SCREEN_MACRO_MAX_NUMBER) return;
@@ -330,7 +330,7 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 		// At this stage, we have a struct containing the command to execute
 		// this can be stored in EEPROM for future execution
 		if (mc.cmd != SCREEN_MACRO_CMD_WRITE) {
-			int endWrite = _compressMacroCommand(mc, wBuffer, wBufferPtr);
+			int endWrite = _compressMacroCommand(&mc, wBuffer, wBufferPtr);
 			if (endWrite != SCREEN_MACRO_FORMAT_ERROR) wBufferPtr = endWrite;
 		}
 	}
@@ -348,7 +348,7 @@ void ScreenHAL::executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, ui
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
 	if (grabAndReleaseBus) _grabBus();
-	_drawMacroCommand(mc, x, y, scaleMul, scaleDiv, isScaleThickness);
+	_executeMacroCommand(mc, x, y, scaleMul, scaleDiv);
 	if (grabAndReleaseBus) _releaseBus();
 }
 
@@ -357,10 +357,10 @@ void ScreenHAL::executeEepromMacro(uint8_t macroNb, int16_t x, int16_t y, uint16
 	macroCommand_t mc;
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
-	mc.cmd = SCREEN_MACRO_CMD_EXECUTE_CHAINED;
-	mc.nbParams = macroNb;
+	mc.cmd = SCREEN_MACRO_CMD_EXECUTE;
+	mc.param[SCREEN_MACRO_PARAM_MACRO_NUMBER] = macroNb;
 	if (grabAndReleaseBus) _grabBus();
-	_drawMacroCommand(&mc, x, y, scaleMul, scaleDiv, isScaleThickness);
+	_executeMacroCommand(&mc, x, y, scaleMul, scaleDiv);
 	if (grabAndReleaseBus) _releaseBus();
 }
 
@@ -377,6 +377,40 @@ void ScreenHAL::_initializeMacros() {
 	_mIsFontOverlay = _isFontOverlay;
 	_mIsFontBold = _isFontBold;
 }
+
+
+void ScreenHAL::_formatMacroSentence(uint8_t *s) {
+	// replace all lower by upper outside quotes
+	uint16_t i=0;
+	while (s[i] != 0) {
+		// before quotes, convert lower into higher
+		while ((s[i] != 0) && (s[i] != '"')) {
+			if ((s[i] >= 'a') && (s[i] <= 'z')) s[i] = s[i] + 'A' - 'a';
+			// replace characters not allowed by spaces
+			if ((s[i] < '0') || (s[i] > 'Z') || ((s[i] > '9') && (s[i] < 'A'))) s[i] = ' ';
+			i++;
+		}
+		if (s[i] == 0) break;
+		i++;
+		// inside the quotes, replace escapes
+		while ((s[i] != 0) && (s[i] != '"')) {
+			char c = (char)s[i];
+			if (s[i] == '\\') {
+				if (s[i+1] == 'n') s[i+1] = '\n';
+				else if (s[i+1] == 't') s[i+1] = ' ';
+				// replace the inside quotes by FF, this will be undone when the string command is parsed
+				else if (s[i+1] == '"') s[i+1] = 0xFF;
+				int j = i;
+				while (s[j] != 0) s[j] = s[++j];
+				i++;
+			}
+			i++;
+		}
+		if (s[i] == 0) break;
+		i++;
+	}
+}
+
 
 void ScreenHAL::_executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv) {
 	uint8_t group = mc->cmd & SCREEN_MACRO_CMD_GROUP_MASK;
@@ -520,7 +554,7 @@ void ScreenHAL::_executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, u
 		if (mc->nbParams < 2) return;
 		int bc = _backgroundColor;
 		if (!_mIsFontOverlay) setBackgroundColor(_mBackgroundColor);
-		drawString(mc->text, sX, sY, _mForegroundColor, _mFontSize, _mIsFontBold, _mIsFontOverlay, false);
+		drawString((char *)mc->text, sX, sY, _mForegroundColor, _mFontSize, _mIsFontBold, _mIsFontOverlay, false);
 		if (!_mIsFontOverlay) setBackgroundColor(bc);
 		return;
 	}
@@ -534,58 +568,27 @@ void ScreenHAL::_executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, u
 		// read the EEPROM pointers table to get the start
 		int start = SCREEN_MACRO_MAX_NUMBER + mc->param[SCREEN_MACRO_PARAM_MACRO_NUMBER] * SCREEN_MACRO_MAX_SIZE;
 		// get the compressed macro
-		int buffer[] = new int[SCREEN_MACRO_MAX_SIZE];
-		int i=0;
+		uint8_t buffer[SCREEN_MACRO_MAX_SIZE];
+		uint8_t i=0;
 		while (i < length) {
 			buffer[i] = eeprom_read_uint8_t(start+i);
 			i++;
 		}
 		buffer[i] = 0;
-		macroCommand_t emc = new macroCommand_t();
+		macroCommand_t emc;
 		// uncompress the macro commands and execute them
 		if (mc->cmd == SCREEN_MACRO_CMD_EXECUTE_WITH_RESET) _initializeMacros();
 		i = 0;
 		while (i < length) {
-			int len = _uncompressMacroCommand(buffer, i, emc);
+			int8_t len = _uncompressMacroCommand(buffer, i, &emc);
 			if (len == SCREEN_MACRO_FORMAT_ERROR) return;
-			_executeMacroCommand(emc, x, y, scaleMul, scaleDiv, isScaleThickness);
+			_executeMacroCommand(&emc, x, y, scaleMul, scaleDiv);
 			i = len;
 		}
 	}
 }
 
 
-void ScreenHAL::_formatMacroSentence(uint8_t *s) {
-	// replace all lower by upper outside quotes
-	uint16_t i=0;
-	while (s[i] != 0) {
-		// before quotes, convert lower into higher
-		while ((s[i] != 0) && (s[i] != '"')) {
-			if ((s[i] >= 'a') && (s[i] <= 'z')) s[i] = s[i] + 'A' - 'a';
-			// replace characters not allowed by spaces
-			if ((s[i] < '0') || (s[i] > 'Z') || ((s[i] > '9') && (s[i] < 'A'))) s[i] = ' ';
-			i++;
-		}
-		if (s[i] == 0) break;
-		i++;
-		// inside the quotes, replace escapes
-		while ((s[i] != 0) && (s[i] != '"')) {
-			char c = (char)s[i];
-			if (s[i] == '\\') {
-				if (s[i+1] == 'n') s[i+1] = '\n';
-				else if (s[i+1] == 't') s[i+1] = ' ';
-				// replace the inside quotes by FF, this will be undone when the string command is parsed
-				else if (s[i+1] == '"') s[i+1] = 0xFF;
-				int j = i;
-				while (s[j] != 0) s[j] = s[++j];
-				i++;
-			}
-			i++;
-		}
-		if (s[i] == 0) break;
-		i++;
-	}
-}
 
 int8_t ScreenHAL::_parseHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc) {
 	uint16_t i = n;
@@ -603,7 +606,7 @@ int8_t ScreenHAL::_parseHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc) {
 	return i-n;
 }
 
-int8_t ScreenHAL::_parseParameter(int s[], int n, macroCommand_t mc, int paramId) {
+int8_t ScreenHAL::_parseParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId) {
 	uint16_t i = n;
 	boolean negative = false;
 	// remove front spaces
@@ -622,12 +625,12 @@ int8_t ScreenHAL::_parseParameter(int s[], int n, macroCommand_t mc, int paramId
 		value = value * 10 + s[i] - '0';
 		i++;
 	}
-	if (negative) mc.param[paramId] = -value;
-	else mc.param[paramId] = value;
+	if (negative) mc->param[paramId] = -value;
+	else mc->param[paramId] = value;
 	return i-n;
 }
 
-int16_t ScreenHAL::_getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX) {
+int32_t ScreenHAL::_getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX) {
 	int32_t value = radius;
 	value = (value * SCREEN_MACRO_COS45_LSH16) >> 16;
 	switch (octant) {
@@ -726,10 +729,10 @@ int16_t ScreenHAL::_getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, 
  *
  */
 int16_t ScreenHAL::_compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr) {
-	uint8_t group = mc.cmd & SCREEN_MACRO_CMD_GROUP_MASK;
 	
 	uint16_t i = bufferPtr;
 	buffer[i++] = mc->cmd;
+	uint8_t group = mc->cmd & SCREEN_MACRO_CMD_GROUP_MASK;
 	// presets
 	if (group == SCREEN_MACRO_CMD_GROUP_PRESET) {
 		if ((mc->cmd == SCREEN_MACRO_CMD_PRESET_FOREGROUND) || (mc->cmd == SCREEN_MACRO_CMD_PRESET_BACKGROUND)) { 
@@ -832,7 +835,7 @@ int16_t ScreenHAL::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCom
 	}
 	if (group == SCREEN_MACRO_CMD_GROUP_STRING) {
 		mc->textLen = buffer[i++];
-		mc->text = new int[mc->textLen+1];
+		mc->text = &(buffer[i]);
 		mc->text[mc->textLen] = 0;
 		for (uint8_t j=0; j<mc->textLen; j++) mc->text[j] = buffer[i++];
 	}
@@ -868,7 +871,7 @@ int8_t ScreenHAL::_compressNumber(int16_t in, uint8_t *out, uint16_t n) {
 }
 
 
-int8_t ScreenHAL::_uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, int paramId) {
+int8_t ScreenHAL::_uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, uint8_t paramId) {
 	boolean negative = false;
 	if ((in[n] & (0x01 << 6)) != 0) negative = true;
 	mc->param[paramId] = in[n] & 0x3F;

@@ -5,10 +5,10 @@
 
 // the number of macros defined in eeprom
 // each compressed macro can be up to SCREEN_MACRO_MAX_SIZE character long
-// the eeprom taken will be SCREEN_MACRO_MAX_NUMBER * SCREEN_MACRO_MAX_NUMBER bytes
+// the eeprom taken will be SCREEN_MACRO_MAX_NUMBER * SCREEN_MACRO_MAX_SIZE bytes
 #define SCREEN_MACRO_MAX_NUMBER 16
 // this number can not be bigger than 255
-#define SCREEN_MACRO_MAX_NUMBER 128
+#define SCREEN_MACRO_MAX_SIZE 128
 
 #define SCREEN_MACRO_CMD_NONE						0x00
 #define SCREEN_MACRO_CMD_PRESET_FOREGROUND			0x11
@@ -21,7 +21,7 @@
 #define SCREEN_MACRO_CMD_ARC 						0x30
 #define SCREEN_MACRO_CMD_ARC_FILLED 				0x31
 #define SCREEN_MACRO_CMD_ARC_REVERSED				0x32
-#define SCREEN_MACRO_CMD_ARC_REVERSED_FILLED		0x33
+#define SCREEN_MACRO_CMD_ARC_FILLED_REVERSED		0x33
 #define SCREEN_MACRO_CMD_RECTANGLE					0x40
 #define SCREEN_MACRO_CMD_RECTANGLE_FILLED			0x41
 #define SCREEN_MACRO_CMD_RECTANGLE_ROUNDED			0x42

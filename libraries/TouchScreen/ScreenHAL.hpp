@@ -247,19 +247,19 @@ class ScreenHAL: public Print {
 
 		int8_t _parseHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc);
 
-		int8_t _parseParameter(int s[], int n, macroCommand_t mc, int paramId);
+		int8_t _parseParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId);
 		
 		void _executeMacroCommand(macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1);
 		
 		int32_t _getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX);
 		
-		int8_t _compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr);
+		int16_t _compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr);
 		
-		int8_t uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCommand_t *mc);
+		int16_t _uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCommand_t *mc);
 		
 		int8_t _compressNumber(int16_t in, uint8_t *out, uint16_t n);
 		
-		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, int paramId);
+		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, uint8_t paramId);
 #endif
 
 		void _grabBus();
