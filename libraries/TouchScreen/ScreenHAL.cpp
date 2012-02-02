@@ -50,12 +50,14 @@ void ScreenHAL::initScreen() {
 	_busTaken = 0;
 	_rotation = 0;
 	_margin = 0;
+#if defined(SCREEN_MACRO_DRAWING)	
+	_initializeMacros();
+#endif
 	setFont(1, FONT_PLAIN, NO_OVERLAY);
 	_grabBus();
 	initScreenImpl();
 	_releaseBus();
 }
-
 
 void ScreenHAL::setRotation(uint8_t rotation) {
 	_rotation = rotation;
@@ -118,6 +120,14 @@ void ScreenHAL::setBackgroundColor(uint16_t color) {
 	_backgroundColor = color;
 }
 
+
+void ScreenHAL::setThickness(int8_t thickness) {
+	_thickness = thickness;
+}
+
+int8_t ScreenHAL::getThickness() {
+	return _thickness;
+}
 
 uint16_t ScreenHAL::getMargin() {
 	return _margin;
@@ -190,20 +200,21 @@ void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_
 	if ((x + fontDef->width * fontScale >= _width) || (y + fontDef->height * fontScale >= _height)) return;
 	
 	if (grabAndReleaseBus) _grabBus();
+	int16_t lx = x;
 	while (s[0] != 0) {
 		if (s[0] == '\n') {
 			y += (fontDef->height + fontDef->lineSpacing + (isBold ? 1 : 0)) * fontScale;
 			if (y >= _height) break;
-			x = 0;
+			lx = x;
 		} else if (s[0] == '\r') {
 			// skip the character
 		} else {
 			uint8_t validChr = s[0];
 			if ((validChr < fontDef->firstChar) || (validChr > fontDef->lastChar)) validChr = '?';
-			_drawValidChar(validChr, x, y, color, validFontSize, fontDef, fontScale, isBold, overlay);
-			x += (fontDef->width + fontDef->charSpacing) * fontScale;
-			if (x > _width) {
-				x = 0;
+			_drawValidChar(validChr, lx, y, color, validFontSize, fontDef, fontScale, isBold, overlay);
+			lx += (fontDef->width + fontDef->charSpacing) * fontScale;
+			if (lx > _width) {
+				lx = x;
 				y += (fontDef->height + fontDef->lineSpacing + (isBold ? 1 : 0)) * fontScale;
 				if (y >= _height) break;
 			}
@@ -254,7 +265,11 @@ void ScreenHAL::drawPixel(int16_t x, int16_t y, uint16_t color, bool grabAndRele
 void ScreenHAL::drawHorizontalLine(int16_t x1, int16_t x2, int16_t y, uint16_t color, int8_t thickness, bool grabAndReleaseBus) {
 	if (grabAndReleaseBus) _grabBus();
 	if (thickness <= 1) _fillBoundedArea(x1, y, x2, y, color);
-	else _fillBoundedArea(x1, y-(thickness-1)/2, x2, y+thickness/2, color);
+	else {
+		int8_t t1 = (thickness-1)/2;
+		int8_t t2 = thickness/2;
+		_fillBoundedArea(x1-t1, y-t1, x2+t2, y+t2, color);
+	}
 	if (grabAndReleaseBus) _releaseBus();
 }
 
@@ -262,7 +277,11 @@ void ScreenHAL::drawHorizontalLine(int16_t x1, int16_t x2, int16_t y, uint16_t c
 void ScreenHAL::drawVerticalLine(int16_t x, int16_t y1, int16_t y2, uint16_t color, int8_t thickness, bool grabAndReleaseBus) {
 	if (grabAndReleaseBus) _grabBus();
 	if (thickness <= 1) _fillBoundedArea(x, y1, x, y2, color);
-	else _fillBoundedArea(x-(thickness-1)/2, y1, x+thickness/2, y2, color);
+	else {
+		int8_t t1 = (thickness-1)/2;
+		int8_t t2 = thickness/2;
+		_fillBoundedArea(x-t1, y1-t1, x+t2, y2+t2, color);
+	}
 	if (grabAndReleaseBus) _releaseBus();
 }
 
@@ -379,6 +398,11 @@ void ScreenHAL::fillRectangle(int16_t x, int16_t y, uint16_t width, uint16_t hei
 	if (grabAndReleaseBus) _grabBus();
 	_fillBoundedArea(x, y, x+width-1, y+height-1, color);
 	if (grabAndReleaseBus) _releaseBus();
+}
+
+
+void ScreenHAL::fillScreen(uint16_t color, bool grabAndReleaseBus) {
+	fillRectangle(0, 0, getWidth(), getHeight(), color, grabAndReleaseBus);
 }
 
 

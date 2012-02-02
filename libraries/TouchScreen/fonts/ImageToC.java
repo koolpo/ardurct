@@ -12,7 +12,6 @@ public class ImageToC {
 
 	private static final int HORIZONTAL = 0;
 	private static final int VERTICAL = 1;
-	private static final int PAGE = 2;
 	
 	private static final int BLACK_LIMIT = 128;
 	
@@ -313,6 +312,7 @@ public class ImageToC {
 					"\tscanLineOrientation: V for vertical or H for horizontal [default to H]\n" +
 					"\t\tif V, the display will use vertical scan lines\n" + 
 					"\t\tif H, the display will use horizontal scan lines\n" +
+					"\t\tif P, the display will use page scan lines\n" +
 					"\tvaluesPerLine: number of values per line in the output\n" +
 					"\tfontWidth: width of a character in pixels (fontHeight is the height of the image)\n" +
 					"\tfontCharSpacing: space between two characters in pixels\n" +

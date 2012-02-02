@@ -5,7 +5,12 @@
 #include <inttypes.h>
 
 // Comment this if you don't want to use macros to draw on the screen
-#define SCREEN_MACROS 1
+// this takes a few K of code
+#define SCREEN_MACRO_DRAWING 1
+
+#if defined(SCREEN_MACRO_DRAWING)
+#include "MacroDrawing.hpp"
+#endif
 
 #include "fonts.hpp"
 
@@ -46,6 +51,7 @@
 #define OVERLAY true
 #define NO_OVERLAY false
 
+
 class ScreenHAL: public Print {
     
 	public:
@@ -69,7 +75,11 @@ class ScreenHAL: public Print {
 		uint16_t getBackgroundColor();
 
 		void setBackgroundColor(uint16_t color);
+		
+		void setThickness(int8_t thickness);
 
+		int8_t getThickness();
+		
 		uint16_t getMargin();
 
 		void setMargin(uint16_t color);
@@ -134,6 +144,19 @@ class ScreenHAL: public Print {
 
 		void drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, int16_t y, uint8_t width, uint8_t height, uint16_t color, uint16_t backColor, uint8_t scale = 1, bool overlay = false, bool grabAndReleaseBus = true);
 
+		void fillScreen(uint16_t color, bool grabAndReleaseBus = true);
+		
+#if defined(SCREEN_MACRO_DRAWING)
+		void executeMacro(uint8_t *macro, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1, 
+			bool continueLastMacro = false, bool grabAndReleaseBus = true);
+
+		void executeMacroCommand(macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
+			bool continueLastMacro = false, bool grabAndReleaseBus = true);
+		
+		void executeEepromMacro(uint8_t macroNb, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
+			bool continueLastMacro = false, bool grabAndReleaseBus = true);
+#endif
+
 	protected:
 		volatile uint8_t *_outPort;
 		volatile uint8_t *_inPort;
@@ -194,15 +217,50 @@ class ScreenHAL: public Print {
 		uint16_t _x;
 		uint16_t _y;
 		uint16_t _margin;
-		uint8_t _fontSize;
+		uint8_t _rotation;
 		uint16_t _backgroundColor;
 		uint16_t _foregroundColor;
+		uint8_t _fontSize;
+		bool _isFontBold;
+		bool _isFontOverlay;
+		int8_t _thickness;
 		fontDefinition_t *_fontDef;
 		uint8_t _fontScale;
-		bool _isFontBold;
-		uint8_t _rotation;
-		int16_t _thickness;
-		bool _isFontOverlay;
+#if defined(SCREEN_MACRO_DRAWING)
+		int16_t _mThickness;
+		int16_t _mX;
+		int16_t _mY;
+		int16_t _mScaleMul;
+		int16_t _mScaleDiv;
+		bool _mIsThicknessScalable;
+		uint16_t _mBackgroundColor;
+		uint16_t _mForegroundColor;
+		uint8_t _mFontSize;
+		bool _mIsFontBold;
+		bool _mIsFontOverlay;
+
+		void _formatMacroSentence(uint8_t *s);
+
+		void _initializeMacros();
+		
+		int16_t _parseMacroCommandParameters(uint8_t *s, macroCommand_t *mc);
+
+		int8_t _parseHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc);
+
+		int8_t _parseParameter(int s[], int n, macroCommand_t mc, int paramId);
+		
+		void _executeMacroCommand(macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1);
+		
+		int32_t _getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX);
+		
+		int8_t _compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr);
+		
+		int8_t uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCommand_t *mc);
+		
+		int8_t _compressNumber(int16_t in, uint8_t *out, uint16_t n);
+		
+		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, int paramId);
+#endif
 
 		void _grabBus();
 		
@@ -222,5 +280,6 @@ class ScreenHAL: public Print {
 		void _drawOrFillOctant(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, int8_t thickness, bool fill);
 
 };
+
 
 #endif

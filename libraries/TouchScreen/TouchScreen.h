@@ -28,8 +28,6 @@ typedef struct {
 	int32_t divider;
 } tsCalibrationEquation_t;
 
-#define fillScreen(color) fillRectangle(0, 0, getWidth(), getHeight(), color)
-
 class TouchScreen: public S6D04H0 {
     
 	public:
