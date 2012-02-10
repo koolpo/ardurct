@@ -24,12 +24,12 @@ TouScruino_1284_8.build.variant=standard
 TouScruino_1284_11.name=TouScruino (3.3V, 11.0592 MHz) w/ ATmega1284
 
 TouScruino_1284_11.upload.protocol=stk500
-TouScruino_1284_8.upload.maximum_size=131072
-TouScruino_1284_8.upload.speed=57600
+TouScruino_1284_11.upload.maximum_size=131072
+TouScruino_1284_11.upload.speed=57600
 
-TouScruino_1284_8.bootloader.low_fuses=0xFF
-TouScruino_1284_8.bootloader.high_fuses=0xDA
-TouScruino_1284_8.bootloader.extended_fuses=0xFD
+TouScruino_1284_11.bootloader.low_fuses=0xFF
+TouScruino_1284_11.bootloader.high_fuses=0xDA
+TouScruino_1284_11.bootloader.extended_fuses=0xFD
 TouScruino_1284_11.bootloader.path=atmega
 TouScruino_1284_11.bootloader.file=ATmegaBOOT_atmega1284p_11MHz.hex
 TouScruino_1284_11.bootloader.unlock_bits=0x3F
@@ -39,6 +39,27 @@ TouScruino_1284_11.build.mcu=atmega1284p
 TouScruino_1284_11.build.f_cpu=11059200L
 TouScruino_1284_11.build.core=arduino
 TouScruino_1284_11.build.variant=standard
+
+###################################################################
+
+TouScruino_1284_16.name=TouScruino (3.3V, 16 MHz) w/ ATmega1284
+
+TouScruino_1284_16.upload.protocol=stk500
+TouScruino_1284_16.upload.maximum_size=131072
+TouScruino_1284_16.upload.speed=57600
+
+TouScruino_1284_16.bootloader.low_fuses=0xFF
+TouScruino_1284_16.bootloader.high_fuses=0xDA
+TouScruino_1284_16.bootloader.extended_fuses=0xFD
+TouScruino_1284_16.bootloader.path=atmega
+TouScruino_1284_16.bootloader.file=ATmegaBOOT_atmega1284p_16MHz.hex
+TouScruino_1284_16.bootloader.unlock_bits=0x3F
+TouScruino_1284_16.bootloader.lock_bits=0x0F
+
+TouScruino_1284_16.build.mcu=atmega1284p
+TouScruino_1284_16.build.f_cpu=16000000L
+TouScruino_1284_16.build.core=arduino
+TouScruino_1284_16.build.variant=standard
 
 ###################################################################
 

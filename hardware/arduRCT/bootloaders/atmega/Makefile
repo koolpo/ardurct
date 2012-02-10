@@ -248,6 +248,21 @@ atmega1284p_11_isp: HFUSE = DA
 atmega1284p_11_isp: EFUSE = FD
 atmega1284p_11_isp: isp
 
+atmega1284p_16: TARGET = atmega1284p_16MHz
+atmega1284p_16: MCU_TARGET = atmega1284p
+atmega1284p_16: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600
+atmega1284p_16: AVR_FREQ = 16000000L 
+atmega1284p_16: LDSECTION  = --section-start=.text=0x1F000
+atmega1284p_16: $(PROGRAM)_atmega1284p_16MHz.hex
+
+atmega1284p_16_isp: atmega1284p_16
+atmega1284p_16_isp: TARGET = atmega1284p_16MHz
+atmega1284p_16_isp: MCU_TARGET = atmega1284p
+atmega1284p_16_isp: LFUSE = FF
+atmega1284p_16_isp: HFUSE = DA
+atmega1284p_16_isp: EFUSE = FD
+atmega1284p_16_isp: isp
+
 #########################################################################################
 
 mega: TARGET = atmega1280
