@@ -173,6 +173,7 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	NOT_ON_TIMER,
 	NOT_ON_TIMER,
 	NOT_ON_TIMER,
+	NOT_ON_TIMER,
 	TIMER1B,		// PD4 -  D5 / PWM1
 	TIMER1A,		// PD5 -  D6 / PWM2
 	NOT_ON_TIMER,
