@@ -233,5 +233,14 @@ const unsigned char PROGMEM font_medium[][12] = {
 	{ 0x0c, 0x10, 0x10, 0x10, 0x10, 0x20, 0x10, 0x10, 0x10, 0x10, 0x0c, 0x00 },		/* } - 0x7d - 125 */
 };
 
+// a ?x? font occupying ?x? space per char, (?px between chars and ?px between lines)
+// starts at ascii code 0x20 and finishes at 0x7d
+// each byte represents a HORIZONTAL line in the pattern
+fontDefinition_t fontDefinition_big = { 1, 1, 1, 1, 0x00, 0x00, 0 };
+
+const unsigned char PROGMEM font_big[][1] = {
+	{ 0 }
+};
+
 #endif  /* FONTS_H */
 

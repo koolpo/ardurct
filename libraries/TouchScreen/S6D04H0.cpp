@@ -13,6 +13,7 @@
 #define S6D04H0_R180	0x88
 #define S6D04H0_R270	0xE8
 
+// the following functions are defined as macros to speed up the execution
 #define _clearRD() { *_rdPort &= _rdLow; *_rdPort &= _rdLow; }
 
 #define _pulseWR() { *_wrPort &= _wrLow; *_wrPort |= _wrHigh; }
@@ -165,15 +166,6 @@ void S6D04H0::setRotationImpl(uint8_t rotation) {
 		_writeCommand(S6D04H0_MADCTL);
 		_writeData(S6D04H0_R270);
 	}
-}
-
-uint16_t S6D04H0::getWidthImpl() {
-	return S6D04H0_WIDTH;
-}
-
-
-uint16_t S6D04H0::getHeightImpl() {
-	return S6D04H0_HEIGHT;
 }
 
 /* ---------------- Private functions -------------------------- */

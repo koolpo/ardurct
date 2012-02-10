@@ -1,6 +1,7 @@
 #include "TouchScreen.h"
 #include "eepromUtils.hpp"
-	
+
+
 TouchScreen::TouchScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
 	setupScreen(port, cd, wr, rd, cs, reset);
 	_xm = 0xFF;
@@ -41,7 +42,7 @@ uint8_t TouchScreen::getBacklight() {
 }
 
 
-void TouchScreen::setupTouchPanel(uint8_t xm, uint8_t xp, uint8_t ym, uint8_t yp, uint16_t xPlaneResistance, uint16_t pressureThreshold) {
+void TouchScreen::setupTouchPanel(uint8_t xm, uint8_t xp, uint8_t ym, uint8_t yp) {
 	_xm = xm;
 	_ym = ym;
 	_xp = xp;
@@ -54,8 +55,6 @@ void TouchScreen::setupTouchPanel(uint8_t xm, uint8_t xp, uint8_t ym, uint8_t yp
 	_xpBitMask = digitalPinToBitMask(xp);
 	_ymBitMask = digitalPinToBitMask(ym);
 	_ypBitMask = digitalPinToBitMask(yp);
-	_xPlaneResistance = xPlaneResistance;
-	_pressureThreshold = pressureThreshold;
 	// calibrate the touch panel if required
 	_xCalibrationEquation.divider = 0;
 	if (!calibrateTouchPanel()) return;
@@ -123,7 +122,7 @@ uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	*_xmPort &= ~_xmBitMask;
 	val1 = analogRead(_yp);
 	val2 = analogRead(_yp);
-	if (abs(val1-val2) > TOUCHSCREEN_EQUAL) return TOUCHSCREEN_NO_TOUCH;
+	if (abs(val1-val2) > HARDWARE_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
 	X = (val1 + val2)/2;
 	
 	// measure Y
@@ -135,7 +134,7 @@ uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	*_ypPort |= _ypBitMask;
 	val1 = analogRead(_xm);
 	val2 = analogRead(_xm);
-	if (abs(val1-val2) > TOUCHSCREEN_EQUAL) return TOUCHSCREEN_NO_TOUCH;
+	if (abs(val1-val2) > HARDWARE_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
 	Y = (val1 + val2)/2;
 	
 	// Measure Z
@@ -148,13 +147,13 @@ uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	float Z = val2;
 	Z /= val1;
 	Z -= 1;
-	Z *= X *_xPlaneResistance / 1024;
+	Z *= (X * HARDWARE_X_PLANE_RESISTANCE) / 1024;
 	*z = Z; 
 	
 	// we leave with XP and YM as outputs
 	// and XM and YP as inputs
 	
-	if ((*z >= _pressureThreshold) && (*z < TOUCHSCREEN_MAX_PRESSURE)) {
+	if ((*z >= HARDWARE_PRESSURE_THRESHOLD) && (*z < HARDWARE_PRESSURE_MAX)) {
 		_getDisplayXY(&X, &Y);
 		*x = X;
 		*y = Y;

@@ -1,5 +1,7 @@
 #include "ScreenHAL.hpp"
 
+#if defined(SCREEN_MACROS)
+
 /* 
  *	A macro is a serie of drawing commands which can be chained together.
  *  Each command is a few letters followed by a space and some parameters separated by spaces
@@ -8,7 +10,7 @@
  *	Chaining: 	If the number of parameters is not sufficient to finish the command, 
  *				the last point reached by the previous command is used 
  *	Numbers:	Colors are in hexadecimal
- *				all other are in decimal
+ *				all other numbers are in decimal
  *
  *	Examples
  *	--------
@@ -32,14 +34,15 @@
  *				o			if present the font will be overlaid
  *		
  *		l	Line
- *			l x1 y1 [x2 y2]
+ *			l[d] x1 y1 [x2 y2]
+ *				d		delta: x1 and y1 (or x2 and y2 if they exist) are delta values relative to last point drawn
  *				x1 y1	start or next point in the line
  *				x2 y2	next point in the line
  *
  *		a	Arc			can be drawn clockwise or counter clockwise and filled
  *			a[r][f]DDD [x0 y0] radius
  *				r		if present, the arc will be drawn reversed (counter clockwise). 
-						i.e.: if DDD=NE
+ *						i.e.: if DDD=NE
  *							if r the East end will be connected to the last point drawn
  *							else the North end will be attached
  *				f		if present, the arc will be filled		
@@ -71,7 +74,7 @@
  *				x1 y1	top left of the first char drawn
  *				"text"	text to draw. Some characters can be escaped \n, \", \\
  *
- *		w	Write		Write the macro in EEPROM, all following commands are written to the eeprom
+ *		w	Write		Write a macro in EEPROM, all following commands are written to the eeprom
  *			w n
  *				n		the macro number to write
  *
@@ -80,8 +83,6 @@
  *				r		reset the macro variables before executing
  *				n		the macro number to execute
  */
-
-#if defined(SCREEN_MACRO_DRAWING)
 
 #define SCREEN_MACRO_FORMAT_ERROR -1
 
@@ -110,6 +111,7 @@
 #define SCREEN_MACRO_PARAM_WIDTH 2
 #define SCREEN_MACRO_PARAM_HEIGHT 3
 #define SCREEN_MACRO_PARAM_ROUNDING 4
+#define SCREEN_MACRO_PARAM_RADIUS 2
 #define SCREEN_MACRO_PARAM_THICKNESS 0
 #define SCREEN_MACRO_PARAM_THICKNESS_IS_SCALABLE 1
 #define SCREEN_MACRO_PARAM_FONT_SIZE 0
@@ -117,7 +119,6 @@
 #define SCREEN_MACRO_PARAM_FONT_IS_OVERLAY 2
 #define SCREEN_MACRO_PARAM_SCALE_MUL 0
 #define SCREEN_MACRO_PARAM_SCALE_DIV 1
-#define SCREEN_MACRO_PARAM_RADIUS 0
 #define SCREEN_MACRO_PARAM_ARC_1 0
 #define SCREEN_MACRO_PARAM_ARC_3 2
 #define SCREEN_MACRO_PARAM_ARC_OCTANT 3
@@ -127,7 +128,7 @@
 extern uint8_t eeprom_read_uint8_t(uint16_t address);
 extern void eeprom_write_uint8_t(uint16_t address, uint8_t value);
 
-void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool grabAndReleaseBus) {
+uint8_t *ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
 	macroCommand_t mc;
 	bool drawMode = true;
 	uint8_t wBuffer[256];
@@ -144,7 +145,11 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 		switch (s[i]) {
 			case 'L':
 				mc.cmd = SCREEN_MACRO_CMD_LINE;
-				if (s[i+1] != ' ') return;
+				if (s[i+1] == 'D') {
+					mc.cmd = SCREEN_MACRO_CMD_LINE_DELTA;
+					i++;
+				}
+				if (s[i+1] != ' ') return 0;
 				break;
 			case 'A':
 				mc.cmd = SCREEN_MACRO_CMD_ARC;
@@ -161,38 +166,36 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 					if (s[i+2] == 'N') {
 						if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NNE;
 						else if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NNW;
-						else if (s[i+3] != ' ') return;
+						else if (s[i+3] != ' ') return  0;
 					} else if (s[i+2] == 'E') {
 						if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NEE;
 						else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NE;
-						else return;
+						else return 0;
 					} else if (s[i+2] == 'W') {
 						if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NWW;
 						else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NW;
-						else return;
+						else return 0;
 					} else if (s[i+2] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_N;
-					else return;
+					else return 0;
 				} else if (s[i+1] == 'S') {
 					if (s[i+2] == 'S') {
 						if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SSE;
 						else if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SSW;
-						else if (s[i+3] != ' ') return;
+						else if (s[i+3] != ' ') return 0;
 					} else if (s[i+2] == 'E') {
 						if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SEE;
 						else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SE;
-						else return;
+						else return 0;
 					} else if (s[i+2] == 'W') {
 						if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SWW;
 						else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SW;
-						else return;
+						else return 0;
 					} else if (s[i+2] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_S;
-					else return;
+					else return 0;
 				} else if ((s[i+1] == 'E') && (s[i+2] == ' ')) mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_E;
 				else if ((s[i+1] == 'W') && (s[i+2] == ' ')) mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_W;
-				else return;
-				i++;
-				if (s[i+2] != ' ') i++;
-				if (s[i+3] != ' ') i++;
+				else return 0;
+				while (s[i+1] = ' ') i++;
 				break;
 			case 'R':
 				if (s[i+1] == 'R') {
@@ -204,26 +207,26 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 				} else if (s[i+1] == 'F') {
 					mc.cmd = SCREEN_MACRO_CMD_RECTANGLE_FILLED;
 					i++;
-				} else 
-				if (s[i+1] != ' ') return;
+				} else mc.cmd = SCREEN_MACRO_CMD_RECTANGLE;
+				if (s[i+1] != ' ') return 0;
 				break;
 			case 'S':
 				mc.cmd = SCREEN_MACRO_CMD_STRING;
-				if (s[i+1] != ' ') return;
+				if (s[i+1] != ' ') return 0;
 				break;
 			case 'C':
 				if (s[i+1] == 'F') {
 					i++;
 					mc.cmd = SCREEN_MACRO_CMD_CIRCLE_FILLED;
 				} else mc.cmd = SCREEN_MACRO_CMD_CIRCLE;
-				if (s[i+1] != ' ') return;
+				if (s[i+1] != ' ') return 0;
 				break;
 			case 'T':
 				if (s[i+1] == 'F') {
 					i++;
 					mc.cmd = SCREEN_MACRO_CMD_TRIANGLE_FILLED;
 				} else mc.cmd = SCREEN_MACRO_CMD_TRIANGLE;
-				if (s[i+1] != ' ') return;
+				if (s[i+1] != ' ') return 0;
 				break;
 			case 'P':
 				if (s[i+1] == 'T') {
@@ -234,11 +237,11 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 						i++;
 						mc.param[SCREEN_MACRO_PARAM_THICKNESS_IS_SCALABLE] = 1;
 					}
-					if (s[i+1] != ' ') return;
+					if (s[i+1] != ' ') return 0;
 				} else if (s[i+1] == 'S') {
 					mc.cmd = SCREEN_MACRO_CMD_PRESET_SCALE;
 					i++;
-					if (s[i+1] != ' ') return;
+					if (s[i+1] != ' ') return 0;
 				} else if (s[i+1] == 'F') {
 					mc.cmd = SCREEN_MACRO_CMD_PRESET_FONT;
 					mc.param[SCREEN_MACRO_PARAM_FONT_IS_BOLD] = 0;
@@ -252,40 +255,40 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 						mc.param[SCREEN_MACRO_PARAM_FONT_IS_OVERLAY] = 1;
 						i++;
 					} 
-					if (s[i+1] != ' ') return;
+					if (s[i+1] != ' ') return 0;
 				} else if (s[i+1] == 'C') {
-					int8_t len = _parseHexColor(s, i+2, &mc);
-					if (len == SCREEN_MACRO_FORMAT_ERROR) return;
+					int8_t len = _parseMacroCommandHexColor(s, i+2, &mc);
+					if (len == SCREEN_MACRO_FORMAT_ERROR) return 0;
 					i += len+1;
 					mc.cmd = SCREEN_MACRO_CMD_PRESET_FOREGROUND;
 				} else if (s[i+1] == 'B') {
-					int8_t len = _parseHexColor(s, i+2, &mc);
-					if (len == SCREEN_MACRO_FORMAT_ERROR) return;
+					int8_t len = _parseMacroCommandHexColor(s, i+2, &mc);
+					if (len == SCREEN_MACRO_FORMAT_ERROR) return 0;
 					i += len+1;
 					mc.cmd = SCREEN_MACRO_CMD_PRESET_BACKGROUND;
 				} else if (s[i+1] == 'E') {
 					mc.cmd = SCREEN_MACRO_CMD_PRESET_ERASE;
 					i++;
-					if (s[i+1] != ' ') return;
-				} else return;
+					if (s[i+1] != ' ') return 0;
+				} else return 0;
 				break;
 			case 'E':
 				if (s[i+1] == 'R') {
 					i++;
 					mc.cmd = SCREEN_MACRO_CMD_EXECUTE_WITH_RESET;
 				} else mc.cmd = SCREEN_MACRO_CMD_EXECUTE;
-				if (s[i+1] != ' ') return;
+				if (s[i+1] != ' ') return 0;
 				break;
 			case 'W':
 				drawMode = false;
 				mc.cmd = SCREEN_MACRO_CMD_WRITE;
-				if (s[i+1] != ' ') return;
+				if (s[i+1] != ' ') return 0;
 				break;
 			case ' ':
 				mc.cmd = SCREEN_MACRO_CMD_NONE;
 				break;
 			default:
-				return;
+				return 0;
 		}
 		i++;
 		
@@ -295,7 +298,7 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 		mc.nbParams = 0;
 		int len = 0;
 		while (true) {
-			len = _parseParameter(s, i, &mc, mc.nbParams);
+			len = _parseMacroCommandParameter(s, i, &mc, mc.nbParams);
 			if (len == SCREEN_MACRO_FORMAT_ERROR) break;
 			i += len;
 			mc.nbParams ++;
@@ -304,7 +307,7 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 			// for text, always 2 coordinates, followed by text
 			// search for start of string
 			while ((s[i] != 0) && (s[i] != '"')) i++;
-			if (s[i] != '"') return;
+			if (s[i] != '"') return 0;
 			i++;
 			int txtStart = i;
 			// search for end of string
@@ -313,7 +316,7 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 				if (s[i] == 0xFF) s[i] = '"';
 				i++;
 			}
-			if (s[i] != '"') return;
+			if (s[i] != '"') return 0;
 			s[i] = 0;
 			mc.text = &s[txtStart];
 			mc.textLen = i - txtStart;
@@ -321,16 +324,16 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 
 		
 		// Execute the command
-		if (drawMode) executeMacroCommand(&mc, x, y, scaleMul, scaleDiv, true, grabAndReleaseBus);
+		if (drawMode) executeMacroCommand(&mc, x, y, scaleMul, scaleDiv, true, selectAndUnselectScreen);
 		else if (mc.cmd == SCREEN_MACRO_CMD_WRITE) {
 			wBufferNb = mc.param[SCREEN_MACRO_PARAM_MACRO_NUMBER];
-			if (wBufferNb > SCREEN_MACRO_MAX_NUMBER) return;
+			if (wBufferNb > SCREEN_MACRO_MAX_NUMBER) return 0;
 		}
 
 		// At this stage, we have a struct containing the command to execute
 		// this can be stored in EEPROM for future execution
 		if (mc.cmd != SCREEN_MACRO_CMD_WRITE) {
-			int endWrite = _compressMacroCommand(&mc, wBuffer, wBufferPtr);
+			int16_t endWrite = _compressMacroCommand(&mc, wBuffer, wBufferPtr);
 			if (endWrite != SCREEN_MACRO_FORMAT_ERROR) wBufferPtr = endWrite;
 		}
 	}
@@ -341,27 +344,28 @@ void ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul
 			for (int j=0; j<wBufferPtr; j++) eeprom_write_uint8_t(SCREEN_MACRO_MAX_NUMBER + wBufferNb*SCREEN_MACRO_MAX_SIZE+j, wBuffer[j]);
 		}
 	}
+	return wBuffer;
 }
 
 
-void ScreenHAL::executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool grabAndReleaseBus) {
+void ScreenHAL::executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
-	if (grabAndReleaseBus) _grabBus();
+	if (selectAndUnselectScreen) _selectScreen();
 	_executeMacroCommand(mc, x, y, scaleMul, scaleDiv);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::executeEepromMacro(uint8_t macroNb, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool grabAndReleaseBus) {
+void ScreenHAL::executeEepromMacro(uint8_t macroNb, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
 	macroCommand_t mc;
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
 	mc.cmd = SCREEN_MACRO_CMD_EXECUTE;
 	mc.param[SCREEN_MACRO_PARAM_MACRO_NUMBER] = macroNb;
-	if (grabAndReleaseBus) _grabBus();
+	if (selectAndUnselectScreen) _selectScreen();
 	_executeMacroCommand(&mc, x, y, scaleMul, scaleDiv);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
@@ -380,7 +384,6 @@ void ScreenHAL::_initializeMacros() {
 
 
 void ScreenHAL::_formatMacroSentence(uint8_t *s) {
-	// replace all lower by upper outside quotes
 	uint16_t i=0;
 	while (s[i] != 0) {
 		// before quotes, convert lower into higher
@@ -403,7 +406,7 @@ void ScreenHAL::_formatMacroSentence(uint8_t *s) {
 				int j = i;
 				while (s[j] != 0) s[j] = s[++j];
 				i++;
-			}
+			} else if (s[i] == 0xFF) s[i] = ' ';	// because quotes are now FF, replace FF by space
 			i++;
 		}
 		if (s[i] == 0) break;
@@ -447,27 +450,45 @@ void ScreenHAL::_executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, u
 	if (_mIsThicknessScalable) sThickness = sThickness * sMul/sDiv;	
 	
 	// lines
-	if (mc->cmd == SCREEN_MACRO_CMD_LINE) {
-		int32_t sX2, sY2;
+	if (group == SCREEN_MACRO_CMD_GROUP_LINE) {
+		int sX2, sY2;
 		if (mc->nbParams < 2) return;
-		if (mc->nbParams > 2) {
-			sX2 = mc->param[SCREEN_MACRO_PARAM_X2];
-			sX2 = sX2 * sMul/sDiv + x;
-			sY2 = mc->param[SCREEN_MACRO_PARAM_Y2];
-			sY2 = sY2 * sMul/sDiv + y;
-			// p2 becomes the end point
-			_mX = mc->param[SCREEN_MACRO_PARAM_X2];
-			_mY = mc->param[SCREEN_MACRO_PARAM_Y2];
+		if (mc->cmd == SCREEN_MACRO_CMD_LINE) {
+			if (mc->nbParams > 2) {
+				sX2 = x + mc->param[SCREEN_MACRO_PARAM_X2] * sMul/sDiv;
+				sY2 = y + mc->param[SCREEN_MACRO_PARAM_Y2] * sMul/sDiv;
+				// p2 becomes the end point
+				_mX = mc->param[SCREEN_MACRO_PARAM_X2];
+				_mY = mc->param[SCREEN_MACRO_PARAM_Y2];
+			} else {
+				sX2 = sX;
+				sY2 = sY;
+				sX = x + _mX * sMul/sDiv;
+				sY = y + _mY * sMul/sDiv;	
+				// p1 becomes the end point
+				_mX = mc->param[SCREEN_MACRO_PARAM_X1];
+				_mY = mc->param[SCREEN_MACRO_PARAM_Y1];
+			}
 		} else {
-			sX2 = sX;
-			sY2 = sY;
-			sX = _mX;
-			sX = sX * sMul/sDiv + x;
-			sY = _mY;
-			sY = sY * sMul/sDiv + y;	
-			// p1 becomes the end point
-			_mX = mc->param[SCREEN_MACRO_PARAM_X1];
-			_mY = mc->param[SCREEN_MACRO_PARAM_Y1];
+			// delta values
+			if (mc->nbParams > 2) {
+				// p2 = p1+delta
+				sX2 = x + (mc->param[SCREEN_MACRO_PARAM_X1] + mc->param[SCREEN_MACRO_PARAM_X2]) * sMul/sDiv;
+				sY2 = y + (mc->param[SCREEN_MACRO_PARAM_Y1] + mc->param[SCREEN_MACRO_PARAM_Y2]) * sMul/sDiv;
+				// p1+delta becomes the end point
+				_mX = mc->param[SCREEN_MACRO_PARAM_X1] + mc->param[SCREEN_MACRO_PARAM_X2];
+				_mY = mc->param[SCREEN_MACRO_PARAM_Y1] + mc->param[SCREEN_MACRO_PARAM_Y2];
+			} else {
+				// p2 = old_point+delta
+				sX2 = x + (_mX + mc->param[SCREEN_MACRO_PARAM_X1]) * sMul/sDiv;
+				sY2 = y + (_mY + mc->param[SCREEN_MACRO_PARAM_Y1]) * sMul/sDiv;
+				sX = x + _mX * sMul/sDiv;
+				sY = y + _mY * sMul/sDiv;	
+				// old_point+delta  becomes the end point
+				_mX += mc->param[SCREEN_MACRO_PARAM_X1];
+				_mY += mc->param[SCREEN_MACRO_PARAM_Y1];
+			}
+			
 		}
 		drawLine(sX, sY, sX2, sY2, _mForegroundColor, sThickness, false);
 		return;
@@ -590,7 +611,7 @@ void ScreenHAL::_executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, u
 
 
 
-int8_t ScreenHAL::_parseHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc) {
+int8_t ScreenHAL::_parseMacroCommandHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc) {
 	uint16_t i = n;
 	mc->color = 0;
 	// remove front spaces
@@ -606,7 +627,7 @@ int8_t ScreenHAL::_parseHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc) {
 	return i-n;
 }
 
-int8_t ScreenHAL::_parseParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId) {
+int8_t ScreenHAL::_parseMacroCommandParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId) {
 	uint16_t i = n;
 	boolean negative = false;
 	// remove front spaces
@@ -845,8 +866,9 @@ int16_t ScreenHAL::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCom
 /*
  * Compression format for numbers
  *		NSxxxxxx
- *			N	if N is null, only one byte of data, else 2 bytes
- *			S	if S is null, number is positive
+ *			N		if N is null, only one byte of data, else 2 bytes
+ *			S		if S is null, number is positive
+ *			x..x	positive number
  *		1Snnnnnn nnnnnnnn
  *			From -16383 [11111111 11111111] to 16383 [10111111 11111111]
  *		0Snnnnnn

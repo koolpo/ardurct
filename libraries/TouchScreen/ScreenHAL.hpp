@@ -4,20 +4,24 @@
 #include <Arduino.h>
 #include <inttypes.h>
 
-// Comment this if you don't want to use macros to draw on the screen
-// this takes a few K of code
-#define SCREEN_MACRO_DRAWING 1
-
-#if defined(SCREEN_MACRO_DRAWING)
-#include "MacroDrawing.hpp"
-#endif
-
+#include "hardware.hpp"
 #include "fonts.hpp"
 
-// Max space that a pattern or a bitmap that needs to be overlaid can occupy
-// minimum is FONT_MAX_SPACE
-// RAM taken can be up to 5 times this, so beware! 
-#define SCREENHAL_MAX_BITMAP_SPACE (32*32)		
+// Comment this if you don't want to use macros
+// this takes a few bytes of code
+#define SCREEN_MACROS 1
+
+#if defined(SCREEN_MACROS)
+#include "Macros.hpp"
+#endif
+
+// Comment this if you don't want to use user interface items
+// this takes a few bytes of code
+#define SCREEN_UI 1
+
+#if defined(SCREEN_UI)
+#include "UserInterface.hpp"
+#endif
 
 #define SCREEN_ROTATION_0	0
 #define SCREEN_ROTATION_90	1
@@ -91,12 +95,16 @@ class ScreenHAL: public Print {
 		bool isFontOverlay();
 
 		void setFont(uint8_t size, bool isBold = false, bool isOverlay = false);
+		
+		uint16_t getStringWidth(uint8_t *s, uint8_t fontSize);
+		
+		uint8_t getFontHeight(uint8_t fontSize);
 
 		uint16_t getWidth();
 
 		uint16_t getHeight();
 		
-		void setRotation(uint8_t rotation);
+		void setRotation(uint8_t rotation, bool selectAndUnselectScreen = true);
 		
 		uint8_t getRotation();
 		
@@ -106,55 +114,55 @@ class ScreenHAL: public Print {
 
 		void setCursor(uint8_t x, uint8_t y);
 
-		void drawChar(uint8_t chr, int16_t x, int16_t y, uint16_t color, uint8_t fontSize = 1, bool isBold = false, bool overlay = false, bool grabAndReleaseBus = true);
+		void drawChar(uint8_t chr, int16_t x, int16_t y, uint16_t color, uint8_t fontSize = 1, bool isBold = false, bool overlay = false, bool selectAndUnselectScreen = true);
 
-		void drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_t fontSize = 1, bool isBold = false, bool overlay = false, bool grabAndReleaseBus = true);
+		void drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_t fontSize = 1, bool isBold = false, bool overlay = false, bool selectAndUnselectScreen = true);
 
-		void drawPixel(int16_t x, int16_t y, uint16_t color, bool grabAndReleaseBus = true);
+		void drawPixel(int16_t x, int16_t y, uint16_t color, bool selectAndUnselectScreen = true);
 
-		void drawHorizontalLine(int16_t x1, int16_t x2, int16_t y, uint16_t color, int8_t thickness = 1, bool grabAndReleaseBus = true);
+		void drawHorizontalLine(int16_t x1, int16_t x2, int16_t y, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 
-		void drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness = 1, bool grabAndReleaseBus = true);
+		void drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 
-		void drawVerticalLine(int16_t x, int16_t y1, int16_t y2, uint16_t color, int8_t thickness = 1, bool grabAndReleaseBus = true);
+		void drawVerticalLine(int16_t x, int16_t y1, int16_t y2, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 
-		void drawRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color, int8_t thickness = 1, bool grabAndReleaseBus = true);
+		void drawRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 		
-		void fillRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color, bool grabAndReleaseBus = true);
+		void fillRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color, bool selectAndUnselectScreen = true);
 				
-		void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness = 1, bool grabAndReleaseBus = true);
+		void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 	
-		void fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color, bool grabAndReleaseBus = true);
+		void fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color, bool selectAndUnselectScreen = true);
 		
-		void drawArc(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, int8_t thickness = 1, bool grabAndReleaseBus = true);
+		void drawArc(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 
-		void fillArc(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, bool grabAndReleaseBus = true);
+		void fillArc(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, bool selectAndUnselectScreen = true);
 
-		void drawCircle(int16_t x0, int16_t y0, uint16_t r, uint16_t color, int8_t thickness = 1, bool grabAndReleaseBus = true);
+		void drawCircle(int16_t x0, int16_t y0, uint16_t r, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 
-		void fillCircle(int16_t x0, int16_t y0, uint16_t r, uint16_t color, bool grabAndReleaseBus = true);
+		void fillCircle(int16_t x0, int16_t y0, uint16_t r, uint16_t color, bool selectAndUnselectScreen = true);
 		
-		void drawRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t r, uint16_t color, int8_t thickness = 1, bool grabAndReleaseBus = true);
+		void drawRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t r, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 	
-		void fillRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t r, uint16_t color, bool grabAndReleaseBus = true);
+		void fillRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t r, uint16_t color, bool selectAndUnselectScreen = true);
 		
-		uint16_t *retrieveBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool grabAndReleaseBus = true);
+		uint16_t *retrieveBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool selectAndUnselectScreen = true);
 
-		void pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool hasTransparency = false, uint16_t transparentColor = 0xFFFF, bool grabAndReleaseBus = true);
+		void pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool hasTransparency = false, uint16_t transparentColor = 0xFFFF, bool selectAndUnselectScreen = true);
 
-		void drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, int16_t y, uint8_t width, uint8_t height, uint16_t color, uint16_t backColor, uint8_t scale = 1, bool overlay = false, bool grabAndReleaseBus = true);
+		void drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, int16_t y, uint8_t width, uint8_t height, uint16_t color, uint16_t backColor, uint8_t scale = 1, bool overlay = false, bool selectAndUnselectScreen = true);
 
-		void fillScreen(uint16_t color, bool grabAndReleaseBus = true);
+		void fillScreen(uint16_t color, bool selectAndUnselectScreen = true);
 		
-#if defined(SCREEN_MACRO_DRAWING)
-		void executeMacro(uint8_t *macro, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1, 
-			bool continueLastMacro = false, bool grabAndReleaseBus = true);
+#if defined(SCREEN_MACROS)
+		uint8_t *executeMacro(uint8_t *macro, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1, 
+			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
 
 		void executeMacroCommand(macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
-			bool continueLastMacro = false, bool grabAndReleaseBus = true);
+			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
 		
 		void executeEepromMacro(uint8_t macroNb, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
-			bool continueLastMacro = false, bool grabAndReleaseBus = true);
+			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
 #endif
 
 	protected:
@@ -190,28 +198,14 @@ class ScreenHAL: public Print {
 
 		// NEEDS TO BE implemented by the class inheriting from this class
 		virtual void retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
-
-		// NEEDS TO BE implemented by the class inheriting from this class
-		virtual uint16_t getWidthImpl();
-
-		// NEEDS TO BE implemented by the class inheriting from this class
-		virtual uint16_t getHeightImpl();		
 		
-		void writeCommand(uint8_t command);
-
-		void writeData(uint8_t data);
-
-		void write16bData(uint16_t data);
-
-		void write16bDataBuffer(uint16_t *data, uint32_t len);
-
-		uint8_t readData();
-
 	private:
 		uint8_t _cs;
 		uint8_t _reset;
+#if defined(HARDWARE_BUS_IS_SHARED_WITH_SPI)
 		uint8_t _spiUsed;
-		uint8_t _busTaken;
+#endif
+		bool _screenSelected;
 		uint16_t _width;
 		uint16_t _height;
 		uint16_t _x;
@@ -226,7 +220,7 @@ class ScreenHAL: public Print {
 		int8_t _thickness;
 		fontDefinition_t *_fontDef;
 		uint8_t _fontScale;
-#if defined(SCREEN_MACRO_DRAWING)
+#if defined(SCREEN_MACROS)
 		int16_t _mThickness;
 		int16_t _mX;
 		int16_t _mY;
@@ -245,9 +239,9 @@ class ScreenHAL: public Print {
 		
 		int16_t _parseMacroCommandParameters(uint8_t *s, macroCommand_t *mc);
 
-		int8_t _parseHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc);
+		int8_t _parseMacroCommandHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc);
 
-		int8_t _parseParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId);
+		int8_t _parseMacroCommandParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId);
 		
 		void _executeMacroCommand(macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1);
 		
@@ -262,9 +256,9 @@ class ScreenHAL: public Print {
 		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, uint8_t paramId);
 #endif
 
-		void _grabBus();
+		void _selectScreen();
 		
-		void _releaseBus();
+		void _unselectScreen();
 		
 		void _drawValidChar(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, fontDefinition_t *fontDef, uint8_t fontScale, bool fontBold, bool overlay);
 

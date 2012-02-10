@@ -1,5 +1,5 @@
-#ifndef MACRO_DRAWING_HPP
-#define MACRO_DRAWING_HPP 1
+#ifndef MACROS_HPP
+#define MACROS_HPP 1
 
 #include <inttypes.h>
 
@@ -18,6 +18,7 @@
 #define SCREEN_MACRO_CMD_PRESET_SCALE				0x15
 #define SCREEN_MACRO_CMD_PRESET_ERASE				0x16
 #define SCREEN_MACRO_CMD_LINE 						0x20
+#define SCREEN_MACRO_CMD_LINE_DELTA 				0x21
 #define SCREEN_MACRO_CMD_ARC 						0x30
 #define SCREEN_MACRO_CMD_ARC_FILLED 				0x31
 #define SCREEN_MACRO_CMD_ARC_REVERSED				0x32

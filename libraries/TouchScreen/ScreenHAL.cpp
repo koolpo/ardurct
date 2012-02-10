@@ -1,5 +1,6 @@
 #include "ScreenHAL.hpp"
 #include "fontBitmaps.hpp"
+#include "hardware.hpp"
 
 ScreenHAL::ScreenHAL(void) {
 }
@@ -44,34 +45,34 @@ void ScreenHAL::initScreen() {
 		digitalWrite(_reset, HIGH);
 	}
 	
-	_width = getWidthImpl();
-	_height = getHeightImpl();
+	_width = HARDWARE_WIDTH;
+	_height = HARDWARE_HEIGHT;
 	_spiUsed = 0;
-	_busTaken = 0;
+	_screenSelected = 0;
 	_rotation = 0;
 	_margin = 0;
-#if defined(SCREEN_MACRO_DRAWING)	
+#if defined(SCREEN_MACROS)	
 	_initializeMacros();
 #endif
 	setFont(1, FONT_PLAIN, NO_OVERLAY);
-	_grabBus();
+	_selectScreen();
 	initScreenImpl();
-	_releaseBus();
+	_unselectScreen();
 }
 
-void ScreenHAL::setRotation(uint8_t rotation) {
+void ScreenHAL::setRotation(uint8_t rotation, bool selectAndUnselectScreen) {
 	_rotation = rotation;
 	if (_rotation > SCREEN_ROTATION_270) _rotation = SCREEN_ROTATION_0;
 	if ((_rotation == SCREEN_ROTATION_0) || (_rotation == SCREEN_ROTATION_180)) {
-		_width = getWidthImpl();
-		_height = getHeightImpl();
+		_width = HARDWARE_WIDTH;
+		_height = HARDWARE_HEIGHT;
 	} else {
-		_width = getHeightImpl();
-		_height = getWidthImpl();
+		_width = HARDWARE_HEIGHT;
+		_height = HARDWARE_WIDTH;
 	}
-	_grabBus();
+	if (selectAndUnselectScreen) _selectScreen();
 	setRotationImpl(_rotation);
-	_releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
@@ -87,14 +88,14 @@ void ScreenHAL::getRotatedXY(int16_t *x, int16_t *y, uint8_t rotation) {
 	int16_t Y = *y;
 	
 	if (rotation == SCREEN_ROTATION_180) {
-		*x = getWidthImpl() - X;
-		*y = getHeightImpl() - Y;
+		*x = HARDWARE_WIDTH - X;
+		*y = HARDWARE_HEIGHT - Y;
 	} else if (rotation == SCREEN_ROTATION_90) {
-		*x = getHeightImpl() - Y;
+		*x = HARDWARE_HEIGHT - Y;
 		*y = X;
 	} else if (rotation == SCREEN_ROTATION_270) {
 		*x = Y;
-		*y = getWidthImpl() - X;
+		*y = HARDWARE_WIDTH - X;
 	} 
 }
 
@@ -158,7 +159,29 @@ void ScreenHAL::setFont(uint8_t size, bool bold, bool overlay) {
 	if (_fontSize == 0) _fontSize = 1;
 	_fontScale = (_fontSize <= FONT_LAST_DEF ? 1 : 2);
 	_fontDef = &fontDefinition_small;
-	if ((_fontSize == 2) || (_fontSize == 4)) _fontDef = &fontDefinition_medium;
+	if ((FONT_LAST_DEF >= 2) && ((_fontSize == 2) || (_fontSize == 2+FONT_LAST_DEF))) _fontDef = &fontDefinition_medium;
+	else if ((FONT_LAST_DEF >= 3) && ((_fontSize == 3) || (_fontSize == 3+FONT_LAST_DEF))) _fontDef = &fontDefinition_big;
+}
+
+
+uint16_t getStringWidth(uint8_t *s, uint8_t fontSize) {
+	uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
+	uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
+	fontDefinition_t *fontDef = &fontDefinition_small;
+	if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = &fontDefinition_medium;
+	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
+	uint16_t nbChr = 0;
+	while (s[nbChr] != 0) nbChr ++;
+	return nbChr * (fontDef->width + fontDef->charSpacing) * fontScale;
+}
+
+uint8_t getFontHeight(uint8_t fontSize) {
+	uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
+	uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
+	fontDefinition_t *fontDef = &fontDefinition_small;
+	if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = &fontDefinition_medium;
+	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
+	return (fontDef->height + fontDef->lineSpacing) * fontScale;
 }
 
 
@@ -177,29 +200,31 @@ uint16_t ScreenHAL::getHeight() {
 }
 
 
-void ScreenHAL::drawChar(uint8_t chr, int16_t x, int16_t y, uint16_t color, uint8_t fontSize, bool isBold, bool overlay, bool grabAndReleaseBus) {
+void ScreenHAL::drawChar(uint8_t chr, int16_t x, int16_t y, uint16_t color, uint8_t fontSize, bool isBold, bool overlay, bool selectAndUnselectScreen) {
 	if ((x < 0) || (y < 0)) return;
 	uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
 	uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
 	fontDefinition_t *fontDef = &fontDefinition_small;
-	if ((validFontSize == 2) || (validFontSize == 4)) fontDef = &fontDefinition_medium;
+	if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = &fontDefinition_medium;
+	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
 	if ((x + fontDef->width * fontScale >= _width) || (y + fontDef->height * fontScale >= _height)) return;
 	if ((chr < fontDef->firstChar) || (chr > fontDef->lastChar)) return;
-	if (grabAndReleaseBus) _grabBus();
+	if (selectAndUnselectScreen) _selectScreen();
 	_drawValidChar(chr, x, y, color, validFontSize, fontDef, fontScale, isBold, overlay);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_t fontSize, bool isBold, bool overlay, bool grabAndReleaseBus) {
+void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_t fontSize, bool isBold, bool overlay, bool selectAndUnselectScreen) {
 	if ((x < 0) || (y < 0)) return;
 	uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
 	uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
 	fontDefinition_t *fontDef = &fontDefinition_small;
-	if ((validFontSize == 2) || (validFontSize == 4)) fontDef = &fontDefinition_medium;
+	if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = &fontDefinition_medium;
+	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
 	if ((x + fontDef->width * fontScale >= _width) || (y + fontDef->height * fontScale >= _height)) return;
 	
-	if (grabAndReleaseBus) _grabBus();
+	if (selectAndUnselectScreen) _selectScreen();
 	int16_t lx = x;
 	while (s[0] != 0) {
 		if (s[0] == '\n') {
@@ -221,7 +246,7 @@ void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_
 		}
 		s++;
 	}
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
@@ -230,7 +255,7 @@ size_t ScreenHAL::write(uint8_t chr) {
 #else
 void ScreenHAL::write(uint8_t chr) {
 #endif
-	_grabBus();
+	_selectScreen();
 	if (chr == '\n') {
 		_y += (_fontDef->height + _fontDef->lineSpacing + (_isFontBold ? 1 : 0)) * _fontScale;
 		if (_y > _height - 2*_margin) _y = 0;
@@ -248,56 +273,60 @@ void ScreenHAL::write(uint8_t chr) {
 			if (_y > _height-2*_margin) _y = 0;
 		}
 	}
-	_releaseBus();
+	_unselectScreen();
 #if ARDUINO >= 100
 	return 1;
 #endif
 }
 
 
-void ScreenHAL::drawPixel(int16_t x, int16_t y, uint16_t color, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();
+void ScreenHAL::drawPixel(int16_t x, int16_t y, uint16_t color, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();
 	_drawBoundedPixel(x, y, color);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::drawHorizontalLine(int16_t x1, int16_t x2, int16_t y, uint16_t color, int8_t thickness, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();
+#define swap(a, b) { int16_t t = a; a = b; b = t; }
+
+void ScreenHAL::drawHorizontalLine(int16_t x1, int16_t x2, int16_t y, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();
 	if (thickness <= 1) _fillBoundedArea(x1, y, x2, y, color);
 	else {
 		int8_t t1 = (thickness-1)/2;
 		int8_t t2 = thickness/2;
+		if (x2 < x1) swap(x2, x1);
 		_fillBoundedArea(x1-t1, y-t1, x2+t2, y+t2, color);
 	}
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::drawVerticalLine(int16_t x, int16_t y1, int16_t y2, uint16_t color, int8_t thickness, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();
+void ScreenHAL::drawVerticalLine(int16_t x, int16_t y1, int16_t y2, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();
 	if (thickness <= 1) _fillBoundedArea(x, y1, x, y2, color);
 	else {
 		int8_t t1 = (thickness-1)/2;
 		int8_t t2 = thickness/2;
+		if (y2 < y1) swap(y2, y1);
 		_fillBoundedArea(x-t1, y1-t1, x+t2, y2+t2, color);
 	}
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
 /*
  *	From Wikipedia - Bresenham's line algorithm
  */
-void ScreenHAL::drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness, bool grabAndReleaseBus) {
+void ScreenHAL::drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
 	int16_t dx = abs(x2-x1);
 	if (dx == 0) {
-		drawVerticalLine(x1, y1, y2, color, thickness, grabAndReleaseBus);
+		drawVerticalLine(x1, y1, y2, color, thickness, selectAndUnselectScreen);
 		return;
 	}
 	int16_t dy = abs(y2-y1);
 	if (dy == 0) {
-		drawHorizontalLine(x1, x2, y1, color, thickness, grabAndReleaseBus);
+		drawHorizontalLine(x1, x2, y1, color, thickness, selectAndUnselectScreen);
 		return;
 	}
 	
@@ -309,7 +338,7 @@ void ScreenHAL::drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_
 	int8_t d1 = (thickness-1) / 2;
 	int8_t d2 = thickness / 2;
 
-	if (grabAndReleaseBus) _grabBus();	
+	if (selectAndUnselectScreen) _selectScreen();	
 	while (1) {
 		if (thickness == 1) drawPixelImpl(x1, y1, color);
 		else _fillBoundedArea(x1-d1, y1-d1, x1+d2, y1+d2, color);
@@ -324,21 +353,19 @@ void ScreenHAL::drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_
 			y1 = y1 + sy;
 		}
 	}
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();	
+void ScreenHAL::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();	
 	drawLine(x0, y0, x1, y1, color, thickness, false);
 	drawLine(x1, y1, x2, y2, color, thickness, false);
 	drawLine(x2, y2, x0, y0, color, thickness, false);
-	if (grabAndReleaseBus) _releaseBus();	
+	if (selectAndUnselectScreen) _unselectScreen();	
 }
 
-#define swap(a, b) { int16_t t = a; a = b; b = t; }
-
-void ScreenHAL::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color, bool grabAndReleaseBus) {
+void ScreenHAL::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color, bool selectAndUnselectScreen) {
 	if (y0 > y1) {
 		swap(y0, y1); 
 		swap(x0, x1);
@@ -368,7 +395,7 @@ void ScreenHAL::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int
 	else dx3 = 0;
 
 	// Render scanlines 
-	if (grabAndReleaseBus) _grabBus();	
+	if (selectAndUnselectScreen) _selectScreen();	
 	if (dx1 > dx2) {
 		for (; sy<=y1; sy++, sx1+=dx2, sx2+=dx1) _fillBoundedArea(sx1/1000, sy, sx2/1000, sy, color);
 		sx2 = x1 * 1000;
@@ -380,62 +407,62 @@ void ScreenHAL::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int
 		sy = y1;
 		for (; sy<=y2; sy++, sx1+=dx3, sx2+=dx2) _fillBoundedArea(sx1/1000, sy, sx2/1000, sy, color);
 	}
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::drawRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color, int8_t thickness, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();
+void ScreenHAL::drawRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();
 	drawHorizontalLine(x, x+width-1, y, color, thickness, false);
 	drawHorizontalLine(x, x+width-1, y+height-1, color, thickness, false);
 	drawVerticalLine(x, y, y+height-1, color, thickness, false);
 	drawVerticalLine(x+width-1, y, y+height-1, color, thickness, false);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::fillRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();
+void ScreenHAL::fillRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();
 	_fillBoundedArea(x, y, x+width-1, y+height-1, color);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::fillScreen(uint16_t color, bool grabAndReleaseBus) {
-	fillRectangle(0, 0, getWidth(), getHeight(), color, grabAndReleaseBus);
+void ScreenHAL::fillScreen(uint16_t color, bool selectAndUnselectScreen) {
+	fillRectangle(0, 0, getWidth(), getHeight(), color, selectAndUnselectScreen);
 }
 
 
-void ScreenHAL::drawArc(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, int8_t thickness, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();	
+void ScreenHAL::drawArc(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();	
 	_drawOrFillOctant(x0, y0, r, octant, color, thickness, false);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::fillArc(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();	
+void ScreenHAL::fillArc(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();	
 	_drawOrFillOctant(x0, y0, r, octant, color, 0, true);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::drawCircle(int16_t x0, int16_t y0, uint16_t r, uint16_t color, int8_t thickness, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();	
+void ScreenHAL::drawCircle(int16_t x0, int16_t y0, uint16_t r, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();	
 	_drawOrFillOctant(x0, y0, r, SCREEN_ARC_ALL, color, thickness, false);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::fillCircle(int16_t x0, int16_t y0, uint16_t r, uint16_t color, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();	
+void ScreenHAL::fillCircle(int16_t x0, int16_t y0, uint16_t r, uint16_t color, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();	
 	_drawOrFillOctant(x0, y0, r, SCREEN_ARC_ALL, color, 0, true);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::drawRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t r, uint16_t color, int8_t thickness, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();	
+void ScreenHAL::drawRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t r, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();	
 	_drawOrFillOctant(x+r, y+r, r, SCREEN_ARC_NW, color, thickness, false);
 	drawHorizontalLine(x+r, x+width-1-r, y, color, thickness, false);
 	_drawOrFillOctant(x+width-1-r, y+r, r, SCREEN_ARC_NE, color, thickness, false);
@@ -444,12 +471,12 @@ void ScreenHAL::drawRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint1
 	drawHorizontalLine(x+r, x+width-1-r, y+height-1, color, thickness, false);
 	_drawOrFillOctant(x+width-1-r, y+height-1-r, r, SCREEN_ARC_SE, color, thickness, false);
 	drawVerticalLine(x, y+r, y+height-1-r, color, thickness, false);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-void ScreenHAL::fillRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t r, uint16_t color, bool grabAndReleaseBus) {
-	if (grabAndReleaseBus) _grabBus();	
+void ScreenHAL::fillRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t r, uint16_t color, bool selectAndUnselectScreen) {
+	if (selectAndUnselectScreen) _selectScreen();	
 	_drawOrFillOctant(x+r, y+r, r, SCREEN_ARC_NW, color, 0, true);
 	_drawOrFillOctant(x+width-1-r, y+r, r, SCREEN_ARC_NE, color, 0, true);
 	_drawOrFillOctant(x+r, y+height-1-r, r, SCREEN_ARC_SW, color, 0, true);
@@ -457,26 +484,26 @@ void ScreenHAL::fillRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint1
 	_fillBoundedArea(x, y+r, x+width-1, y+height-1-r, color);
 	_fillBoundedArea(x+r, y, x+width-1-r, y+r, color);
 	_fillBoundedArea(x+r, y+height-1-r, x+width-1-r, y+height-1, color);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
-uint16_t *ScreenHAL::retrieveBitmap(uint16_t *buffer, int16_t x, int16_t y, uint16_t width, uint16_t height, bool grabAndReleaseBus) {
-	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height) || (width*height > SCREENHAL_MAX_BITMAP_SPACE)) return 0;
-	if (grabAndReleaseBus) _grabBus();
+uint16_t *ScreenHAL::retrieveBitmap(uint16_t *buffer, int16_t x, int16_t y, uint16_t width, uint16_t height, bool selectAndUnselectScreen) {
+	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height) || (width*height > HARDWARE_MAX_BITMAP_SPACE)) return 0;
+	if (selectAndUnselectScreen) _selectScreen();
 	retrieveBitmapImpl(buffer, x, y, width, height);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 	return buffer;
 }
 
 
-void ScreenHAL::pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool hasTransparency, uint16_t transparentColor, bool grabAndReleaseBus) {
-	uint16_t buffer[SCREENHAL_MAX_BITMAP_SPACE];
+void ScreenHAL::pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool hasTransparency, uint16_t transparentColor, bool selectAndUnselectScreen) {
+	uint16_t buffer[HARDWARE_MAX_BITMAP_SPACE];
 
 	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
 	// check for overflow
-	if (hasTransparency && (width * height > SCREENHAL_MAX_BITMAP_SPACE)) return;
-	if (grabAndReleaseBus) _grabBus();
+	if (hasTransparency && (width * height > HARDWARE_MAX_BITMAP_SPACE)) return;
+	if (selectAndUnselectScreen) _selectScreen();
 	if (hasTransparency) {
 		// get the background image
 		retrieveBitmapImpl(buffer, x, y, width, height);
@@ -486,27 +513,27 @@ void ScreenHAL::pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t wid
 		}
 		pasteBitmapImpl(buffer, x, y, width, height);
 	} else pasteBitmapImpl(bitmap, x, y, width, height);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
 void ScreenHAL::drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, int16_t y, uint8_t width, uint8_t height, 
-		uint16_t color, uint16_t backColor, uint8_t scale, bool overlay, bool grabAndReleaseBus) {
-	uint16_t buffer[SCREENHAL_MAX_BITMAP_SPACE];
-	uint8_t unpacked[SCREENHAL_MAX_BITMAP_SPACE];
+		uint16_t color, uint16_t backColor, uint8_t scale, bool overlay, bool selectAndUnselectScreen) {
+	uint16_t buffer[HARDWARE_MAX_BITMAP_SPACE];
+	uint8_t unpacked[HARDWARE_MAX_BITMAP_SPACE];
 
 	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
-	if (width * height * scale * scale > SCREENHAL_MAX_BITMAP_SPACE) return;
+	if (width * height * scale * scale > HARDWARE_MAX_BITMAP_SPACE) return;
 	// unpack the pattern
 	_unpackPattern(pattern, unpacked, width, height, 0, 0, orientation);
-	if (grabAndReleaseBus) _grabBus();
+	if (selectAndUnselectScreen) _selectScreen();
 	// if overlay, get the bitmap from the screen
 	if (overlay) retrieveBitmapImpl(buffer, x, y, width*scale, height*scale);
 	// scale and colorize it, setting a background color if no need to overlay
 	_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, backColor, width, height, scale, 0, 0, overlay != true);
 	// draw it
 	pasteBitmapImpl(buffer, x, y, width*scale, height*scale);
-	if (grabAndReleaseBus) _releaseBus();
+	if (selectAndUnselectScreen) _unselectScreen();
 }
 
 
@@ -533,7 +560,7 @@ void ScreenHAL::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy,
 	// needs to be implemented by the class inheriting from this class
 }
 
-// Draws the bitmap
+// Draws a bitmap
 void ScreenHAL::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
 }
 
@@ -541,99 +568,30 @@ void ScreenHAL::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16
 void ScreenHAL::retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
 }
 
-// returns the width of the non rotated screen
-uint16_t ScreenHAL::getWidthImpl() {
-	return 240;
-}
-
-// returns the height of the non rotated screen
-uint16_t ScreenHAL::getHeightImpl() {
-	return 160;
-}
-
-/* ---------------- End of virtual functions --------------------- */
-
-#define _pulseWR() { *_wrPort &= _wrLow; *_wrPort |= _wrHigh; }
-
-void ScreenHAL::writeCommand(uint8_t command) {
-	// set command mode
-	*_cdPort &= ~_cdBitMask;
-	// write the command
-	*_outPort = command;
-	_pulseWR();
-	// set data mode
-	*_cdPort |= _cdBitMask;
-}
-
-void ScreenHAL::writeData(uint8_t data) {
-	*_outPort = data;
-	_pulseWR();
-}
-
-void ScreenHAL::write16bData(uint16_t data) {
-	*_outPort = data >> 8;
-	_pulseWR();
-	*_outPort = data;
-	_pulseWR();
-}
-
-void ScreenHAL::write16bDataBuffer(uint16_t *data, uint32_t len) {
-	for (uint32_t i=0; i<len; i++) { 
-		*_outPort = (uint8_t) (data[i] >> 8);
-		_pulseWR();
-		*_outPort = (uint8_t) (data[i] & 0x0FF);
-		_pulseWR();
-	}
-}
-
-uint8_t ScreenHAL::readData() {
-	uint8_t data;
-	*_portMode = 0x00;
-	*_rdPort &= _rdLow;
-	*_rdPort &= _rdLow;
-	data = *_inPort;
-	*_rdPort |= _rdHigh; 
-	*_portMode = 0xFF;
-	return data;
-}
-
 /* ---------------- Private functions ------------------------ */
 
-void ScreenHAL::_grabBus() {
-	if (_busTaken) return;
+void ScreenHAL::_selectScreen() {
+	if (_screenSelected) return;
+#if defined(HARDWARE_BUS_IS_SHARED_WITH_SPI)	
 	// if SPI is active, disable it but remember that we disabled it
 	if (SPCR & _BV(SPE)) {
 		SPCR &= ~_BV(SPE);
 		_spiUsed = 1;
 	}
+#endif
 	// set the direction to output
 	*_portMode = 0xFF;
 	// select the screen
 	if (_cs != 0xFF) digitalWrite(_cs, LOW);
-	/*
-	else {
-		// we had to keep WR down not to influence the bus
-		// so we have to complete a NOP operation
-		*_outPort = 0;
-		*_wrPort |= _wrHigh;
-	}
-	*/
 	// put the screen in data mode
 	*_cdPort |= _cdBitMask;
-	_busTaken = 1;
+	_screenSelected = true;
 }
 
-void ScreenHAL::_releaseBus() {
+void ScreenHAL::_unselectScreen() {
 	// unselect the screen
 	if (_cs != 0xFF) digitalWrite(_cs, HIGH);
-	/*
-	else {
-		// we have to keep WR down not to influence the bus
-		*_cdPort &= ~_cdBitMask;
-		*_wrPort |= _wrHigh;
-		*_wrPort &= _wrLow;
-	}
-	*/
+#if defined(HARDWARE_BUS_IS_SHARED_WITH_SPI)		
 	// restore the SPI if it was active
 	if (_spiUsed) {
 		// we have to set SS as an output to enable SPI
@@ -642,7 +600,8 @@ void ScreenHAL::_releaseBus() {
 		SPCR |= _BV(MSTR);
 		SPCR |= _BV(SPE);
 	}
-	_busTaken = 0;
+#endif
+	_screenSelected = false;
 }
 
 

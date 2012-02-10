@@ -7,6 +7,8 @@
 #define FONT_MEDIUM 2
 #define FONT_BIG 3
 #define FONT_HUGE 4
+#define FONT_BIGGER 5
+#define FONT_BIGGEST 6
 
 #define FONT_PLAIN false
 #define FONT_BOLD true
@@ -16,7 +18,7 @@
 #define FONT_MAX_SPACE		(9*14)		/* width x height of the biggest font including the charSpacing and lineSpacing */
 #define FONT_MAX_PATTERN	12			/* max bytes one character definition can take */
 
-/** Display fill direction
+/** Display fill orientation
  *
  *  0 (HORIZONTAL)
  *     --------/
@@ -42,5 +44,6 @@ extern fontDefinition_t fontDefinition_small;
 extern fontDefinition_t fontDefinition_medium;
 extern const unsigned char PROGMEM font_small[][5];
 extern const unsigned char PROGMEM font_medium[][12];
+extern const unsigned char PROGMEM font_big[][1];
 
 #endif

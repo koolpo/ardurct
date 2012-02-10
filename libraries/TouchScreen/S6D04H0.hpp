@@ -3,9 +3,6 @@
 
 #include "ScreenHAL.hpp"
 
-#define S6D04H0_WIDTH 240
-#define S6D04H0_HEIGHT 320
-
 class S6D04H0: public ScreenHAL {
     
 	public:
@@ -29,12 +26,6 @@ class S6D04H0: public ScreenHAL {
 		
 		// required by the ScreenHAL superclass
 		void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
-
-		// required by the ScreenHAL superclass
-		uint16_t getWidthImpl();
-
-		// required by the ScreenHAL superclass
-		uint16_t getHeightImpl();
 		
 	private:
 		void _setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy);

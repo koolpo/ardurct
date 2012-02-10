@@ -1,15 +1,15 @@
 #ifndef TOUCHSCREEN_H
 #define TOUCHSCREEN_H
 
-// TouchScreen extends the implementation of ScreenHAL, here it is S6D04H0
-// To change the COG of your screen, include another header and replace S6D04H0 by your COG  
-#include "S6D04H0.hpp"
-
 #include "colors.hpp"
-#include "TouScruino.hpp"
+#include "hardware.hpp"
 
-#define TOUCHSCREEN_EQUAL 20
-#define TOUCHSCREEN_MAX_PRESSURE 1000
+#if defined(HARDWARE_S6D04H0)
+#include "S6D04H0.hpp"
+#elif defined(HARDWARE_ILI932X)
+#include "ILI932X.hpp"
+#endif
+
 #define TOUCHSCREEN_NO_TOUCH 0xFFFF
 
 // the address in the eeprom where the calibration matrix is stored 
@@ -28,18 +28,21 @@ typedef struct {
 	int32_t divider;
 } tsCalibrationEquation_t;
 
+#if defined(HARDWARE_S6D04H0)
 class TouchScreen: public S6D04H0 {
-    
+#elif defined(HARDWARE_ILI932X)
+class TouchScreen: public ILI932X {
+#endif    
+
 	public:
-		TouchScreen(uint8_t port = TOUSCRUINO_PORT, uint8_t cd = TOUSCRUINO_CD, uint8_t wr = TOUSCRUINO_WR, uint8_t rd = TOUSCRUINO_RD, 
-				uint8_t cs = TOUSCRUINO_CS, uint8_t reset = TOUSCRUINO_RESET, uint8_t backlightPin = TOUSCRUINO_BACKLIGHT);
+		TouchScreen(uint8_t port = HARDWARE_PORT, uint8_t cd = HARDWARE_CD, uint8_t wr = HARDWARE_WR, uint8_t rd = HARDWARE_RD, 
+				uint8_t cs = HARDWARE_CS, uint8_t reset = HARDWARE_RESET, uint8_t backlightPin = HARDWARE_BACKLIGHT);
 		
-		void setupTouchPanel(uint8_t xm = TOUSCRUINO_XM, uint8_t xp = TOUSCRUINO_XP, uint8_t ym = TOUSCRUINO_YM, uint8_t yp = TOUSCRUINO_YP, 
-				uint16_t xPlaneResistance = TOUSCRUINO_X_PLANE_RESISTANCE, uint16_t pressureThreshold = TOUSCRUINO_PRESSURE_THRESHOLD);
+		void setupTouchPanel(uint8_t xm = HARDWARE_XM, uint8_t xp = HARDWARE_XP, uint8_t ym = HARDWARE_YM, uint8_t yp = HARDWARE_YP);
 
 		void begin(uint16_t foregroundColor = WHITE, uint16_t backgroundColor = BLACK, uint8_t fontSize = FONT_SMALL, bool fontBold = false, bool fontOverlay = false);
 
-		void setupBacklight(uint8_t backlightPin = TOUSCRUINO_BACKLIGHT);
+		void setupBacklight(uint8_t backlightPin = HARDWARE_BACKLIGHT);
 		
 		void setBacklight(uint8_t value);
 		
