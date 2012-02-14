@@ -1,5 +1,5 @@
 #######################################
-# Syntax Coloring Map LCD_Nokia5110
+# Syntax Coloring Map HMC6352
 #######################################
 
 #######################################
@@ -19,7 +19,7 @@ getHeading	KEYWORD2
 # Instances (KEYWORD2)
 #######################################
 
-Hmc6352	KEYWORD2
+HMC6352	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

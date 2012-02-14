@@ -24,6 +24,7 @@
 
 /* 
  * Versions
+ *	v1.1	Update for Arduino 100
  *	v1.0	Initial release
  */
  
@@ -32,7 +33,7 @@
 
 #include "../Wire/Wire.h"
 #include <inttypes.h>
-#include <WProgram.h>
+#include <Arduino.h>
 
 class HMC6352Class {
 
