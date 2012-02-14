@@ -22,6 +22,11 @@
  * THE SOFTWARE.
  */
 
+/* 
+ * Versions
+ *	v1.0	Initial release
+ */
+ 
 #ifndef TOUCHSCREEN_H
 #define TOUCHSCREEN_H
 
