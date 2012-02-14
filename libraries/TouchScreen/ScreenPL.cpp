@@ -1,7 +1,7 @@
 /*
- * S6D04H0 - Implementation of the ScreenHAL abstract functions for the S6D04H0
+ * ScreenHAL - Screen Hardware Abstraction Layer
  *
- * Copyright (c) 2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,40 +22,39 @@
  * THE SOFTWARE.
  */
 
-#ifndef S6D0H0_HPP
-#define S6D0H0_HPP
-
 #include "ScreenPL.hpp"
 
-class S6D04H0: public ScreenPL {
-    
-	public:
-		S6D04H0();
-		
-	protected:
-		// required by the ScreenHAL superclass
-		void initScreenImpl(void);
-		
-		// required by the ScreenHAL superclass
-		void fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);
+ScreenPL::ScreenPL(void) {
+}
 
-		// required by the ScreenHAL superclass
-		void retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 
-		// required by the ScreenHAL superclass
-		void pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+void ScreenPL::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset) {	
+	_outPort = portOutputRegister(port);
+	_inPort = portInputRegister(port);
+	_portMode = portModeRegister(port);
+	_rdPort = portOutputRegister(digitalPinToPort(rd));
+	_rdHigh = digitalPinToBitMask(rd);
+	_rdLow = ~_rdHigh;
+	_wrPort = portOutputRegister(digitalPinToPort(wr));
+	_wrHigh = digitalPinToBitMask(wr);
+	_wrLow = ~_wrHigh;
+	_cdPort = portOutputRegister(digitalPinToPort(cd));
+	_cdBitMask = digitalPinToBitMask(cd);
+	_rd = rd;
+	_wr = wr;
+	_cd = cd;
+	_cs = cs;
+	_reset = reset;
+}
 
-		// required by the ScreenHAL superclass
-		void setRotationImpl(uint8_t rotation);
-		
-		// required by the ScreenHAL superclass
-		void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
-		
-	private:
-		uint8_t _wrPortLowWR;
-		uint8_t _wrPortHighWR;
-		
-		void _setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy);
-};
 
+#if ARDUINO >= 100
+size_t ScreenPL::write(uint8_t chr) {
+#else
+void ScreenPL::write(uint8_t chr) {
 #endif
+#if ARDUINO >= 100
+	return 1;
+#endif
+}
+

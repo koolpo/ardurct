@@ -32,6 +32,7 @@
 
 #include "colors.hpp"
 #include "configuration.hpp"
+#include "ScreenHAL.hpp"
 
 #if defined(CONFIGURATION_HAS_MACROS)
 #include "Macros.hpp"
@@ -41,12 +42,6 @@
 #include "UserInterface.hpp"
 #endif
 
-
-#if defined(CONFIGURATION_S6D04H0)
-#include "S6D04H0.hpp"
-#elif defined(CONFIGURATION_ILI932X)
-#include "ILI932X.hpp"
-#endif
 
 #define TOUCHSCREEN_NO_TOUCH 0xFFFF
 
@@ -66,11 +61,7 @@ typedef struct {
 	int32_t divider;
 } tsCalibrationEquation_t;
 
-#if defined(CONFIGURATION_S6D04H0)
-class TouchScreen: public S6D04H0 {
-#elif defined(CONFIGURATION_ILI932X)
-class TouchScreen: public ILI932X {
-#endif    
+class TouchScreen: public ScreenHAL {
 
 	public:
 		TouchScreen(uint8_t port = CONFIGURATION_PORT, uint8_t cd = CONFIGURATION_CD, uint8_t wr = CONFIGURATION_WR, uint8_t rd = CONFIGURATION_RD, 

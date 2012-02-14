@@ -25,16 +25,16 @@
 #ifndef SCREEN_HAL_HPP
 #define SCREEN_HAL_HPP
 
-#include <Arduino.h>
-#include <inttypes.h>
-
+#include "ScreenPL.hpp"
 #include "configuration.hpp"
 #include "fonts.hpp"
 
-#define SCREEN_ROTATION_0	0
-#define SCREEN_ROTATION_90	1
-#define SCREEN_ROTATION_180	2
-#define SCREEN_ROTATION_270	3
+
+#if defined(CONFIGURATION_S6D04H0)
+#include "S6D04H0.hpp"
+#elif defined(CONFIGURATION_ILI932X)
+#include "ILI932X.hpp"
+#endif
 
 #define SCREEN_ARC_SSE (1 << 0)
 #define SCREEN_ARC_SEE (1 << 1)
@@ -64,12 +64,15 @@
 #define NO_OVERLAY false
 
 
-class ScreenHAL: public Print {
-    
+#if defined(CONFIGURATION_S6D04H0)
+class ScreenHAL: public S6D04H0 {
+#elif defined(CONFIGURATION_ILI932X)
+class ScreenHAL: public ILI932X {
+#endif    
+   
 	public:
 		ScreenHAL();
 			
-		// required by the Print superclass
 #if ARDUINO >= 100
 		size_t write(uint8_t chr);
 #else
@@ -162,41 +165,6 @@ class ScreenHAL: public Print {
 
 		void fillScreen(uint16_t color, bool selectAndUnselectScreen = true);
 		
-
-	protected:
-		volatile uint8_t *_outPort;
-		volatile uint8_t *_inPort;
-		volatile uint8_t *_portMode;
-		volatile uint8_t *_rdPort;
-		volatile uint8_t *_wrPort;
-		volatile uint8_t *_cdPort;
-		uint8_t _rd;
-		uint8_t _wr;
-		uint8_t _cd;		
-		uint8_t _rdHigh;
-		uint8_t _rdLow;
-		uint8_t _wrHigh;
-		uint8_t _wrLow;
-		uint8_t _cdBitMask;
-		
-		// NEEDS TO BE implemented by the class inheriting from this class
-		virtual void initScreenImpl(void);		
-
-		// NEEDS TO BE implemented by the class inheriting from this class
-		virtual void setRotationImpl(uint8_t rotation);
-		
-		// NEEDS TO BE implemented by the class inheriting from this class
-		virtual void fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);	
-
-		// NEEDS TO BE implemented by the class inheriting from this class
-		virtual void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
-
-		// NEEDS TO BE implemented by the class inheriting from this class
-		virtual void pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
-
-		// NEEDS TO BE implemented by the class inheriting from this class
-		virtual void retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
-	
 	protected:
 		uint16_t _backgroundColor;
 		uint16_t _foregroundColor;
@@ -210,8 +178,6 @@ class ScreenHAL: public Print {
 		void _unselectScreen();		
 	
 	private:
-		uint8_t _cs;
-		uint8_t _reset;
 #if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)
 		uint8_t _spiUsed;
 #endif

@@ -557,38 +557,6 @@ void ScreenHAL::drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, in
 	if (selectAndUnselectScreen) _unselectScreen();
 }
 
-
-/* ---------------- Protected functions ------------------------ */
-
-/* ---------------- Virtual functions -------------------------- */
-/* ---------------- NEED TO BE IMPLEMENTED BY CHILD CLASS ------ */
-
-void ScreenHAL::initScreenImpl() {
-	// needs to be implemented by the class inheriting from this class
-}
-
-void ScreenHAL::setRotationImpl(uint8_t rotation) {
-	// needs to be implemented by the class inheriting from this class
-}
-
-void ScreenHAL::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
-	// needs to be implemented by the class inheriting from this class
-}
-
-// Fills the area lx,ly -> hx, hy
-// this function assumes that lx <= hx and ly <= hy
-void ScreenHAL::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {
-	// needs to be implemented by the class inheriting from this class
-}
-
-// Draws a bitmap
-void ScreenHAL::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
-}
-
-// retrieves a bitmap from the screen
-void ScreenHAL::retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
-}
-
 /* ---------------- Private functions ------------------------ */
 
 void ScreenHAL::_selectScreen() {

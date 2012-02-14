@@ -1,7 +1,7 @@
 /*
- * S6D04H0 - Implementation of the ScreenHAL abstract functions for the S6D04H0
+ * ScreenPL - Screen Physical Layer
  *
- * Copyright (c) 2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ * Copyright (c) 2010 Laurent Wibaux <lm.wibaux@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,41 +21,52 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+ 
+#ifndef SCREEN_PL_HPP
+#define SCREEN_PL_HPP 1
 
-#ifndef S6D0H0_HPP
-#define S6D0H0_HPP
+#include <Arduino.h>
+#include <inttypes.h>
 
-#include "ScreenPL.hpp"
+#define SCREEN_ROTATION_0	0
+#define SCREEN_ROTATION_90	1
+#define SCREEN_ROTATION_180	2
+#define SCREEN_ROTATION_270	3
 
-class S6D04H0: public ScreenPL {
+class ScreenPL: public Print {
     
 	public:
-		S6D04H0();
+		ScreenPL();
+			
+		// required by the Print superclass
+#if ARDUINO >= 100
+		virtual size_t write(uint8_t chr);
+#else
+		virtual void write(uint8_t chr);
+#endif
 		
+		void setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset);
+
 	protected:
-		// required by the ScreenHAL superclass
-		void initScreenImpl(void);
-		
-		// required by the ScreenHAL superclass
-		void fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);
+		volatile uint8_t *_outPort;
+		volatile uint8_t *_inPort;
+		volatile uint8_t *_portMode;
+		volatile uint8_t *_rdPort;
+		volatile uint8_t *_wrPort;
+		volatile uint8_t *_cdPort;
+		uint8_t _rd;
+		uint8_t _wr;
+		uint8_t _cd;		
+		uint8_t _rdHigh;
+		uint8_t _rdLow;
+		uint8_t _wrHigh;
+		uint8_t _wrLow;
+		uint8_t _cdBitMask;
+		uint8_t _cs;
+		uint8_t _reset;
 
-		// required by the ScreenHAL superclass
-		void retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 
-		// required by the ScreenHAL superclass
-		void pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
-
-		// required by the ScreenHAL superclass
-		void setRotationImpl(uint8_t rotation);
-		
-		// required by the ScreenHAL superclass
-		void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
-		
-	private:
-		uint8_t _wrPortLowWR;
-		uint8_t _wrPortHighWR;
-		
-		void _setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy);
 };
+
 
 #endif

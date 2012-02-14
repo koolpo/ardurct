@@ -5,12 +5,13 @@ Content
 =======
 Classes
 -------
-ScreenHAL.*			All the abstract work is done in 
-Touchscreen.* 		Derives from one of the class below and implements the touchpanel elements
-	S6D04H0.*		Derives from ScreenHAL and manages the S6D04H0 chip
-	ILI932X.*		Derives from ScreenHAL and manages the ILI9325 or ILI9328 chip
-	UserInterface.*	Contains the functions to draw UserInterface elements (part of Touchscreen class)
-	Macros.*		Contains the functions to draw macros (part of Touchscreen class)
+ScreenPL.*							Physical layer
+	S6D04H0.*						Derives from ScreenPL and manages the S6D04H0 chip
+	ILI932X.*						Derives from ScreenPL and manages the ILI9325 or ILI9328 chip
+		ScreenHAL.*					Derives from one other class above and do all the abstract work  
+			Touchscreen.* 			Derives from ScreenHAL implements the touchpanel elements
+				(UserInterface.*)	Contains the functions to draw UserInterface elements (part of Touchscreen class)
+				(Macros.*)			Contains the functions to draw macros (part of Touchscreen class)
 
 Headers
 -------
