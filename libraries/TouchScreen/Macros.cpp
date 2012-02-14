@@ -153,7 +153,7 @@
 extern uint8_t eeprom_read_uint8_t(uint16_t address);
 extern void eeprom_write_uint8_t(uint16_t address, uint8_t value);
 
-uint8_t *Touchscreen::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
+uint8_t *TouchScreen::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
 	macroCommand_t mc;
 	bool drawMode = true;
 	uint8_t wBuffer[256];
@@ -373,7 +373,7 @@ uint8_t *Touchscreen::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t sc
 }
 
 
-void Touchscreen::executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
+void TouchScreen::executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
 	if (selectAndUnselectScreen) _selectScreen();
@@ -382,7 +382,7 @@ void Touchscreen::executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, 
 }
 
 
-void Touchscreen::executeEepromMacro(uint8_t macroNb, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
+void TouchScreen::executeEepromMacro(uint8_t macroNb, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
 	macroCommand_t mc;
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
@@ -394,7 +394,7 @@ void Touchscreen::executeEepromMacro(uint8_t macroNb, int16_t x, int16_t y, uint
 }
 
 
-void Touchscreen::_initializeMacros() {
+void TouchScreen::_initializeMacros() {
 	_mX = 0;
 	_mY = 0;
 	_mThickness = _thickness;
@@ -408,7 +408,7 @@ void Touchscreen::_initializeMacros() {
 }
 
 
-void Touchscreen::_formatMacroSentence(uint8_t *s) {
+void TouchScreen::_formatMacroSentence(uint8_t *s) {
 	uint16_t i=0;
 	while (s[i] != 0) {
 		// before quotes, convert lower into higher
@@ -440,7 +440,7 @@ void Touchscreen::_formatMacroSentence(uint8_t *s) {
 }
 
 
-void Touchscreen::_executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv) {
+void TouchScreen::_executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv) {
 	uint8_t group = mc->cmd & SCREEN_MACRO_CMD_GROUP_MASK;
 	
 	// presets
@@ -636,7 +636,7 @@ void Touchscreen::_executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y,
 
 
 
-int8_t Touchscreen::_parseMacroCommandHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc) {
+int8_t TouchScreen::_parseMacroCommandHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc) {
 	uint16_t i = n;
 	mc->color = 0;
 	// remove front spaces
@@ -652,7 +652,7 @@ int8_t Touchscreen::_parseMacroCommandHexColor(uint8_t *s, uint16_t n, macroComm
 	return i-n;
 }
 
-int8_t Touchscreen::_parseMacroCommandParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId) {
+int8_t TouchScreen::_parseMacroCommandParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId) {
 	uint16_t i = n;
 	boolean negative = false;
 	// remove front spaces
@@ -676,7 +676,7 @@ int8_t Touchscreen::_parseMacroCommandParameter(uint8_t *s, uint16_t n, macroCom
 	return i-n;
 }
 
-int32_t Touchscreen::_getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX) {
+int32_t TouchScreen::_getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX) {
 	int32_t value = radius;
 	value = (value * SCREEN_MACRO_COS45_LSH16) >> 16;
 	switch (octant) {
@@ -774,7 +774,7 @@ int32_t Touchscreen::_getArcEnd(uint32_t radius, uint8_t octant, bool isReversed
  *	Ratio:			11 / 30
  *
  */
-int16_t Touchscreen::_compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr) {
+int16_t TouchScreen::_compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr) {
 	
 	uint16_t i = bufferPtr;
 	buffer[i++] = mc->cmd;
@@ -825,7 +825,7 @@ int16_t Touchscreen::_compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, 
 	return i;
 }
 
-int16_t Touchscreen::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCommand_t *mc) {
+int16_t TouchScreen::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCommand_t *mc) {
 	uint16_t i = n;
 	mc->cmd = buffer[i++];
 	
@@ -899,7 +899,7 @@ int16_t Touchscreen::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroC
  *		0Snnnnnn
  *			From -63 [01111111] to 63 [00111111]
  */
-int8_t Touchscreen::_compressNumber(int16_t in, uint8_t *out, uint16_t n) {
+int8_t TouchScreen::_compressNumber(int16_t in, uint8_t *out, uint16_t n) {
 	bool negative = false;
 	if (in < 0) {
 		negative = true;
@@ -918,7 +918,7 @@ int8_t Touchscreen::_compressNumber(int16_t in, uint8_t *out, uint16_t n) {
 }
 
 
-int8_t Touchscreen::_uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, uint8_t paramId) {
+int8_t TouchScreen::_uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, uint8_t paramId) {
 	boolean negative = false;
 	if ((in[n] & (0x01 << 6)) != 0) negative = true;
 	mc->param[paramId] = in[n] & 0x3F;

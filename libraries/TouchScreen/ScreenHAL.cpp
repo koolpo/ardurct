@@ -75,9 +75,6 @@ void ScreenHAL::initScreen() {
 	_screenSelected = 0;
 	_rotation = 0;
 	_margin = 0;
-#if defined(CONFIGURATION_HAS_MACROS)	
-	_initializeMacros();
-#endif
 	setFont(1, FONT_PLAIN, NO_OVERLAY);
 	_selectScreen();
 	initScreenImpl();
@@ -188,7 +185,7 @@ void ScreenHAL::setFont(uint8_t size, bool bold, bool overlay) {
 }
 
 
-uint16_t getStringWidth(uint8_t *s, uint8_t fontSize) {
+uint16_t ScreenHAL::getStringWidth(char *s, uint8_t fontSize) {
 	uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
 	uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
 	fontDefinition_t *fontDef = &fontDefinition_small;
@@ -199,7 +196,7 @@ uint16_t getStringWidth(uint8_t *s, uint8_t fontSize) {
 	return nbChr * (fontDef->width + fontDef->charSpacing) * fontScale;
 }
 
-uint8_t getFontHeight(uint8_t fontSize) {
+uint8_t ScreenHAL::getFontHeight(uint8_t fontSize) {
 	uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
 	uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
 	fontDefinition_t *fontDef = &fontDefinition_small;

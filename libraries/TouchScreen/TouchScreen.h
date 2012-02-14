@@ -107,13 +107,13 @@ class TouchScreen: public ILI932X {
 #if defined(CONFIGURATION_HAS_UI)
 		void setupUI(int16_t x, int16_t y, uint16_t width, uint16_t height);
 		
-		int16_t addUITab(uint8_t *text);
+		int16_t addUITab(char *text);
 		
-		int16_t addUIButton(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t *text, void (*handle)(uint8_t id));
+		int16_t addUIButton(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, char *text, void (*handle)(uint8_t id));
 		
-		int16_t addUILabel(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t *text);
+		int16_t addUILabel(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, char *text);
 		
-		int16_t addUIPushButton(int16_t tab, uint8_t id, int16_t group, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t *text, uint16_t state, void (*handle)(uint8_t id));
+		int16_t addUIPushButton(int16_t tab, uint8_t id, int16_t group, int16_t x, int16_t y, uint16_t width, uint16_t height, char *text, uint16_t state, void (*handle)(uint8_t id));
 		
 		int16_t addUIArea(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, void (*handle)(uint8_t id), 
 			void (*draw)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value));
@@ -157,7 +157,7 @@ class TouchScreen: public ILI932X {
 		tsCalibrationEquation_t _xCalibrationEquation;
 		tsCalibrationEquation_t _yCalibrationEquation;
 		
-#if defined(CONFIGURATION_HAS_MACROS)
+#if defined(CONFIGURATION_HAS_UI)
 		uiElement_t _uiElement[UI_MAX_ELEMENTS];
 		uint8_t _uiNbElements;
 		int16_t _uiActiveElement;
@@ -205,11 +205,6 @@ class TouchScreen: public ILI932X {
 		
 		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, uint8_t paramId);
 #endif
-		
-		bool _calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tsX, int32_t *tsY);
-		
-		void _getDisplayXY(int16_t *x, int16_t *y);
-		
 #if defined(CONFIGURATION_HAS_UI)
 		int16_t _addUIElement(int16_t type, int16_t tab, uint8_t id, int16_t group, int16_t x, int16_t y, int16_t width, int16_t height, int16_t value, uint8_t *text, int16_t min, int16_t max,
 			void (*handle)(uint8_t id), void (*draw)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value));
@@ -224,9 +219,13 @@ class TouchScreen: public ILI932X {
 		
 		int16_t _getUIElementIndex(uint8_t id);
 #endif
-}
+		
+		bool _calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tsX, int32_t *tsY);
+		
+		void _getDisplayXY(int16_t *x, int16_t *y);
+		
 
-#endif
+
 };
 
 #endif

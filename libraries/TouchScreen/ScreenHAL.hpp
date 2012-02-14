@@ -104,7 +104,7 @@ class ScreenHAL: public Print {
 
 		void setFont(uint8_t size, bool isBold = false, bool isOverlay = false);
 		
-		uint16_t getStringWidth(uint8_t *s, uint8_t fontSize);
+		uint16_t getStringWidth(char *s, uint8_t fontSize);
 		
 		uint8_t getFontHeight(uint8_t fontSize);
 
@@ -196,11 +196,23 @@ class ScreenHAL: public Print {
 
 		// NEEDS TO BE implemented by the class inheriting from this class
 		virtual void retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+	
+	protected:
+		uint16_t _backgroundColor;
+		uint16_t _foregroundColor;
+		uint8_t _fontSize;
+		bool _isFontBold;
+		bool _isFontOverlay;
+		int8_t _thickness;
+
+		void _selectScreen();
 		
+		void _unselectScreen();		
+	
 	private:
 		uint8_t _cs;
 		uint8_t _reset;
-#if defined(HARDWARE_BUS_IS_SHARED_WITH_SPI)
+#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)
 		uint8_t _spiUsed;
 #endif
 		bool _screenSelected;
@@ -210,18 +222,8 @@ class ScreenHAL: public Print {
 		uint16_t _y;
 		uint16_t _margin;
 		uint8_t _rotation;
-		uint16_t _backgroundColor;
-		uint16_t _foregroundColor;
-		uint8_t _fontSize;
-		bool _isFontBold;
-		bool _isFontOverlay;
-		int8_t _thickness;
 		fontDefinition_t *_fontDef;
 		uint8_t _fontScale;
-		
-		void _selectScreen();
-		
-		void _unselectScreen();
 		
 		void _drawValidChar(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, fontDefinition_t *fontDef, uint8_t fontScale, bool fontBold, bool overlay);
 

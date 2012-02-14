@@ -35,6 +35,9 @@ TouchScreen::TouchScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8
 
 void TouchScreen::begin(uint16_t foregroundColor, uint16_t backgroundColor, uint8_t fontSize, bool fontBold, bool fontOverlay) {
 	initScreen();
+#if defined(CONFIGURATION_HAS_MACROS)	
+	_initializeMacros();
+#endif
 	if (_backlightPin != 0xFF) setupBacklight(_backlightPin);
 	setFont(fontSize, fontBold, fontOverlay);
 	setBackgroundColor(backgroundColor);
@@ -146,7 +149,7 @@ uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	*_xmPort &= ~_xmBitMask;
 	val1 = analogRead(_yp);
 	val2 = analogRead(_yp);
-	if (abs(val1-val2) > HARDWARE_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
+	if (abs(val1-val2) > CONFIGURATION_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
 	X = (val1 + val2)/2;
 	
 	// measure Y
@@ -158,7 +161,7 @@ uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	*_ypPort |= _ypBitMask;
 	val1 = analogRead(_xm);
 	val2 = analogRead(_xm);
-	if (abs(val1-val2) > HARDWARE_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
+	if (abs(val1-val2) > CONFIGURATION_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
 	Y = (val1 + val2)/2;
 	
 	// Measure Z
@@ -171,13 +174,13 @@ uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	float Z = val2;
 	Z /= val1;
 	Z -= 1;
-	Z *= (X * HARDWARE_X_PLANE_RESISTANCE) / 1024;
+	Z *= (X * CONFIGURATION_X_PLANE_RESISTANCE) / 1024;
 	*z = Z; 
 	
 	// we leave with XP and YM as outputs
 	// and XM and YP as inputs
 	
-	if ((*z >= HARDWARE_PRESSURE_THRESHOLD) && (*z < HARDWARE_PRESSURE_MAX)) {
+	if ((*z >= CONFIGURATION_PRESSURE_THRESHOLD) && (*z < CONFIGURATION_PRESSURE_MAX)) {
 		_getDisplayXY(&X, &Y);
 		*x = X;
 		*y = Y;
