@@ -1,6 +1,30 @@
+/*
+ * ScreenHAL - Screen Hardware Abstraction Layer
+ *
+ * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include "ScreenHAL.hpp"
 #include "fontBitmaps.hpp"
-#include "hardware.hpp"
+#include "configuration.hpp"
 
 ScreenHAL::ScreenHAL(void) {
 }
@@ -45,13 +69,13 @@ void ScreenHAL::initScreen() {
 		digitalWrite(_reset, HIGH);
 	}
 	
-	_width = HARDWARE_WIDTH;
-	_height = HARDWARE_HEIGHT;
+	_width = CONFIGURATION_WIDTH;
+	_height = CONFIGURATION_HEIGHT;
 	_spiUsed = 0;
 	_screenSelected = 0;
 	_rotation = 0;
 	_margin = 0;
-#if defined(SCREEN_MACROS)	
+#if defined(CONFIGURATION_HAS_MACROS)	
 	_initializeMacros();
 #endif
 	setFont(1, FONT_PLAIN, NO_OVERLAY);
@@ -64,11 +88,11 @@ void ScreenHAL::setRotation(uint8_t rotation, bool selectAndUnselectScreen) {
 	_rotation = rotation;
 	if (_rotation > SCREEN_ROTATION_270) _rotation = SCREEN_ROTATION_0;
 	if ((_rotation == SCREEN_ROTATION_0) || (_rotation == SCREEN_ROTATION_180)) {
-		_width = HARDWARE_WIDTH;
-		_height = HARDWARE_HEIGHT;
+		_width = CONFIGURATION_WIDTH;
+		_height = CONFIGURATION_HEIGHT;
 	} else {
-		_width = HARDWARE_HEIGHT;
-		_height = HARDWARE_WIDTH;
+		_width = CONFIGURATION_HEIGHT;
+		_height = CONFIGURATION_WIDTH;
 	}
 	if (selectAndUnselectScreen) _selectScreen();
 	setRotationImpl(_rotation);
@@ -88,14 +112,14 @@ void ScreenHAL::getRotatedXY(int16_t *x, int16_t *y, uint8_t rotation) {
 	int16_t Y = *y;
 	
 	if (rotation == SCREEN_ROTATION_180) {
-		*x = HARDWARE_WIDTH - X;
-		*y = HARDWARE_HEIGHT - Y;
+		*x = CONFIGURATION_WIDTH - X;
+		*y = CONFIGURATION_HEIGHT - Y;
 	} else if (rotation == SCREEN_ROTATION_90) {
-		*x = HARDWARE_HEIGHT - Y;
+		*x = CONFIGURATION_HEIGHT - Y;
 		*y = X;
 	} else if (rotation == SCREEN_ROTATION_270) {
 		*x = Y;
-		*y = HARDWARE_WIDTH - X;
+		*y = CONFIGURATION_WIDTH - X;
 	} 
 }
 
@@ -489,7 +513,7 @@ void ScreenHAL::fillRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint1
 
 
 uint16_t *ScreenHAL::retrieveBitmap(uint16_t *buffer, int16_t x, int16_t y, uint16_t width, uint16_t height, bool selectAndUnselectScreen) {
-	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height) || (width*height > HARDWARE_MAX_BITMAP_SPACE)) return 0;
+	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height) || (width*height > CONFIGURATION_MAX_BITMAP_SPACE)) return 0;
 	if (selectAndUnselectScreen) _selectScreen();
 	retrieveBitmapImpl(buffer, x, y, width, height);
 	if (selectAndUnselectScreen) _unselectScreen();
@@ -498,11 +522,11 @@ uint16_t *ScreenHAL::retrieveBitmap(uint16_t *buffer, int16_t x, int16_t y, uint
 
 
 void ScreenHAL::pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool hasTransparency, uint16_t transparentColor, bool selectAndUnselectScreen) {
-	uint16_t buffer[HARDWARE_MAX_BITMAP_SPACE];
+	uint16_t buffer[CONFIGURATION_MAX_BITMAP_SPACE];
 
 	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
 	// check for overflow
-	if (hasTransparency && (width * height > HARDWARE_MAX_BITMAP_SPACE)) return;
+	if (hasTransparency && (width * height > CONFIGURATION_MAX_BITMAP_SPACE)) return;
 	if (selectAndUnselectScreen) _selectScreen();
 	if (hasTransparency) {
 		// get the background image
@@ -519,11 +543,11 @@ void ScreenHAL::pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t wid
 
 void ScreenHAL::drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, int16_t y, uint8_t width, uint8_t height, 
 		uint16_t color, uint16_t backColor, uint8_t scale, bool overlay, bool selectAndUnselectScreen) {
-	uint16_t buffer[HARDWARE_MAX_BITMAP_SPACE];
-	uint8_t unpacked[HARDWARE_MAX_BITMAP_SPACE];
+	uint16_t buffer[CONFIGURATION_MAX_BITMAP_SPACE];
+	uint8_t unpacked[CONFIGURATION_MAX_BITMAP_SPACE];
 
 	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
-	if (width * height * scale * scale > HARDWARE_MAX_BITMAP_SPACE) return;
+	if (width * height * scale * scale > CONFIGURATION_MAX_BITMAP_SPACE) return;
 	// unpack the pattern
 	_unpackPattern(pattern, unpacked, width, height, 0, 0, orientation);
 	if (selectAndUnselectScreen) _selectScreen();
@@ -572,7 +596,7 @@ void ScreenHAL::retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uin
 
 void ScreenHAL::_selectScreen() {
 	if (_screenSelected) return;
-#if defined(HARDWARE_BUS_IS_SHARED_WITH_SPI)	
+#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)	
 	// if SPI is active, disable it but remember that we disabled it
 	if (SPCR & _BV(SPE)) {
 		SPCR &= ~_BV(SPE);
@@ -591,7 +615,7 @@ void ScreenHAL::_selectScreen() {
 void ScreenHAL::_unselectScreen() {
 	// unselect the screen
 	if (_cs != 0xFF) digitalWrite(_cs, HIGH);
-#if defined(HARDWARE_BUS_IS_SHARED_WITH_SPI)		
+#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)		
 	// restore the SPI if it was active
 	if (_spiUsed) {
 		// we have to set SS as an output to enable SPI

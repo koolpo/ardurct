@@ -1,27 +1,35 @@
+/*
+ * ScreenHAL - Screen Hardware Abstraction Layer
+ *
+ * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #ifndef SCREEN_HAL_HPP
 #define SCREEN_HAL_HPP
 
 #include <Arduino.h>
 #include <inttypes.h>
 
-#include "hardware.hpp"
+#include "configuration.hpp"
 #include "fonts.hpp"
-
-// Comment this if you don't want to use macros
-// this takes a few bytes of code
-#define SCREEN_MACROS 1
-
-#if defined(SCREEN_MACROS)
-#include "Macros.hpp"
-#endif
-
-// Comment this if you don't want to use user interface items
-// this takes a few bytes of code
-#define SCREEN_UI 1
-
-#if defined(SCREEN_UI)
-#include "UserInterface.hpp"
-#endif
 
 #define SCREEN_ROTATION_0	0
 #define SCREEN_ROTATION_90	1
@@ -154,16 +162,6 @@ class ScreenHAL: public Print {
 
 		void fillScreen(uint16_t color, bool selectAndUnselectScreen = true);
 		
-#if defined(SCREEN_MACROS)
-		uint8_t *executeMacro(uint8_t *macro, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1, 
-			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
-
-		void executeMacroCommand(macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
-			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
-		
-		void executeEepromMacro(uint8_t macroNb, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
-			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
-#endif
 
 	protected:
 		volatile uint8_t *_outPort;
@@ -220,42 +218,7 @@ class ScreenHAL: public Print {
 		int8_t _thickness;
 		fontDefinition_t *_fontDef;
 		uint8_t _fontScale;
-#if defined(SCREEN_MACROS)
-		int16_t _mThickness;
-		int16_t _mX;
-		int16_t _mY;
-		int16_t _mScaleMul;
-		int16_t _mScaleDiv;
-		bool _mIsThicknessScalable;
-		uint16_t _mBackgroundColor;
-		uint16_t _mForegroundColor;
-		uint8_t _mFontSize;
-		bool _mIsFontBold;
-		bool _mIsFontOverlay;
-
-		void _formatMacroSentence(uint8_t *s);
-
-		void _initializeMacros();
 		
-		int16_t _parseMacroCommandParameters(uint8_t *s, macroCommand_t *mc);
-
-		int8_t _parseMacroCommandHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc);
-
-		int8_t _parseMacroCommandParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId);
-		
-		void _executeMacroCommand(macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1);
-		
-		int32_t _getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX);
-		
-		int16_t _compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr);
-		
-		int16_t _uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCommand_t *mc);
-		
-		int8_t _compressNumber(int16_t in, uint8_t *out, uint16_t n);
-		
-		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, uint8_t paramId);
-#endif
-
 		void _selectScreen();
 		
 		void _unselectScreen();

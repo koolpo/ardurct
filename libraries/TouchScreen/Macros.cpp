@@ -1,6 +1,31 @@
-#include "ScreenHAL.hpp"
+/*
+ * Macros - Macro language to draw on the screen
+ *	Part of Touchscreen class
+ *
+ * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+ 
+#include "Touchscreen.h"
 
-#if defined(SCREEN_MACROS)
+#if defined(CONFIGURATION_HAS_MACROS)
 
 /* 
  *	A macro is a serie of drawing commands which can be chained together.
@@ -128,7 +153,7 @@
 extern uint8_t eeprom_read_uint8_t(uint16_t address);
 extern void eeprom_write_uint8_t(uint16_t address, uint8_t value);
 
-uint8_t *ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
+uint8_t *Touchscreen::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
 	macroCommand_t mc;
 	bool drawMode = true;
 	uint8_t wBuffer[256];
@@ -348,7 +373,7 @@ uint8_t *ScreenHAL::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scal
 }
 
 
-void ScreenHAL::executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
+void Touchscreen::executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
 	if (selectAndUnselectScreen) _selectScreen();
@@ -357,7 +382,7 @@ void ScreenHAL::executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, ui
 }
 
 
-void ScreenHAL::executeEepromMacro(uint8_t macroNb, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
+void Touchscreen::executeEepromMacro(uint8_t macroNb, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
 	macroCommand_t mc;
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
@@ -369,7 +394,7 @@ void ScreenHAL::executeEepromMacro(uint8_t macroNb, int16_t x, int16_t y, uint16
 }
 
 
-void ScreenHAL::_initializeMacros() {
+void Touchscreen::_initializeMacros() {
 	_mX = 0;
 	_mY = 0;
 	_mThickness = _thickness;
@@ -383,7 +408,7 @@ void ScreenHAL::_initializeMacros() {
 }
 
 
-void ScreenHAL::_formatMacroSentence(uint8_t *s) {
+void Touchscreen::_formatMacroSentence(uint8_t *s) {
 	uint16_t i=0;
 	while (s[i] != 0) {
 		// before quotes, convert lower into higher
@@ -415,7 +440,7 @@ void ScreenHAL::_formatMacroSentence(uint8_t *s) {
 }
 
 
-void ScreenHAL::_executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv) {
+void Touchscreen::_executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv) {
 	uint8_t group = mc->cmd & SCREEN_MACRO_CMD_GROUP_MASK;
 	
 	// presets
@@ -611,7 +636,7 @@ void ScreenHAL::_executeMacroCommand(macroCommand_t *mc, int16_t x, int16_t y, u
 
 
 
-int8_t ScreenHAL::_parseMacroCommandHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc) {
+int8_t Touchscreen::_parseMacroCommandHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc) {
 	uint16_t i = n;
 	mc->color = 0;
 	// remove front spaces
@@ -627,7 +652,7 @@ int8_t ScreenHAL::_parseMacroCommandHexColor(uint8_t *s, uint16_t n, macroComman
 	return i-n;
 }
 
-int8_t ScreenHAL::_parseMacroCommandParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId) {
+int8_t Touchscreen::_parseMacroCommandParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId) {
 	uint16_t i = n;
 	boolean negative = false;
 	// remove front spaces
@@ -651,7 +676,7 @@ int8_t ScreenHAL::_parseMacroCommandParameter(uint8_t *s, uint16_t n, macroComma
 	return i-n;
 }
 
-int32_t ScreenHAL::_getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX) {
+int32_t Touchscreen::_getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX) {
 	int32_t value = radius;
 	value = (value * SCREEN_MACRO_COS45_LSH16) >> 16;
 	switch (octant) {
@@ -749,7 +774,7 @@ int32_t ScreenHAL::_getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, 
  *	Ratio:			11 / 30
  *
  */
-int16_t ScreenHAL::_compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr) {
+int16_t Touchscreen::_compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr) {
 	
 	uint16_t i = bufferPtr;
 	buffer[i++] = mc->cmd;
@@ -800,7 +825,7 @@ int16_t ScreenHAL::_compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, ui
 	return i;
 }
 
-int16_t ScreenHAL::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCommand_t *mc) {
+int16_t Touchscreen::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCommand_t *mc) {
 	uint16_t i = n;
 	mc->cmd = buffer[i++];
 	
@@ -874,7 +899,7 @@ int16_t ScreenHAL::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCom
  *		0Snnnnnn
  *			From -63 [01111111] to 63 [00111111]
  */
-int8_t ScreenHAL::_compressNumber(int16_t in, uint8_t *out, uint16_t n) {
+int8_t Touchscreen::_compressNumber(int16_t in, uint8_t *out, uint16_t n) {
 	bool negative = false;
 	if (in < 0) {
 		negative = true;
@@ -893,7 +918,7 @@ int8_t ScreenHAL::_compressNumber(int16_t in, uint8_t *out, uint16_t n) {
 }
 
 
-int8_t ScreenHAL::_uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, uint8_t paramId) {
+int8_t Touchscreen::_uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, uint8_t paramId) {
 	boolean negative = false;
 	if ((in[n] & (0x01 << 6)) != 0) negative = true;
 	mc->param[paramId] = in[n] & 0x3F;

@@ -1,14 +1,32 @@
+/*
+ * Macros - Macro language to draw on the screen
+ *	Part of Touchscreen class
+ *
+ * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+ 
 #ifndef MACROS_HPP
 #define MACROS_HPP 1
 
 #include <inttypes.h>
-
-// the number of macros defined in eeprom
-// each compressed macro can be up to SCREEN_MACRO_MAX_SIZE character long
-// the eeprom taken will be SCREEN_MACRO_MAX_NUMBER * SCREEN_MACRO_MAX_SIZE bytes
-#define SCREEN_MACRO_MAX_NUMBER 16
-// this number can not be bigger than 255
-#define SCREEN_MACRO_MAX_SIZE 128
 
 #define SCREEN_MACRO_CMD_NONE						0x00
 #define SCREEN_MACRO_CMD_PRESET_FOREGROUND			0x11

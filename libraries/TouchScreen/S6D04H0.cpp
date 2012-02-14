@@ -1,3 +1,27 @@
+/*
+ * S6D04H0 - Implementation of the ScreenHAL abstract functions for the S6D04H0
+ *
+ * Copyright (c) 2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include "S6D04H0.hpp"
 
 #define S6D04H0_DELAY	120
@@ -16,13 +40,15 @@
 // the following functions are defined as macros to speed up the execution
 #define _clearRD() { *_rdPort &= _rdLow; *_rdPort &= _rdLow; }
 
-#define _pulseWR() { *_wrPort &= _wrLow; *_wrPort |= _wrHigh; }
+#define _prepareWR() { _wrPortLowWR = (*_wrPort) & _wrLow; _wrPortHighWR = (*_wrPort) | _wrHigh; }
 
-#define _writeCommand(cmd) { *_cdPort &= ~_cdBitMask; *_outPort = cmd; *_wrPort &= _wrLow; *_wrPort |= _wrHigh; *_cdPort |= _cdBitMask; }
+#define _pulseWR() { *_wrPort = _wrPortLowWR;  *_wrPort = _wrPortHighWR; }
 
-#define _writeData(data8b) { *_outPort = data8b; *_wrPort &= _wrLow; *_wrPort |= _wrHigh; }
+#define _writeCommand(cmd) { *_cdPort &= ~_cdBitMask; *_outPort = cmd; *_wrPort = _wrPortLowWR;  *_wrPort = _wrPortHighWR; *_cdPort |= _cdBitMask; }
 
-#define _write16bData(data16b) { *_outPort = data16b >> 8; *_wrPort &= _wrLow; *_wrPort |= _wrHigh; *_outPort = data16b; *_wrPort &= _wrLow; *_wrPort |= _wrHigh; }
+#define _writeData(data8b) { *_outPort = data8b; *_wrPort =	_wrPortLowWR;  *_wrPort = _wrPortHighWR; }
+
+#define _write16bData(data16b) { *_outPort = data16b >> 8; *_wrPort = _wrPortLowWR;  *_wrPort = _wrPortHighWR; *_outPort = data16b; *_wrPort = _wrPortLowWR;  *_wrPort = _wrPortHighWR; }
 
 const unsigned char PROGMEM S6D04H0_initialization_code[] = {
 	0xFE,				/* delay(S6D04H0_DELAY) */
@@ -61,6 +87,7 @@ void S6D04H0::initScreenImpl(void) {
 	uint16_t i = 0;
 	
 	// init the screen
+	_prepareWR();
 	while (1) {
 		memcpy_P(buffer, &(S6D04H0_initialization_code[i]), 32);
 		if (buffer[0] == 0xFF) break;
@@ -81,6 +108,7 @@ void S6D04H0::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
 	uint8_t xl = x;
 	uint8_t yh = y >> 8;
 	uint8_t yl = y;
+	_prepareWR();
 	_writeCommand(S6D04H0_CASET);
 	_writeData(xh);
 	_writeData(xl);
@@ -103,11 +131,18 @@ void S6D04H0::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, u
 	nbPixels *= (hy - ly + 1);
 	uint8_t colH = color >> 8;
 	uint8_t colL = color;
+	_prepareWR();
 	_setClippingRectangle(lx, ly, hx, hy);
 	_writeCommand(S6D04H0_RAMWR);
-	while (nbPixels-- > 0) {
-		_writeData(colH);
-		_writeData(colL);
+	if (colH == colL) {
+		*_outPort = colH;
+		nbPixels = nbPixels << 1;
+		while (nbPixels-- > 0) _pulseWR();
+	} else {
+		while (nbPixels-- > 0) {
+			_writeData(colH);
+			_writeData(colL);
+		}
 	}
 }
 
@@ -116,6 +151,7 @@ void S6D04H0::retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint1
 	uint32_t nbPixels = width;
 	nbPixels *= height;
 	
+	_prepareWR();
 	_setClippingRectangle(x, y, x+width-1, y+height-1); 
 	_writeCommand(S6D04H0_RAMRD);
 	*_portMode = 0x00;	
@@ -146,6 +182,7 @@ void S6D04H0::retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint1
 void S6D04H0::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
 	uint32_t nbPixels = width;
 	nbPixels *= height;
+	_prepareWR();
 	_setClippingRectangle(x, y, x+width-1, y+height-1); 
 	_writeCommand(S6D04H0_RAMWR);
 	for (uint32_t i=0; i<nbPixels; i++) _write16bData(bitmap[i]);
@@ -153,6 +190,7 @@ void S6D04H0::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t
 
 
 void S6D04H0::setRotationImpl(uint8_t rotation) {
+	_prepareWR();
 	if (rotation == SCREEN_ROTATION_0) {
 		_writeCommand(S6D04H0_MADCTL);
 		_writeData(S6D04H0_R0);

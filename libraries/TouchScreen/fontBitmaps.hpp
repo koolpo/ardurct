@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2010 Laurent Wibaux <lm.wibaux@gmail.com>
+ * FontBitmaps : defines 3 font patterns 
+ *
+ * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
