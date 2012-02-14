@@ -27,16 +27,16 @@
 #define HMC6352_ADDRESS	0x42
 #define HMC6352_GET_HEADING	'A'
 
-HMC6352::HMC6352() {
+HMC6352Class::HMC6352Class() {
 }
 
 
-void HMC6352::begin() {
+void HMC6352Class::begin() {
 	Wire.begin();
 }
 
 
-uint16_t HMC6352::getHeading() {
+uint16_t HMC6352Class::getHeading() {
 	uint16_t heading;
 
 	// Send the get data command
@@ -62,4 +62,4 @@ uint16_t HMC6352::getHeading() {
 
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
-HMC6352 Hmc6352 = HMC6352();
+HMC6352Class HMC6352 = HMC6352Class();

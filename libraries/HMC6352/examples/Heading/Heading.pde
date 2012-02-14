@@ -43,14 +43,14 @@
 
 void setup() {
     // Initialize the magnetometer
-    Hmc6352.begin();
+    HMC6352.begin();
     // Initialize the serial port
     Serial.begin(9600);
 }
 
 void loop() {
     Serial.print("Heading: ");
-    Serial.println(Hmc6352.getHeading());
+    Serial.println(HMC6352.getHeading());
     delay(500);
 }
 

@@ -34,10 +34,10 @@
 #include <inttypes.h>
 #include <WProgram.h>
 
-class HMC6352 {
+class HMC6352Class {
 
 	public:
-		HMC6352();
+		HMC6352Class();
 
         virtual void begin();
 
@@ -45,6 +45,6 @@ class HMC6352 {
 
 };
 
-extern HMC6352 Hmc6352;
+extern HMC6352Class HMC6352;
 
 #endif  /* HMC6352_H */
