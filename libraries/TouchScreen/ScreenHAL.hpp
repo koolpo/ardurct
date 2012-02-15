@@ -81,8 +81,6 @@ class ScreenHAL: public ILI932X {
 		
 		void initScreen();
 
-		void setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset);
-
 		uint16_t getForegroundColor();
 
 		void setForegroundColor(uint16_t color);		

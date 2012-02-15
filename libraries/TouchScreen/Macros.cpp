@@ -166,6 +166,7 @@ uint8_t *TouchScreen::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t sc
 	// convert to upper case, transform all char below space as space
 	_formatMacroSentence(s);
 	while (s[i] != 0) {
+		bool hasText = false;
 		// get the command
 		switch (s[i]) {
 			case 'L':
@@ -237,6 +238,7 @@ uint8_t *TouchScreen::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t sc
 				break;
 			case 'S':
 				mc.cmd = SCREEN_MACRO_CMD_STRING;
+				hasText = true;
 				if (s[i+1] != ' ') return 0;
 				break;
 			case 'C':
@@ -328,8 +330,7 @@ uint8_t *TouchScreen::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t sc
 			i += len;
 			mc.nbParams ++;
 		}
-		if (mc.cmd == SCREEN_MACRO_CMD_STRING) {
-			// for text, always 2 coordinates, followed by text
+		if (hasText) {
 			// search for start of string
 			while ((s[i] != 0) && (s[i] != '"')) i++;
 			if (s[i] != '"') return 0;
@@ -345,8 +346,8 @@ uint8_t *TouchScreen::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t sc
 			s[i] = 0;
 			mc.text = &s[txtStart];
 			mc.textLen = i - txtStart;
+			i++;
 		}
-
 		
 		// Execute the command
 		if (drawMode) executeMacroCommand(&mc, x, y, scaleMul, scaleDiv, true, selectAndUnselectScreen);
@@ -369,6 +370,8 @@ uint8_t *TouchScreen::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t sc
 			for (int j=0; j<wBufferPtr; j++) eeprom_write_uint8_t(SCREEN_MACRO_MAX_NUMBER + wBufferNb*SCREEN_MACRO_MAX_SIZE+j, wBuffer[j]);
 		}
 	}
+	wBuffer[wBufferPtr] = 0;
+	Serial.println((char *)wBuffer);
 	return wBuffer;
 }
 
@@ -410,6 +413,7 @@ void TouchScreen::_initializeMacros() {
 
 void TouchScreen::_formatMacroSentence(uint8_t *s) {
 	uint16_t i=0;
+	Serial.println((char *)s);
 	while (s[i] != 0) {
 		// before quotes, convert lower into higher
 		while ((s[i] != 0) && (s[i] != '"')) {
@@ -437,6 +441,7 @@ void TouchScreen::_formatMacroSentence(uint8_t *s) {
 		if (s[i] == 0) break;
 		i++;
 	}
+	Serial.println((char *)s);
 }
 
 

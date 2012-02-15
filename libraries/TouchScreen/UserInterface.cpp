@@ -131,7 +131,7 @@ void TouchScreen::handleUI() {
 	
 	// get the touched point
 	getTouchXYZ(&x, &y, &z);
-	
+Serial.print(x, DEC); Serial.print(" "); Serial.println(y);	
 	// check if we need to change tab
 	for (uint8_t i=0; i<_uiNbTabs; i++) {
 		if (_isTouchInUITab(&(_uiTab[i]), x, y)) {
@@ -181,9 +181,11 @@ uint16_t TouchScreen::getUIElementWidth(uint8_t id) {
 void TouchScreen::setUIElementValue(uint8_t id, int16_t value) {
 	int16_t index = _getUIElementIndex(id);
 	if (index == UI_ERROR) return;
-	if (value > _uiElement[index].max) _uiElement[index].value = _uiElement[index].max;
-	else if (value < _uiElement[index].min) _uiElement[index].value = _uiElement[index].min;
-	else _uiElement[index].value = value;
+	_uiElement[index].value = value;
+	if (_uiElement[index].type != UI_AREA) {
+		if (value > _uiElement[index].max) _uiElement[index].value = _uiElement[index].max;
+		else if (value < _uiElement[index].min) _uiElement[index].value = _uiElement[index].min;
+	}
 	if (_uiElement[index].tab == _uiActiveTab) _drawUIElement(&(_uiElement[index]));
 }
 

@@ -149,6 +149,7 @@ uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	*_xmPort &= ~_xmBitMask;
 	val1 = analogRead(_yp);
 	val2 = analogRead(_yp);
+	Serial.print("X="); Serial.print(val1, DEC);Serial.print(" "); Serial.print(val2, DEC); Serial.print(" "); Serial.println((val1+val2)/2, DEC);
 	if (abs(val1-val2) > CONFIGURATION_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
 	X = (val1 + val2)/2;
 	
@@ -161,6 +162,7 @@ uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	*_ypPort |= _ypBitMask;
 	val1 = analogRead(_xm);
 	val2 = analogRead(_xm);
+	Serial.print("Y="); Serial.print(val1, DEC);Serial.print(" "); Serial.print(val2, DEC); Serial.print(" "); Serial.println((val1+val2)/2, DEC);
 	if (abs(val1-val2) > CONFIGURATION_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
 	Y = (val1 + val2)/2;
 	
@@ -176,6 +178,7 @@ uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	Z -= 1;
 	Z *= (X * CONFIGURATION_X_PLANE_RESISTANCE) / 1024;
 	*z = Z; 
+	Serial.print("Z="); Serial.println(*z, DEC);
 	
 	// we leave with XP and YM as outputs
 	// and XM and YP as inputs

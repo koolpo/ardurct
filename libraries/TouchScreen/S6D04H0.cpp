@@ -42,9 +42,9 @@
 
 #define _prepareWR() { _wrPortLowWR = (*_wrPort) & _wrLow; _wrPortHighWR = (*_wrPort) | _wrHigh; }
 
-#define _pulseWR() { *_wrPort = _wrPortLowWR;  *_wrPort = _wrPortHighWR; }
+#define _writeCommand(cmd) { *_cdPort &= ~_cdBitMask; *_outPort = cmd; *_wrPort &= _wrLow;  *_wrPort |= _wrHigh; *_cdPort |= _cdBitMask; }
 
-#define _writeCommand(cmd) { *_cdPort &= ~_cdBitMask; *_outPort = cmd; *_wrPort = _wrPortLowWR;  *_wrPort = _wrPortHighWR; *_cdPort |= _cdBitMask; }
+#define _pulseWR() { *_wrPort = _wrPortLowWR;  *_wrPort = _wrPortHighWR; }
 
 #define _writeData(data8b) { *_outPort = data8b; *_wrPort =	_wrPortLowWR;  *_wrPort = _wrPortHighWR; }
 
@@ -71,7 +71,6 @@ const unsigned char PROGMEM S6D04H0_initialization_code[] = {
 	4,	0x2a, 0x00, 0x00, 0x00, 0xef,	/* CASET: Column Address SET */
 	4,	0x2b, 0x00, 0x00, 0x01, 0x3f, 	/* PASET:Page Address SET */
 	0,	0x29, 			/* DISPON:	DISplay ON */
-	0,	0x2c,			/* RAMWR: RAM WRite */
 	0xFE,				/* delay(S6D04H0_DELAY) */
 	0xFF				/* End initialization */
 };
@@ -136,8 +135,10 @@ void S6D04H0::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, u
 	_writeCommand(S6D04H0_RAMWR);
 	if (colH == colL) {
 		*_outPort = colH;
-		nbPixels = nbPixels << 1;
-		while (nbPixels-- > 0) _pulseWR();
+		while (nbPixels-- > 0) {
+			_pulseWR();
+			_pulseWR();
+		}
 	} else {
 		while (nbPixels-- > 0) {
 			_writeData(colH);

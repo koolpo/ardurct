@@ -45,5 +45,5 @@ void loop() {
         Serial.println(z);
         touchscreen.fillRectangle(x-10, y-10, 20, 20, BLUE);
     }
-    delay(100);
+    delay(2000);
 }

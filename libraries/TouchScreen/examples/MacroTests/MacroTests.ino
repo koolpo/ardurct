@@ -37,7 +37,7 @@ void setup() {
     touchscreen.setBacklight(180);
 
     touchscreen.executeMacro(seven, 20, 20);
-    touchscreen.executeMacro(seven, 10, 100, 2);
+    touchscreen.executeMacro(seven, 10, 100, 3);
     
     delay(3000);
     

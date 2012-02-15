@@ -30,26 +30,6 @@ ScreenHAL::ScreenHAL(void) {
 }
 
 
-void ScreenHAL::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset) {	
-	_outPort = portOutputRegister(port);
-	_inPort = portInputRegister(port);
-	_portMode = portModeRegister(port);
-	_rdPort = portOutputRegister(digitalPinToPort(rd));
-	_rdHigh = digitalPinToBitMask(rd);
-	_rdLow = ~_rdHigh;
-	_wrPort = portOutputRegister(digitalPinToPort(wr));
-	_wrHigh = digitalPinToBitMask(wr);
-	_wrLow = ~_wrHigh;
-	_cdPort = portOutputRegister(digitalPinToPort(cd));
-	_cdBitMask = digitalPinToBitMask(cd);
-	_rd = rd;
-	_wr = wr;
-	_cd = cd;
-	_cs = cs;
-	_reset = reset;
-}
-
-
 void ScreenHAL::initScreen() {
 	pinMode(_rd, OUTPUT);
 	pinMode(_wr, OUTPUT);
