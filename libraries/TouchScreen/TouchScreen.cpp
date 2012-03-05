@@ -87,12 +87,12 @@ void TouchScreen::setupTouchPanel(uint8_t xm, uint8_t xp, uint8_t ym, uint8_t yp
 	if (!calibrateTouchPanel()) return;
 	// read the matrix from eeprom if not already set by calibrateTouchPanel
 	if (_xCalibrationEquation.divider == 0) {
-		_xCalibrationEquation.a = eeprom_read_int32_t(TOUCHSCREEN_X_A_EEPROM_ADDRESS);
-		_xCalibrationEquation.b = eeprom_read_int32_t(TOUCHSCREEN_X_B_EEPROM_ADDRESS);
-		_xCalibrationEquation.divider = eeprom_read_int32_t(TOUCHSCREEN_X_DIVIDER_EEPROM_ADDRESS);
-		_yCalibrationEquation.a = eeprom_read_int32_t(TOUCHSCREEN_Y_A_EEPROM_ADDRESS);
-		_yCalibrationEquation.b = eeprom_read_int32_t(TOUCHSCREEN_Y_B_EEPROM_ADDRESS);
-		_yCalibrationEquation.divider = eeprom_read_int32_t(TOUCHSCREEN_Y_DIVIDER_EEPROM_ADDRESS);
+		_xCalibrationEquation.a = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_A);
+		_xCalibrationEquation.b = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_B);
+		_xCalibrationEquation.divider = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_DIVIDER);
+		_yCalibrationEquation.a = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_A);
+		_yCalibrationEquation.b = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_B);
+		_yCalibrationEquation.divider = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_DIVIDER);
 	}
 }
 
@@ -126,75 +126,20 @@ bool TouchScreen::isTouched() {
 
 uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	if (_xm == 0xFF) return TOUCHSCREEN_NO_TOUCH;
-	
-	uint16_t val1, val2;
-	int16_t X, Y;
-	
-	// void the values
-	*x = TOUCHSCREEN_NO_TOUCH;
-	*y = TOUCHSCREEN_NO_TOUCH;
-	*z = TOUCHSCREEN_NO_TOUCH;
-	
-	// restore the analog reference: just in case...
-	analogReference(DEFAULT);
-	
-	// measure X
-	pinMode(_yp, INPUT);
-	pinMode(_ym, INPUT);  
-	*_ypPort &= ~_ypBitMask;
-	*_ymPort &= ~_ymBitMask;
-	pinMode(_xp, OUTPUT);
-	pinMode(_xm, OUTPUT);
-	*_xpPort |= _xpBitMask;
-	*_xmPort &= ~_xmBitMask;
-	val1 = analogRead(_yp);
-	val2 = analogRead(_yp);
-	Serial.print("X="); Serial.print(val1, DEC);Serial.print(" "); Serial.print(val2, DEC); Serial.print(" "); Serial.println((val1+val2)/2, DEC);
-	if (abs(val1-val2) > CONFIGURATION_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
-	X = (val1 + val2)/2;
-	
-	// measure Y
-	pinMode(_xp, INPUT);
-	pinMode(_xm, INPUT);
-	*_xpPort &= ~_xpBitMask;
-	pinMode(_yp, OUTPUT);
-	pinMode(_ym, OUTPUT);
-	*_ypPort |= _ypBitMask;
-	val1 = analogRead(_xm);
-	val2 = analogRead(_xm);
-	Serial.print("Y="); Serial.print(val1, DEC);Serial.print(" "); Serial.print(val2, DEC); Serial.print(" "); Serial.println((val1+val2)/2, DEC);
-	if (abs(val1-val2) > CONFIGURATION_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
-	Y = (val1 + val2)/2;
-	
-	// Measure Z
-	pinMode(_xp, OUTPUT);
-	*_ymPort |= _ymBitMask;
-	pinMode(_yp, INPUT);
-	*_ypPort &= ~_ypBitMask;
-	val1 = analogRead(_xm);
-	val2 = analogRead(_yp);	
-	float Z = val2;
-	Z /= val1;
-	Z -= 1;
-	Z *= (X * CONFIGURATION_X_PLANE_RESISTANCE) / 1024;
-	*z = Z; 
-	Serial.print("Z="); Serial.println(*z, DEC);
-	
-	// we leave with XP and YM as outputs
-	// and XM and YP as inputs
-	
-	if ((*z >= CONFIGURATION_PRESSURE_THRESHOLD) && (*z < CONFIGURATION_PRESSURE_MAX)) {
-		_getDisplayXY(&X, &Y);
-		*x = X;
-		*y = Y;
-		return *z;
-	}
-	return TOUCHSCREEN_NO_TOUCH;
+#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_TOUCHPANEL)	
+	highZBus();
+	uint16_t valid = _measureTouchXYZ(x, y, z);
+	deHighZBus();
+	return valid;
+#else
+	return _measureTouchXYZ(x, y, z);
+#endif
 }
+
 
 bool TouchScreen::calibrateTouchPanel(bool force) {
 	// check if we are calibrated or forced to calibrate
-	if (!force && (eeprom_read_uint8_t(TOUCHSCREEN_CALIBRATED_EEPROM_ADDRESS) != 0xFF)) return true;
+	if (!force && (eeprom_read_uint8_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_DONE) != 0xFF)) return true;
 	
 	// set the rotation to 0
 	setRotation(SCREEN_ROTATION_0);
@@ -246,13 +191,13 @@ bool TouchScreen::calibrateTouchPanel(bool force) {
 	_yCalibrationEquation.divider = tpY1 - tpY0;
 	
     // persist the calibration factors to EEPROM
-    eeprom_write_uint8_t(TOUCHSCREEN_CALIBRATED_EEPROM_ADDRESS, 1);
-    eeprom_write_int32_t(TOUCHSCREEN_X_A_EEPROM_ADDRESS, _xCalibrationEquation.a);
-    eeprom_write_int32_t(TOUCHSCREEN_X_B_EEPROM_ADDRESS, _xCalibrationEquation.b);
-    eeprom_write_int32_t(TOUCHSCREEN_X_DIVIDER_EEPROM_ADDRESS, _xCalibrationEquation.divider);
-    eeprom_write_int32_t(TOUCHSCREEN_Y_A_EEPROM_ADDRESS, _yCalibrationEquation.a);
-    eeprom_write_int32_t(TOUCHSCREEN_Y_B_EEPROM_ADDRESS, _yCalibrationEquation.b);
-    eeprom_write_int32_t(TOUCHSCREEN_Y_DIVIDER_EEPROM_ADDRESS, _yCalibrationEquation.divider);
+    eeprom_write_uint8_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_DONE, 1);
+    eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_A, _xCalibrationEquation.a);
+    eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_B, _xCalibrationEquation.b);
+    eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_DIVIDER, _xCalibrationEquation.divider);
+    eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_A, _yCalibrationEquation.a);
+    eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_B, _yCalibrationEquation.b);
+    eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_DIVIDER, _yCalibrationEquation.divider);
 	
 	return true;
 }
@@ -272,9 +217,9 @@ bool TouchScreen::_calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tpX
 			*tpX = x;
 			*tpY = y;
 			// debounce the touchscreen
-			while (getTouchZ() != TOUCHSCREEN_NO_TOUCH) delay(100);
+			while (isTouched()) delay(100);
 			delay(300);
-			while (getTouchZ() != TOUCHSCREEN_NO_TOUCH) delay(100);
+			while (isTouched()) delay(100);
 			break;
 		}
 		// wait 10 seconds maximum for a touch panel contact
@@ -300,3 +245,85 @@ void TouchScreen::_getDisplayXY(int16_t *x, int16_t *y) {
 	getRotatedXY(x, y, getRotation());
 }
 
+
+int16_t TouchScreen::_analogAverage(uint8_t pin) {
+#if (CONFIGURATION_TOUCHPANEL_NB_MEASURES <= 1)
+	return analogRead(pin);
+#else
+	int16_t val1 = analogRead(pin);
+//	Serial.print(val1, DEC);Serial.print(" "); 
+	int32_t average = val1;
+	for (uint8_t i=1; i<CONFIGURATION_TOUCHPANEL_NB_MEASURES; i++) {
+		int16_t val2 = analogRead(pin);
+// Serial.print(val2, DEC);Serial.print(" ");
+		if (abs(val1-val2) > CONFIGURATION_TOUCHPANEL_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
+		average += val2;
+	}
+	return average / CONFIGURATION_TOUCHPANEL_NB_MEASURES;
+#endif
+}
+
+uint16_t TouchScreen::_measureTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
+	// void the values
+	*x = TOUCHSCREEN_NO_TOUCH;
+	*y = TOUCHSCREEN_NO_TOUCH;
+	*z = TOUCHSCREEN_NO_TOUCH;
+	
+	// restore the analog reference: just in case...
+	analogReference(DEFAULT);
+	
+	// measure X
+	pinMode(_yp, INPUT);
+	pinMode(_ym, INPUT);  
+	*_ypPort &= ~_ypBitMask;
+	*_ymPort &= ~_ymBitMask;
+	pinMode(_xp, OUTPUT);
+	pinMode(_xm, OUTPUT);
+	*_xpPort |= _xpBitMask;
+	*_xmPort &= ~_xmBitMask;
+//Serial.print("X="); 
+	int16_t X = _analogAverage(_yp);
+// Serial.println(X, DEC);	
+	if (X == TOUCHSCREEN_NO_TOUCH) return TOUCHSCREEN_NO_TOUCH;
+	
+	// measure Y
+	pinMode(_xp, INPUT);
+	pinMode(_xm, INPUT);
+	*_xpPort &= ~_xpBitMask;
+	pinMode(_yp, OUTPUT);
+	pinMode(_ym, OUTPUT);
+	*_ypPort |= _ypBitMask;
+//Serial.print("Y="); 
+	int16_t Y = _analogAverage(_xm);
+// Serial.println(Y, DEC);	
+	if (Y == TOUCHSCREEN_NO_TOUCH) return TOUCHSCREEN_NO_TOUCH;
+	
+	// we return with XP and YM as outputs
+	// and XM and YP as inputs, no pull-up
+	pinMode(_xp, OUTPUT);
+	*_ymPort |= _ymBitMask;
+	pinMode(_yp, INPUT);
+	*_ypPort &= ~_ypBitMask;
+
+	// convert the measures according to the calibration
+	_getDisplayXY(&X, &Y);
+	*x = X;
+	*y = Y;
+
+#if defined(CONFIGURATION_TOUCHPANEL_CALCULATE_PRESSURE)
+	// Measure Z
+	int16_t val1 = analogRead(_xm);
+	int16_t val2 = analogRead(_yp);	
+	float Z = val2;
+	Z /= val1;
+	Z -= 1;
+	Z *= (X * CONFIGURATION_TOUCHPANEL_X_PLANE_RESISTANCE) / 1024;
+	*z = Z; 
+//Serial.print("Z="); Serial.println(*z, DEC);
+		
+	if ((*z >= CONFIGURATION_TOUCHPANEL_PRESSURE_THRESHOLD) && (*z < CONFIGURATION_TOUCHPANEL_PRESSURE_MAX)) return *z;
+#endif
+
+	return TOUCHSCREEN_PRESSURE_NOT_VALID;
+	
+}

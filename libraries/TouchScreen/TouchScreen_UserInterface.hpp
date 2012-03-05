@@ -76,7 +76,9 @@ typedef struct {
 	int16_t x;
 	int16_t y;
 	uint16_t width;
-} uiTab_t;
+	void (*drawCallback)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value);
+	void (*handleCallback)(uint8_t id);
+} touchScreen_UITab_t;
 
 typedef struct {
 	uint8_t type;
@@ -92,8 +94,6 @@ typedef struct {
 	int16_t min;
 	int16_t max;
 	bool editable;
-	void (*draw)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value);
-	void (*handle)(uint8_t id);
-} uiElement_t;
+} touchScreen_UIElement_t;
 
 #endif

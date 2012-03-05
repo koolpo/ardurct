@@ -51,14 +51,12 @@ void ScreenHAL::initScreen() {
 	
 	_width = CONFIGURATION_WIDTH;
 	_height = CONFIGURATION_HEIGHT;
-	_spiUsed = 0;
-	_screenSelected = 0;
 	_rotation = 0;
 	_margin = 0;
 	setFont(1, FONT_PLAIN, NO_OVERLAY);
-	_selectScreen();
+	selectScreen();
 	initScreenImpl();
-	_unselectScreen();
+	unselectScreen();
 }
 
 void ScreenHAL::setRotation(uint8_t rotation, bool selectAndUnselectScreen) {
@@ -71,9 +69,9 @@ void ScreenHAL::setRotation(uint8_t rotation, bool selectAndUnselectScreen) {
 		_width = CONFIGURATION_HEIGHT;
 		_height = CONFIGURATION_WIDTH;
 	}
-	if (selectAndUnselectScreen) _selectScreen();
+	if (selectAndUnselectScreen) selectScreen();
 	setRotationImpl(_rotation);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
@@ -210,9 +208,9 @@ void ScreenHAL::drawChar(uint8_t chr, int16_t x, int16_t y, uint16_t color, uint
 	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
 	if ((x + fontDef->width * fontScale >= _width) || (y + fontDef->height * fontScale >= _height)) return;
 	if ((chr < fontDef->firstChar) || (chr > fontDef->lastChar)) return;
-	if (selectAndUnselectScreen) _selectScreen();
+	if (selectAndUnselectScreen) selectScreen();
 	_drawValidChar(chr, x, y, color, validFontSize, fontDef, fontScale, isBold, overlay);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
@@ -225,7 +223,7 @@ void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_
 	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
 	if ((x + fontDef->width * fontScale >= _width) || (y + fontDef->height * fontScale >= _height)) return;
 	
-	if (selectAndUnselectScreen) _selectScreen();
+	if (selectAndUnselectScreen) selectScreen();
 	int16_t lx = x;
 	while (s[0] != 0) {
 		if (s[0] == '\n') {
@@ -247,7 +245,7 @@ void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_
 		}
 		s++;
 	}
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
@@ -256,7 +254,7 @@ size_t ScreenHAL::write(uint8_t chr) {
 #else
 void ScreenHAL::write(uint8_t chr) {
 #endif
-	_selectScreen();
+	selectScreen();
 	if (chr == '\n') {
 		_y += (_fontDef->height + _fontDef->lineSpacing + (_isFontBold ? 1 : 0)) * _fontScale;
 		if (_y > _height - 2*_margin) _y = 0;
@@ -274,7 +272,7 @@ void ScreenHAL::write(uint8_t chr) {
 			if (_y > _height-2*_margin) _y = 0;
 		}
 	}
-	_unselectScreen();
+	unselectScreen();
 #if ARDUINO >= 100
 	return 1;
 #endif
@@ -282,16 +280,16 @@ void ScreenHAL::write(uint8_t chr) {
 
 
 void ScreenHAL::drawPixel(int16_t x, int16_t y, uint16_t color, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();
+	if (selectAndUnselectScreen) selectScreen();
 	_drawBoundedPixel(x, y, color);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
 #define swap(a, b) { int16_t t = a; a = b; b = t; }
 
 void ScreenHAL::drawHorizontalLine(int16_t x1, int16_t x2, int16_t y, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();
+	if (selectAndUnselectScreen) selectScreen();
 	if (thickness <= 1) _fillBoundedArea(x1, y, x2, y, color);
 	else {
 		int8_t t1 = (thickness-1)/2;
@@ -299,12 +297,12 @@ void ScreenHAL::drawHorizontalLine(int16_t x1, int16_t x2, int16_t y, uint16_t c
 		if (x2 < x1) swap(x2, x1);
 		_fillBoundedArea(x1-t1, y-t1, x2+t2, y+t2, color);
 	}
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
 void ScreenHAL::drawVerticalLine(int16_t x, int16_t y1, int16_t y2, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();
+	if (selectAndUnselectScreen) selectScreen();
 	if (thickness <= 1) _fillBoundedArea(x, y1, x, y2, color);
 	else {
 		int8_t t1 = (thickness-1)/2;
@@ -312,7 +310,7 @@ void ScreenHAL::drawVerticalLine(int16_t x, int16_t y1, int16_t y2, uint16_t col
 		if (y2 < y1) swap(y2, y1);
 		_fillBoundedArea(x-t1, y1-t1, x+t2, y2+t2, color);
 	}
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
@@ -339,7 +337,7 @@ void ScreenHAL::drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_
 	int8_t d1 = (thickness-1) / 2;
 	int8_t d2 = thickness / 2;
 
-	if (selectAndUnselectScreen) _selectScreen();	
+	if (selectAndUnselectScreen) selectScreen();	
 	while (1) {
 		if (thickness == 1) drawPixelImpl(x1, y1, color);
 		else _fillBoundedArea(x1-d1, y1-d1, x1+d2, y1+d2, color);
@@ -354,16 +352,16 @@ void ScreenHAL::drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_
 			y1 = y1 + sy;
 		}
 	}
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
 void ScreenHAL::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();	
+	if (selectAndUnselectScreen) selectScreen();	
 	drawLine(x0, y0, x1, y1, color, thickness, false);
 	drawLine(x1, y1, x2, y2, color, thickness, false);
 	drawLine(x2, y2, x0, y0, color, thickness, false);
-	if (selectAndUnselectScreen) _unselectScreen();	
+	if (selectAndUnselectScreen) unselectScreen();	
 }
 
 void ScreenHAL::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color, bool selectAndUnselectScreen) {
@@ -396,7 +394,7 @@ void ScreenHAL::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int
 	else dx3 = 0;
 
 	// Render scanlines 
-	if (selectAndUnselectScreen) _selectScreen();	
+	if (selectAndUnselectScreen) selectScreen();	
 	if (dx1 > dx2) {
 		for (; sy<=y1; sy++, sx1+=dx2, sx2+=dx1) _fillBoundedArea(sx1/1000, sy, sx2/1000, sy, color);
 		sx2 = x1 * 1000;
@@ -408,24 +406,24 @@ void ScreenHAL::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int
 		sy = y1;
 		for (; sy<=y2; sy++, sx1+=dx3, sx2+=dx2) _fillBoundedArea(sx1/1000, sy, sx2/1000, sy, color);
 	}
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
 void ScreenHAL::drawRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();
+	if (selectAndUnselectScreen) selectScreen();
 	drawHorizontalLine(x, x+width-1, y, color, thickness, false);
 	drawHorizontalLine(x, x+width-1, y+height-1, color, thickness, false);
 	drawVerticalLine(x, y, y+height-1, color, thickness, false);
 	drawVerticalLine(x+width-1, y, y+height-1, color, thickness, false);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
 void ScreenHAL::fillRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();
+	if (selectAndUnselectScreen) selectScreen();
 	_fillBoundedArea(x, y, x+width-1, y+height-1, color);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
@@ -435,35 +433,35 @@ void ScreenHAL::fillScreen(uint16_t color, bool selectAndUnselectScreen) {
 
 
 void ScreenHAL::drawArc(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();	
+	if (selectAndUnselectScreen) selectScreen();	
 	_drawOrFillOctant(x0, y0, r, octant, color, thickness, false);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
 void ScreenHAL::fillArc(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();	
+	if (selectAndUnselectScreen) selectScreen();	
 	_drawOrFillOctant(x0, y0, r, octant, color, 0, true);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
 void ScreenHAL::drawCircle(int16_t x0, int16_t y0, uint16_t r, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();	
+	if (selectAndUnselectScreen) selectScreen();	
 	_drawOrFillOctant(x0, y0, r, SCREEN_ARC_ALL, color, thickness, false);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
 void ScreenHAL::fillCircle(int16_t x0, int16_t y0, uint16_t r, uint16_t color, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();	
+	if (selectAndUnselectScreen) selectScreen();	
 	_drawOrFillOctant(x0, y0, r, SCREEN_ARC_ALL, color, 0, true);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
 void ScreenHAL::drawRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t r, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();	
+	if (selectAndUnselectScreen) selectScreen();	
 	_drawOrFillOctant(x+r, y+r, r, SCREEN_ARC_NW, color, thickness, false);
 	drawHorizontalLine(x+r, x+width-1-r, y, color, thickness, false);
 	_drawOrFillOctant(x+width-1-r, y+r, r, SCREEN_ARC_NE, color, thickness, false);
@@ -472,12 +470,12 @@ void ScreenHAL::drawRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint1
 	drawHorizontalLine(x+r, x+width-1-r, y+height-1, color, thickness, false);
 	_drawOrFillOctant(x+width-1-r, y+height-1-r, r, SCREEN_ARC_SE, color, thickness, false);
 	drawVerticalLine(x, y+r, y+height-1-r, color, thickness, false);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
 void ScreenHAL::fillRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t r, uint16_t color, bool selectAndUnselectScreen) {
-	if (selectAndUnselectScreen) _selectScreen();	
+	if (selectAndUnselectScreen) selectScreen();	
 	_drawOrFillOctant(x+r, y+r, r, SCREEN_ARC_NW, color, 0, true);
 	_drawOrFillOctant(x+width-1-r, y+r, r, SCREEN_ARC_NE, color, 0, true);
 	_drawOrFillOctant(x+r, y+height-1-r, r, SCREEN_ARC_SW, color, 0, true);
@@ -485,15 +483,15 @@ void ScreenHAL::fillRoundedRectangle(int16_t x, int16_t y, uint16_t width, uint1
 	_fillBoundedArea(x, y+r, x+width-1, y+height-1-r, color);
 	_fillBoundedArea(x+r, y, x+width-1-r, y+r, color);
 	_fillBoundedArea(x+r, y+height-1-r, x+width-1-r, y+height-1, color);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
 uint16_t *ScreenHAL::retrieveBitmap(uint16_t *buffer, int16_t x, int16_t y, uint16_t width, uint16_t height, bool selectAndUnselectScreen) {
 	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height) || (width*height > CONFIGURATION_MAX_BITMAP_SPACE)) return 0;
-	if (selectAndUnselectScreen) _selectScreen();
+	if (selectAndUnselectScreen) selectScreen();
 	retrieveBitmapImpl(buffer, x, y, width, height);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 	return buffer;
 }
 
@@ -504,7 +502,7 @@ void ScreenHAL::pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t wid
 	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
 	// check for overflow
 	if (hasTransparency && (width * height > CONFIGURATION_MAX_BITMAP_SPACE)) return;
-	if (selectAndUnselectScreen) _selectScreen();
+	if (selectAndUnselectScreen) selectScreen();
 	if (hasTransparency) {
 		// get the background image
 		retrieveBitmapImpl(buffer, x, y, width, height);
@@ -514,7 +512,7 @@ void ScreenHAL::pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t wid
 		}
 		pasteBitmapImpl(buffer, x, y, width, height);
 	} else pasteBitmapImpl(bitmap, x, y, width, height);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
 
 
@@ -527,52 +525,30 @@ void ScreenHAL::drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, in
 	if (width * height * scale * scale > CONFIGURATION_MAX_BITMAP_SPACE) return;
 	// unpack the pattern
 	_unpackPattern(pattern, unpacked, width, height, 0, 0, orientation);
-	if (selectAndUnselectScreen) _selectScreen();
+	if (selectAndUnselectScreen) selectScreen();
 	// if overlay, get the bitmap from the screen
 	if (overlay) retrieveBitmapImpl(buffer, x, y, width*scale, height*scale);
 	// scale and colorize it, setting a background color if no need to overlay
 	_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, backColor, width, height, scale, 0, 0, overlay != true);
 	// draw it
 	pasteBitmapImpl(buffer, x, y, width*scale, height*scale);
-	if (selectAndUnselectScreen) _unselectScreen();
+	if (selectAndUnselectScreen) unselectScreen();
 }
+
+/* ---------------- Protected functions ------------------------ */
+
+#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_TOUCHPANEL)
+void ScreenHAL::highZBus() {
+	if (_cs == 0xFF) deHighZBusImpl();
+}
+
+void ScreenHAL::deHighZBus() {
+	if (_cs == 0xFF) deHighZBusImpl();
+}
+#endif
+
 
 /* ---------------- Private functions ------------------------ */
-
-void ScreenHAL::_selectScreen() {
-	if (_screenSelected) return;
-#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)	
-	// if SPI is active, disable it but remember that we disabled it
-	if (SPCR & _BV(SPE)) {
-		SPCR &= ~_BV(SPE);
-		_spiUsed = 1;
-	}
-#endif
-	// set the direction to output
-	*_portMode = 0xFF;
-	// select the screen
-	if (_cs != 0xFF) digitalWrite(_cs, LOW);
-	// put the screen in data mode
-	*_cdPort |= _cdBitMask;
-	_screenSelected = true;
-}
-
-void ScreenHAL::_unselectScreen() {
-	// unselect the screen
-	if (_cs != 0xFF) digitalWrite(_cs, HIGH);
-#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)		
-	// restore the SPI if it was active
-	if (_spiUsed) {
-		// we have to set SS as an output to enable SPI
-		pinMode(SS, OUTPUT);
-		// we always restore the master mode
-		SPCR |= _BV(MSTR);
-		SPCR |= _BV(SPE);
-	}
-#endif
-	_screenSelected = false;
-}
-
 
 void ScreenHAL::_drawValidChar(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, fontDefinition_t *fontDef, uint8_t fontScale, bool isBold, bool overlay) {
 	uint8_t pattern[FONT_MAX_PATTERN];

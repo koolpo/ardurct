@@ -43,7 +43,7 @@ void loop() {
         Serial.print(y);
         Serial.print(", z=");
         Serial.println(z);
-        touchscreen.fillRectangle(x-10, y-10, 20, 20, BLUE);
+        touchscreen.fillRectangle(x-5, y-5, 10, 10, BLUE);
     }
-    delay(2000);
+    delay(100);
 }

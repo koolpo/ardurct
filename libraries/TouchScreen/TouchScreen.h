@@ -35,25 +35,16 @@
 #include "ScreenHAL.hpp"
 
 #if defined(CONFIGURATION_HAS_MACROS)
-#include "Macros.hpp"
+#include "TouchScreen_Macros.hpp"
 #endif
 
 #if defined(CONFIGURATION_HAS_UI)
-#include "UserInterface.hpp"
+#include "TouchScreen_UserInterface.hpp"
 #endif
 
 
 #define TOUCHSCREEN_NO_TOUCH 0xFFFF
-
-// the address in the eeprom where the calibration matrix is stored 
-// 25 bytes are taken in descending order
-#define TOUCHSCREEN_CALIBRATED_EEPROM_ADDRESS 	E2END
-#define TOUCHSCREEN_X_A_EEPROM_ADDRESS 			(E2END-1)
-#define TOUCHSCREEN_X_B_EEPROM_ADDRESS 			(E2END-5)
-#define TOUCHSCREEN_X_DIVIDER_EEPROM_ADDRESS 	(E2END-9)
-#define TOUCHSCREEN_Y_A_EEPROM_ADDRESS 			(E2END-13)
-#define TOUCHSCREEN_Y_B_EEPROM_ADDRESS 			(E2END-17)
-#define TOUCHSCREEN_Y_DIVIDER_EEPROM_ADDRESS 	(E2END-21)
+#define TOUCHSCREEN_PRESSURE_NOT_VALID 0xFFFE
 
 typedef struct {
 	int32_t a;
@@ -93,7 +84,7 @@ class TouchScreen: public ScreenHAL {
 		uint8_t *executeMacro(uint8_t *macro, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1, 
 			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
 
-		void executeMacroCommand(macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
+		void executeMacroCommand(touchScreen_macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
 			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
 		
 		void executeEepromMacro(uint8_t macroNb, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
@@ -101,22 +92,22 @@ class TouchScreen: public ScreenHAL {
 #endif
 
 #if defined(CONFIGURATION_HAS_UI)
-		void setupUI(int16_t x, int16_t y, uint16_t width, uint16_t height);
+		void setupUI(int16_t x = 0, int16_t y = 0, uint16_t width = CONFIGURATION_WIDTH, uint16_t height = CONFIGURATION_HEIGHT, void (*handleCallback)(uint8_t id) = 0, 
+			void (*drawCallback)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value) = 0);
 		
-		int16_t addUITab(char *text);
+		int16_t addUITab(char *text, void (*handleCallback)(uint8_t id) = 0, void (*drawCallback)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value) = 0);
 		
-		int16_t addUIButton(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, char *text, void (*handle)(uint8_t id));
+		int16_t addUIButton(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, char *text);
 		
 		int16_t addUILabel(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, char *text);
 		
-		int16_t addUIPushButton(int16_t tab, uint8_t id, int16_t group, int16_t x, int16_t y, uint16_t width, uint16_t height, char *text, uint16_t state, void (*handle)(uint8_t id));
+		int16_t addUIPushButton(int16_t tab, uint8_t id, int16_t group, int16_t x, int16_t y, uint16_t width, uint16_t height, char *text, uint16_t state);
 		
-		int16_t addUIArea(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, void (*handle)(uint8_t id), 
-			void (*draw)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value));
+		int16_t addUIArea(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height);
 		
 		int16_t addUIGauge(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value, int16_t min, int16_t max);
 		
-		int16_t addUISlider(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value, int16_t min, int16_t max, void (*handle)(uint8_t id));
+		int16_t addUISlider(int16_t tab, uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value, int16_t min, int16_t max);
 		
 		void setUITab(uint8_t tabId);
 		
@@ -154,10 +145,13 @@ class TouchScreen: public ScreenHAL {
 		tsCalibrationEquation_t _yCalibrationEquation;
 		
 #if defined(CONFIGURATION_HAS_UI)
-		uiElement_t _uiElement[UI_MAX_ELEMENTS];
+		uint32_t _uiNextHandleTime;
+		touchScreen_UIElement_t _uiElement[UI_MAX_ELEMENTS];
 		uint8_t _uiNbElements;
 		int16_t _uiActiveElement;
-		uiTab_t _uiTab[UI_MAX_TABS];
+		int16_t _uiPotentialActiveElement;
+		uint8_t _uiDebounceSteps;
+		touchScreen_UITab_t _uiTab[UI_MAX_TABS];
 		uint8_t _uiNbTabs;
 		int8_t _uiActiveTab;
 		int16_t _uiX;
@@ -165,6 +159,9 @@ class TouchScreen: public ScreenHAL {
 		uint16_t _uiWidth;
 		uint16_t _uiHeight;
 		uint8_t _uiTabHeight;
+		void (*_uiDrawCallback)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value);
+		void (*_uiHandleCallback)(uint8_t id);
+
 #endif
 #if defined(CONFIGURATION_HAS_MACROS)
 		int16_t _mThickness;
@@ -183,38 +180,40 @@ class TouchScreen: public ScreenHAL {
 
 		void _initializeMacros();
 		
-		int16_t _parseMacroCommandParameters(uint8_t *s, macroCommand_t *mc);
+		int16_t _parseMacroCommandParameters(uint8_t *s, touchScreen_macroCommand_t *mc);
 
-		int8_t _parseMacroCommandHexColor(uint8_t *s, uint16_t n, macroCommand_t *mc);
+		int8_t _parseMacroCommandHexColor(uint8_t *s, uint16_t n, touchScreen_macroCommand_t *mc);
 
-		int8_t _parseMacroCommandParameter(uint8_t *s, uint16_t n, macroCommand_t *mc, uint8_t paramId);
+		int8_t _parseMacroCommandParameter(uint8_t *s, uint16_t n, touchScreen_macroCommand_t *mc, uint8_t paramId);
 		
-		void _executeMacroCommand(macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1);
+		void _executeMacroCommand(touchScreen_macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1);
 		
 		int32_t _getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX);
 		
-		int16_t _compressMacroCommand(macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr);
+		int16_t _compressMacroCommand(touchScreen_macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr);
 		
-		int16_t _uncompressMacroCommand(uint8_t *buffer, uint16_t n, macroCommand_t *mc);
+		int16_t _uncompressMacroCommand(uint8_t *buffer, uint16_t n, touchScreen_macroCommand_t *mc);
 		
 		int8_t _compressNumber(int16_t in, uint8_t *out, uint16_t n);
 		
-		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  macroCommand_t *mc, uint8_t paramId);
+		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  touchScreen_macroCommand_t *mc, uint8_t paramId);
 #endif
 #if defined(CONFIGURATION_HAS_UI)
-		int16_t _addUIElement(int16_t type, int16_t tab, uint8_t id, int16_t group, int16_t x, int16_t y, int16_t width, int16_t height, int16_t value, uint8_t *text, int16_t min, int16_t max,
-			void (*handle)(uint8_t id), void (*draw)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value));
+		int16_t _addUIElement(int16_t type, int16_t tab, uint8_t id, int16_t group, int16_t x, int16_t y, int16_t width, int16_t height, int16_t value, uint8_t *text, int16_t min, int16_t max);
 		
-		void _drawUIElement(uiElement_t *elt);
+		void _drawUIElement(touchScreen_UIElement_t *elt);
 		
-		bool _isTouchInUITab(uiTab_t *tab, int16_t x, int16_t y);
+		bool _isTouchInUITab(touchScreen_UITab_t *tab, int16_t x, int16_t y);
 		
-		bool _isTouchInUIElement(uiElement_t *elt, int16_t x, int16_t y);
+		bool _isTouchInUIElement(touchScreen_UIElement_t *elt, int16_t x, int16_t y);
 		
-		bool _updateUIElementValue(uiElement_t *elt, int16_t value, int16_t x, int16_t y) ;
+		bool _updateUIElementValue(touchScreen_UIElement_t *elt, int16_t value, int16_t x, int16_t y) ;
 		
 		int16_t _getUIElementIndex(uint8_t id);
 #endif
+		int16_t _analogAverage(uint8_t pin);
+		
+		uint16_t _measureTouchXYZ(int16_t *x, int16_t *y, int16_t *z);
 		
 		bool _calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tsX, int32_t *tsY);
 		

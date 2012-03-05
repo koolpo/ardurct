@@ -31,6 +31,7 @@
 #define S6D04H0_RAMWR	0x2c
 #define S6D04H0_RAMRD	0x2e
 #define S6D04H0_MADCTL	0x36
+#define S6D04H0_NOP		0x00
 
 #define S6D04H0_R0		0x48
 #define S6D04H0_R90		0x28
@@ -206,6 +207,23 @@ void S6D04H0::setRotationImpl(uint8_t rotation) {
 		_writeData(S6D04H0_R270);
 	}
 }
+
+#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_TOUCHPANEL)
+void S6D04H0::highZBusImpl() {
+	if (_cs == 0xFF) {
+		// to put the bus in HighZ, we have to dummy write to the screen
+		_writeCommand(S6D04H0_NOP);
+		*_cdPort |= _cdBitMask;
+		*_wrPort &= _wrLow;
+	}
+}
+
+
+void S6D04H0::deHighZBusImpl() {
+	// complete the write started at highZBus()
+	if (_cs == 0xFF)  *_wrPort |= _wrHigh;
+}
+#endif
 
 /* ---------------- Private functions -------------------------- */
 

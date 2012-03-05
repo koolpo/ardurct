@@ -1,5 +1,5 @@
 /*
- * Macros - Macro language to draw on the screen
+ * TouchScreen_Macros - Macro language to draw on the screen
  *	Part of Touchscreen class
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
@@ -23,8 +23,8 @@
  * THE SOFTWARE.
  */
  
-#ifndef MACROS_HPP
-#define MACROS_HPP 1
+#ifndef TOUCHSCREEN_MACROS_HPP
+#define TOUCHSCREEN_MACROS_HPP 1
 
 #include <inttypes.h>
 
@@ -61,6 +61,6 @@ typedef struct {
 	uint16_t color;
 	uint8_t *text;
 	uint8_t textLen;
-} macroCommand_t;
+} touchScreen_macroCommand_t;
 
 #endif

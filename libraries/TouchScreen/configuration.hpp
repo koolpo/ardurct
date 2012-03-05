@@ -25,12 +25,14 @@
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 
+// Hardware
+//---------
 // choose one of the driver chips for your screen
 #define CONFIGURATION_S6D04H0 1
 //#define CONFIGURATION_ILI932X 1
 
 #define CONFIGURATION_WIDTH 	240
-#define CONFIGURATION_HEIGHT 320
+#define CONFIGURATION_HEIGHT 	320
 
 #define CONFIGURATION_PORT 	PB
 #define CONFIGURATION_CD 	21
@@ -46,33 +48,63 @@
 #define CONFIGURATION_YM	14
 #define CONFIGURATION_YP	A7
 
-#define CONFIGURATION_PRESSURE_THRESHOLD 10
-#define CONFIGURATION_PRESSURE_MAX 1000
-
-#define CONFIGURATION_DISTANCE_EQUAL 20
-
-#define CONFIGURATION_X_PLANE_RESISTANCE 300
-
+// defined if the SPI bus is part of CONFIGURATION_PORT
 #define CONFIGURATION_BUS_IS_SHARED_WITH_SPI 1
 
+// true if CONFIGURATION_XP & CONFIGURATION_YM are taken from the bus
+#define CONFIGURATION_BUS_IS_SHARED_WITH_TOUCHPANEL 1
+
+// Software
+// --------
 // Max space that a pattern or a bitmap that needs to be overlaid can occupy
 // minimum is FONT_MAX_SPACE (from font.hpp)
 // RAM taken can be up to 5 times this, so beware! 
 #define CONFIGURATION_MAX_BITMAP_SPACE (32*32)		
 
-// Comment this if you don't want to use user interface items
-// this takes a few bytes of code
+// Touch panel
+// -----------
+// max delta in measures for points to be considered equal 
+#define CONFIGURATION_TOUCHPANEL_DISTANCE_EQUAL 4
+// number of measures averaged to define the point, 2 or 3 is fine, 3 is more secure
+#define CONFIGURATION_TOUCHPANEL_NB_MEASURES 3
+// whether or not to calculate the pressure: this uses float calculation and associated code overhead
+#define CONFIGURATION_TOUCHPANEL_CALCULATE_PRESSURE 1
+// resistance of the X plane
+#define CONFIGURATION_TOUCHPANEL_X_PLANE_RESISTANCE 300
+// from which value the pressure is considered valid
+#define CONFIGURATION_TOUCHPANEL_PRESSURE_THRESHOLD 10
+// to which value the pressure is considered valid
+#define CONFIGURATION_TOUCHPANEL_PRESSURE_MAX 2000
+
+// the address in the eeprom where the calibration matrix is stored 
+// 25 bytes are taken in descending order
+#define CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_DONE 		E2END
+#define CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_A 		(E2END-1)
+#define CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_B 		(E2END-5)
+#define CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_DIVIDER 	(E2END-9)
+#define CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_A 		(E2END-13)
+#define CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_B 		(E2END-17)
+#define CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_DIVIDER 	(E2END-21)
+
+// User Interface
+// --------------
+// Comment this if you don't want to use the pre-configured user interface
 #define CONFIGURATION_HAS_UI 1
+// minimum time in milliseconds separating the handling of the ui (used for debouncing)
+#define CONFIGURATION_UI_LOOP_LENGTH 50
+// how many times do we debounce
+#define CONFIGURATION_UI_DEBOUNCE_STEPS 3
 
+// Macros
+//-------
 // Comment this if you don't want to use macros
-// this takes a few bytes of code
 #define CONFIGURATION_HAS_MACROS 1
-
 // the number of macros defined in eeprom
 // each compressed macro can be up to SCREEN_MACRO_MAX_SIZE character long
 // the eeprom taken will be SCREEN_MACRO_MAX_NUMBER * SCREEN_MACRO_MAX_SIZE bytes
 #define SCREEN_MACRO_MAX_NUMBER 16
 // this number can not be bigger than 255
 #define SCREEN_MACRO_MAX_SIZE 128
+
 
 #endif

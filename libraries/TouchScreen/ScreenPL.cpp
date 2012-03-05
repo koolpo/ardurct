@@ -45,6 +45,10 @@ void ScreenPL::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uin
 	_cd = cd;
 	_cs = cs;
 	_reset = reset;
+#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)	
+	_spiUsed = 0;
+#endif
+	_screenSelected = 0;
 }
 
 
@@ -58,3 +62,36 @@ void ScreenPL::write(uint8_t chr) {
 #endif
 }
 
+void ScreenPL::selectScreen() {
+	if (_screenSelected) return;
+#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)	
+	// if SPI is active, disable it but remember that we disabled it
+	if (SPCR & _BV(SPE)) {
+		SPCR &= ~_BV(SPE);
+		_spiUsed = 1;
+	}
+#endif
+	// set the direction to output
+	*_portMode = 0xFF;
+	// select the screen
+	if (_cs != 0xFF) digitalWrite(_cs, LOW);
+	// put the screen in data mode
+	*_cdPort |= _cdBitMask;
+	_screenSelected = true;
+}
+
+void ScreenPL::unselectScreen() {
+	// unselect the screen
+	if (_cs != 0xFF) digitalWrite(_cs, HIGH);
+#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)		
+	// restore the SPI if it was active
+	if (_spiUsed) {
+		// we have to set SS as an output to enable SPI
+		pinMode(SS, OUTPUT);
+		// we always restore the master mode
+		SPCR |= _BV(MSTR);
+		SPCR |= _BV(SPE);
+	}
+#endif
+	_screenSelected = false;
+}

@@ -22,6 +22,18 @@
  * THE SOFTWARE.
  */
  
+/**
+ *	To help draw the UI, the coordinates of the UI elements can be expressed relative to other UI elements
+ *		UI_AUTO_SIZE							for with and height: will surround the text with UI_ELEMENT_TOP_MARGIN or UI_ELEMENT_LEFT_MARGIN
+ *		UI_SAME_AS + uiElementId				will return the corresponding coordinate value from uiElementId
+ *		UI_LEFT_OF + uiElementId				will return the left coordinate of uiElementId
+ *		UI_RIGHT_OF	+ uiElementId				will return the right coordinate of uiElementId
+ *		UI_RIGHT_OF_WITH_MARGIN	+ uiElementId	will return the right coordinate of uiElementId plus UI_ELEMENT_LEFT_MARGIN
+ *		UI_TOP_OF + uiElementId					will return the top coordinate of uiElementId
+ *		UI_BOTTOM_OF + uiElementId				will return the bottom coordinate of uiElementId
+ *		UI_BOTTOM_OF_WITH_MARGIN + uiElementId	will return the bottom coordinate of uiElementId plus UI_ELEMENT_TOP_MARGIN
+ **/ 
+ 
 #include <TouchScreen.h>
 
 #define TEST_ID     100
@@ -62,39 +74,32 @@ void setup() {
     
     // add tabs at the top
     listTab = touchscreen.addUITab("List");
-    testsTab = touchscreen.addUITab("Tests");
-    colorsTab = touchscreen.addUITab("Colors");
+    testsTab = touchscreen.addUITab("Tests", &uiActionCallback);
+    colorsTab = touchscreen.addUITab("Colors", &setColor, &drawColor);
     
     // populate the tests tab
-    touchscreen.addUIButton(testsTab, TEST_ID, 5, 5, UI_AUTO_SIZE, UI_AUTO_SIZE, "Test", &uiActionCallback);
-    touchscreen.addUIPushButton(testsTab, PUSH_1_ID, GROUP_1, 5, 35, UI_AUTO_SIZE, UI_AUTO_SIZE, "30", UI_SELECTED, &uiActionCallback);
-    touchscreen.addUIPushButton(testsTab, PUSH_2_ID, GROUP_1, UI_RIGHT_OF + PUSH_1_ID, UI_SAME_AS + PUSH_1_ID, 
-            UI_SAME_AS + PUSH_1_ID, UI_SAME_AS + PUSH_1_ID, "60", UI_UNSELECTED, &uiActionCallback);
-    touchscreen.addUIPushButton(testsTab, PUSH_3_ID, GROUP_1, UI_RIGHT_OF + PUSH_2_ID, UI_SAME_AS + PUSH_1_ID, 
-            UI_SAME_AS + PUSH_1_ID, UI_SAME_AS + PUSH_1_ID, "90", UI_UNSELECTED, &uiActionCallback);
+    touchscreen.addUIButton(testsTab, TEST_ID, 5, 5, UI_AUTO_SIZE, UI_AUTO_SIZE, "Test");
+    touchscreen.addUIPushButton(testsTab, PUSH_1_ID, GROUP_1, 5, 35, UI_AUTO_SIZE, UI_AUTO_SIZE, "30", UI_SELECTED);
+    touchscreen.addUIPushButton(testsTab, PUSH_2_ID, GROUP_1, UI_RIGHT_OF + PUSH_1_ID, UI_SAME_AS + PUSH_1_ID, UI_SAME_AS + PUSH_1_ID, UI_SAME_AS + PUSH_1_ID, "60", UI_UNSELECTED);
+    touchscreen.addUIPushButton(testsTab, PUSH_3_ID, GROUP_1, UI_RIGHT_OF + PUSH_2_ID, UI_SAME_AS + PUSH_1_ID, UI_SAME_AS + PUSH_1_ID, UI_SAME_AS + PUSH_1_ID, "90", UI_UNSELECTED);
     touchscreen.addUILabel(testsTab, LABEL_1_ID, 5, 65, UI_AUTO_SIZE, UI_AUTO_SIZE, "Push");
-    touchscreen.addUIPushButton(testsTab, T1_ID, UI_NO_GROUP, UI_RIGHT_OF_WITH_MARGIN + LABEL_1_ID, UI_SAME_AS + LABEL_1_ID, 
-            UI_AUTO_SIZE, UI_AUTO_SIZE, "Test 1", UI_SELECTED, &uiActionCallback);
-    touchscreen.addUIPushButton(testsTab, T2_ID, UI_NO_GROUP, UI_RIGHT_OF_WITH_MARGIN + T1_ID, UI_SAME_AS + T1_ID, 
-            UI_SAME_AS + T1_ID, UI_SAME_AS + T1_ID, "Test 2", UI_UNSELECTED, &uiActionCallback);
+    touchscreen.addUIPushButton(testsTab, T1_ID, UI_NO_GROUP, UI_RIGHT_OF_WITH_MARGIN + LABEL_1_ID, UI_SAME_AS + LABEL_1_ID, UI_AUTO_SIZE, UI_AUTO_SIZE, "Test 1", UI_SELECTED);
+    touchscreen.addUIPushButton(testsTab, T2_ID, UI_NO_GROUP, UI_RIGHT_OF_WITH_MARGIN + T1_ID, UI_SAME_AS + T1_ID, UI_SAME_AS + T1_ID, UI_SAME_AS + T1_ID, "Test 2", UI_UNSELECTED);
     touchscreen.addUILabel(testsTab, LABEL_2_ID, 5, 95, UI_AUTO_SIZE, UI_AUTO_SIZE, "Gauge");
-    touchscreen.addUIGauge(testsTab, GAUGE_1_ID, UI_RIGHT_OF_WITH_MARGIN + LABEL_2_ID, UI_SAME_AS + LABEL_2_ID, 
-            150, UI_SAME_AS + LABEL_2_ID, 40, 0, 100);
+    touchscreen.addUIGauge(testsTab, GAUGE_1_ID, UI_RIGHT_OF_WITH_MARGIN + LABEL_2_ID, UI_SAME_AS + LABEL_2_ID, 150, UI_SAME_AS + LABEL_2_ID, 40, 0, 100);
     touchscreen.addUILabel(testsTab, LABEL_3_ID, 5, 125, UI_AUTO_SIZE, UI_AUTO_SIZE, "Slider");
-    touchscreen.addUISlider(testsTab, SLIDER_1_ID, UI_RIGHT_OF_WITH_MARGIN + LABEL_3_ID, UI_SAME_AS + LABEL_3_ID, 
-            150, UI_SAME_AS + LABEL_3_ID, 40, 0, 100, &uiActionCallback);
-    touchscreen.addUISlider(testsTab, SLIDER_2_ID, 15, 150, 20, 120, 2, 0, 10, &uiActionCallback);
+    touchscreen.addUISlider(testsTab, SLIDER_1_ID, UI_RIGHT_OF_WITH_MARGIN + LABEL_3_ID, UI_SAME_AS + LABEL_3_ID, 150, UI_SAME_AS + LABEL_3_ID, 40, 0, 100);
+    touchscreen.addUISlider(testsTab, SLIDER_2_ID, 15, 150, 20, 120, 2, 0, 10);
     touchscreen.addUIGauge(testsTab, GAUGE_2_ID, 60, 150, 20, 120, 2, 0, 10);
     
     // populate the colors tab
     touchscreen.addUILabel(colorsTab, LABEL_R_ID, 5, 15, UI_AUTO_SIZE, UI_AUTO_SIZE, "R");
-    touchscreen.addUISlider(colorsTab, SLIDER_R_ID, UI_RIGHT_OF_WITH_MARGIN + LABEL_R_ID, 15, 180, UI_SAME_AS + LABEL_R_ID, 0x15, 0, 0x1F, &setColor);
+    touchscreen.addUISlider(colorsTab, SLIDER_R_ID, UI_RIGHT_OF_WITH_MARGIN + LABEL_R_ID, 15, 180, UI_SAME_AS + LABEL_R_ID, 0x15, 0, 0x1F);
     touchscreen.addUILabel(colorsTab, 0, 5, 45, UI_AUTO_SIZE, UI_AUTO_SIZE, "G");
-    touchscreen.addUISlider(colorsTab, SLIDER_G_ID, UI_RIGHT_OF_WITH_MARGIN + LABEL_R_ID, 45, 180, UI_SAME_AS + LABEL_R_ID, 0x1E, 0, 0x3F, &setColor);
+    touchscreen.addUISlider(colorsTab, SLIDER_G_ID, UI_RIGHT_OF_WITH_MARGIN + LABEL_R_ID, 45, 180, UI_SAME_AS + LABEL_R_ID, 0x1E, 0, 0x3F);
     touchscreen.addUILabel(colorsTab, 0, 5, 75, UI_AUTO_SIZE, UI_AUTO_SIZE, "B");
-    touchscreen.addUISlider(colorsTab, SLIDER_B_ID, UI_RIGHT_OF_WITH_MARGIN + LABEL_R_ID, 75, 180, UI_SAME_AS + LABEL_R_ID, 0xD, 0, 0x1F, &setColor);
-    touchscreen.addUIArea(colorsTab, AREA_COLOR_ID, 50, 130, 140, 140, 0, &drawColor);
-    touchscreen.setUIElementEditable(AREA_COLOR_ID, false);
+    touchscreen.addUISlider(colorsTab, SLIDER_B_ID, UI_RIGHT_OF_WITH_MARGIN + LABEL_R_ID, 75, 180, UI_SAME_AS + LABEL_R_ID, 0xD, 0, 0x1F);
+    touchscreen.addUIArea(colorsTab, AREA_COLOR_ID, 50, 130, 140, 140);
     touchscreen.setUIElementValue(AREA_COLOR_ID, 0xABCD);
 
     // start the UI on the tests tab
@@ -104,7 +109,7 @@ void setup() {
 void loop() {
     // we have to call this function as often as possible to get a good responsivity of the UI
     touchscreen.handleUI();
-    delay(20);
+    delay(5);
 }
 
 void uiActionCallback(uint8_t id) {

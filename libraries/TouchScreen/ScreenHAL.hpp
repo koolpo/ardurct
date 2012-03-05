@@ -171,15 +171,11 @@ class ScreenHAL: public ILI932X {
 		bool _isFontOverlay;
 		int8_t _thickness;
 
-		void _selectScreen();
+		void highZBus();
+
+		void deHighZBus();
 		
-		void _unselectScreen();		
-	
 	private:
-#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)
-		uint8_t _spiUsed;
-#endif
-		bool _screenSelected;
 		uint16_t _width;
 		uint16_t _height;
 		uint16_t _x;

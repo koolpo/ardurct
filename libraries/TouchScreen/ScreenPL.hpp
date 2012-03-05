@@ -27,6 +27,7 @@
 
 #include <Arduino.h>
 #include <inttypes.h>
+#include "configuration.hpp"
 
 #define SCREEN_ROTATION_0	0
 #define SCREEN_ROTATION_90	1
@@ -65,6 +66,15 @@ class ScreenPL: public Print {
 		uint8_t _cs;
 		uint8_t _reset;
 
+		void selectScreen();
+		
+		void unselectScreen();		
+			
+	private:
+#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)
+		uint8_t _spiUsed;
+#endif
+		bool _screenSelected;
 
 };
 
