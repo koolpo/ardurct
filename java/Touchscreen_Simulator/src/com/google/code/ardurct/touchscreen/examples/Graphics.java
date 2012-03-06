@@ -1,6 +1,5 @@
 package com.google.code.ardurct.touchscreen.examples;
 
-import com.google.code.ardurct.touchscreen.Example;
 
 public class Graphics extends Example {
 

@@ -1,6 +1,5 @@
 package com.google.code.ardurct.touchscreen.examples;
 
-import com.google.code.ardurct.touchscreen.Example;
 
 public class Colors extends Example {
 
@@ -63,9 +62,5 @@ public class Colors extends Example {
 	    return buffer;
 	}
 
-	// defined as a macro in colors.hpp, java does not have macros...
-	int COLOR_565(int r, int g, int b) {
-		return ((r >> 3) << 11) + ((g >> 2) << 5) + (b >> 3);
-	}
 	
 }

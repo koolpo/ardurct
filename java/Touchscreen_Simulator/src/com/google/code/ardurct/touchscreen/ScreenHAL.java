@@ -1,44 +1,14 @@
 package com.google.code.ardurct.touchscreen;
 
-
-public class ScreenHAL extends FontBitmaps {
+public class ScreenHAL extends ScreenImpl 
+implements IFontBitmaps {
 
 	private static final long serialVersionUID = 1L;
 
 	public static final int SCREENHAL_MAX_BITMAP_SPACE = (32*32);		
 
-	public static final int SCREEN_ROTATION_0	= 0;
-	public static final int SCREEN_ROTATION_90	= 1;
-	public static final int SCREEN_ROTATION_180	= 2;
-	public static final int SCREEN_ROTATION_270	= 3;
-
-	public static final int SCREEN_ARC_SSE = (1 << 0);
-	public static final int SCREEN_ARC_SEE = (1 << 1);
-	public static final int SCREEN_ARC_NEE = (1 << 2);
-	public static final int SCREEN_ARC_NNE = (1 << 3);
-	public static final int SCREEN_ARC_SSW = (1 << 4);
-	public static final int SCREEN_ARC_SWW = (1 << 5);
-	public static final int SCREEN_ARC_NWW = (1 << 6);
-	public static final int SCREEN_ARC_NNW = (1 << 7);
-
-	public static final int SCREEN_ARC_NE = (SCREEN_ARC_NNE+SCREEN_ARC_NEE);
-	public static final int SCREEN_ARC_SE = (SCREEN_ARC_SSE+SCREEN_ARC_SEE);
-	public static final int SCREEN_ARC_SW = (SCREEN_ARC_SSW+SCREEN_ARC_SWW);
-	public static final int SCREEN_ARC_NW = (SCREEN_ARC_NNW+SCREEN_ARC_NWW);
-
-	public static final int SCREEN_ARC_N = (SCREEN_ARC_NE+SCREEN_ARC_NW);
-	public static final int SCREEN_ARC_S = (SCREEN_ARC_SE+SCREEN_ARC_SW);
-	public static final int SCREEN_ARC_E = (SCREEN_ARC_SE+SCREEN_ARC_NE);
-	public static final int SCREEN_ARC_W = (SCREEN_ARC_NW+SCREEN_ARC_SW);
-
-	public static final int SCREEN_ARC_ALL =(SCREEN_ARC_N+SCREEN_ARC_S);
-
 	public static final int PATTERN_ORIENTATION_HORIZONTAL = 0;
 	public static final int PATTERN_ORIENTATION_VERTICAL = 1;
-
-	public static final boolean OVERLAY = true;
-	public static final boolean NO_OVERLAY = false;
-
 	
 	int _width;
 	int _height;
@@ -54,6 +24,7 @@ public class ScreenHAL extends FontBitmaps {
 	int _fontScale;
 	int _thickness;
 	int _mThickness;
+	boolean _mIsThicknessScalable;
 	int _mX;
 	int _mY;
 	int _mScaleMul;
@@ -69,6 +40,8 @@ public class ScreenHAL extends FontBitmaps {
 	}
 
 	void initScreen() {		
+		_x = 0;
+		_y = 0;
 		_width = getWidthImpl();
 		_height = getHeightImpl();
 		_rotation = 0;
@@ -89,6 +62,7 @@ public class ScreenHAL extends FontBitmaps {
 		_mIsFontOverlay = _isFontOverlay;
 		_mIsFontBold = _isFontBold;
 		_mThickness = _thickness;
+		_mIsThicknessScalable = true;
 	}
 	
 	public void setRotation(int rotation) {
@@ -133,7 +107,7 @@ public class ScreenHAL extends FontBitmaps {
 		return ((_rotation == SCREEN_ROTATION_0) || (_rotation == SCREEN_ROTATION_180));
 	}
 
-	int getForegroundColor() {
+	public int getForegroundColor() {
 		return _foregroundColor;
 	}
 
@@ -142,11 +116,11 @@ public class ScreenHAL extends FontBitmaps {
 	}
 
 
-	int getBackgroundColor() {
+	public int getBackgroundColor() {
 		return _backgroundColor;
 	}
 
-	void setBackgroundColor(int color) {
+	public void setBackgroundColor(int color) {
 		_backgroundColor = color;
 	}
 
@@ -163,7 +137,7 @@ public class ScreenHAL extends FontBitmaps {
 		return _margin;
 	}
 
-	void setMargin(int margin) {
+	public void setMargin(int margin) {
 		_margin = margin;
 	}
 
@@ -188,7 +162,8 @@ public class ScreenHAL extends FontBitmaps {
 		if (_fontSize == 0) _fontSize = 1;
 		_fontScale = (_fontSize <= FONT_LAST_DEF ? 1 : 2);
 		_fontDef = fontDefinition_small;
-		if ((_fontSize == 2) || (_fontSize == 4)) _fontDef = fontDefinition_medium;
+		if ((FONT_LAST_DEF >= 2) && ((_fontSize == 2) || (_fontSize == 2+FONT_LAST_DEF))) _fontDef = fontDefinition_medium;
+		else if ((FONT_LAST_DEF >= 3) && ((_fontSize == 3) || (_fontSize == 3+FONT_LAST_DEF))) _fontDef = fontDefinition_big;
 	}
 
 
@@ -207,13 +182,34 @@ public class ScreenHAL extends FontBitmaps {
 	}
 
 
+	public int getStringWidth(int[] s, int fontSize) {
+		int validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
+		int fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
+		fontDefinition_t fontDef = fontDefinition_small;
+		if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = fontDefinition_medium;
+		else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = fontDefinition_big;
+		int nbChr = 0;
+		while (s[nbChr] != 0) nbChr ++;
+		return nbChr * (fontDef.width + fontDef.charSpacing) * fontScale;
+	}
+
+	public int getFontHeight(int fontSize) {
+		int validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
+		int fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
+		fontDefinition_t fontDef = fontDefinition_small;
+		if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = fontDefinition_medium;
+		else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = fontDefinition_big;
+		return (fontDef.height + fontDef.lineSpacing) * fontScale;
+	}
+
 	void drawChar(int chr, int x, int y, int color, int fontSize, boolean isBold, boolean overlay, 
 			boolean grabAndReleaseBus) {
 		if ((x < 0) || (y < 0)) return;
 		int validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
 		int fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
 		fontDefinition_t fontDef = fontDefinition_small;
-		if ((validFontSize == 2) || (validFontSize == 4)) fontDef = fontDefinition_medium;
+		if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = fontDefinition_medium;
+		else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = fontDefinition_big;
 		if ((x + fontDef.width * fontScale >= _width) || (y + fontDef.height * fontScale >= _height)) return;
 		if ((chr < fontDef.firstChar) || (chr > fontDef.lastChar)) return;
 		if (grabAndReleaseBus) _grabBus();
@@ -227,9 +223,9 @@ public class ScreenHAL extends FontBitmaps {
 		int validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
 		int fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
 		fontDefinition_t fontDef = fontDefinition_small;
-		if ((validFontSize == 2) || (validFontSize == 4)) fontDef = fontDefinition_medium;
+		if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = fontDefinition_medium;
+		else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = fontDefinition_big;
 		if ((x + fontDef.width * fontScale >= _width) || (y + fontDef.height * fontScale >= _height)) return;
-		
 		if (grabAndReleaseBus) _grabBus();
 		int i = 0;
 		int lx = x;
@@ -268,19 +264,19 @@ public class ScreenHAL extends FontBitmaps {
 		while (s[i] != 0) {
 			if (s[i] == '\n') {
 				_y += (_fontDef.height + _fontDef.lineSpacing + (_isFontBold ? 1 : 0)) * _fontScale;
-				if (_y >= _height) break;
+				if (_y >= _height - 2*_margin) _y = 0;;
 				_x = 0;
 			} else if (s[i] == '\r') {
 				// skip the character
 			} else {
 				int validChr = s[i];
 				if ((validChr < _fontDef.firstChar) || (validChr > _fontDef.lastChar)) validChr = '?';
-				_drawValidChar(validChr, _x, _y, _foregroundColor, _fontSize, _fontDef, _fontScale, _isFontBold, _isFontOverlay);
+				_drawValidChar(validChr, _x+_margin, _y+_margin, _foregroundColor, _fontSize, _fontDef, _fontScale, _isFontBold, _isFontOverlay);
 				_x += (_fontDef.width + _fontDef.charSpacing) * _fontScale;
-				if (_x > _width) {
+				if (_x > _width - 2*_margin) {
 					_x = 0;
 					_y += (_fontDef.height + _fontDef.lineSpacing + (_isFontBold ? 1 : 0)) * _fontScale;
-					if (_y >= _height) _y = 0;
+					if (_y >= _height - 2*_margin) _y = 0;
 				}
 			}
 			i++;
@@ -296,7 +292,7 @@ public class ScreenHAL extends FontBitmaps {
 	}
 
 	public void print(int n, int base) {
-		print(Integer.toString(n, base));
+		print(Integer.toString(n, base).toUpperCase());
 	}
 
 	public void print(String s) {
@@ -319,6 +315,7 @@ public class ScreenHAL extends FontBitmaps {
 		else {
 			int t1 = (thickness-1)/2;
 			int t2 = thickness/2;
+			if (x2 < x1) { int t = x2; x2 = x1; x1 = t; }
 			_fillBoundedArea(x1-t1, y-t1, x2+t2, y+t2, color);
 		}
 		if (grabAndReleaseBus) _releaseBus();
@@ -331,6 +328,7 @@ public class ScreenHAL extends FontBitmaps {
 		else {
 			int t1 = (thickness-1)/2;
 			int t2 = thickness/2;
+			if (y2 < y1) { int t = y2; y2 = y1; y1 = t; }
 			_fillBoundedArea(x-t1, y1-t1, x+t2, y2+t2, color);
 		}
 		if (grabAndReleaseBus) _releaseBus();
@@ -387,30 +385,18 @@ public class ScreenHAL extends FontBitmaps {
 		if (grabAndReleaseBus) _releaseBus();	
 	}
 
-	void swap(int a, int b) {
-		int t = a; 
-		a = b; 
-		b = t; 
-	}
-
-	void swap(long a, long b) {
-		long t = a; 
-		a = b; 
-		b = t; 
-	}
-
 	void fillTriangle(int x0, int y0, int x1, int y1, int x2, int y2, int color, boolean grabAndReleaseBus) {
 		if (y0 > y1) {
-			swap(y0, y1); 
-			swap(x0, x1);
+			int t = y1; y1 = y0; y0 = t;
+			t = x1; x1 = x0; x0 = t;
 		}
 		if (y1 > y2) {
-			swap(y2, y1); 
-			swap(x2, x1);
+			int t = y2; y2 = y1; y1 = t;
+			t = x2; x2 = x1; x1 = t;
 		}
 		if (y0 > y1) {
-			swap(y0, y1); 
-			swap(x0, x1);
+			int t = y1; y1 = y0; y0 = t;
+			t = x1; x1 = x0; x0 = t;
 		}
 
 		int dx1, dx2, dx3;
@@ -446,6 +432,7 @@ public class ScreenHAL extends FontBitmaps {
 
 
 	void drawRectangle(int x, int y, int width, int height, int color, int thickness, boolean grabAndReleaseBus) {
+		if ((width == 0) || (height == 0)) return;
 		if (grabAndReleaseBus) _grabBus();
 		drawHorizontalLine(x, x+width-1, y, color, thickness, false);
 		drawHorizontalLine(x, x+width-1, y+height-1, color, thickness, false);
@@ -456,6 +443,7 @@ public class ScreenHAL extends FontBitmaps {
 
 
 	void fillRectangle(int x, int y, int width, int height, int color, boolean grabAndReleaseBus) {
+		if ((width == 0) || (height == 0)) return;
 		if (grabAndReleaseBus) _grabBus();
 		_fillBoundedArea(x, y, x+width-1, y+height-1, color);
 		if (grabAndReleaseBus) _releaseBus();
@@ -578,7 +566,7 @@ public class ScreenHAL extends FontBitmaps {
 		drawChar(chr, x, y, color, fontSize, isBold, overlay, true);
 	}
 
-	void drawString(int s[], int x, int y, int color, int fontSize, boolean isBold, boolean overlay) {
+	public void drawString(int s[], int x, int y, int color, int fontSize, boolean isBold, boolean overlay) {
 		drawString(s, x, y, color, fontSize, isBold, overlay, true);
 	}
 
@@ -674,49 +662,6 @@ public class ScreenHAL extends FontBitmaps {
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////	
 	
-	
-	/* ---------------- Protected functions ------------------------ */
-
-	/* ---------------- Virtual functions -------------------------- */
-	/* ---------------- NEED TO BE IMPLEMENTED BY CHILD CLASS ------ */
-
-	void initScreenImpl() {
-		// needs to be implemented by the class inheriting from this class
-	}
-
-	void setRotationImpl(int rotation) {
-		// needs to be implemented by the class inheriting from this class
-	}
-
-	void drawPixelImpl(int x, int y, int color) {
-		// needs to be implemented by the class inheriting from this class
-	}
-
-	// Fills the area lx,ly -> hx, hy
-	// this function assumes that lx <= hx and ly <= hy
-	void fillAreaImpl(int lx, int ly, int hx, int hy, int color) {
-		// needs to be implemented by the class inheriting from this class
-	}
-
-	// Draws the bitmap
-	void pasteBitmapImpl(int bitmap[], int x, int y, int width, int height) {
-	}
-
-	// retrieves a bitmap from the screen
-	void retrieveBitmapImpl(int bitmap[], int x, int y, int width, int height) {
-	}
-
-	// returns the width of the non rotated screen
-	int getWidthImpl() {
-		return 240;
-	}
-
-	// returns the height of the non rotated screen
-	int getHeightImpl() {
-		return 160;
-	}
-
-
 	/* ---------------- Private functions ------------------------ */
 
 	void _grabBus() {
@@ -813,9 +758,9 @@ public class ScreenHAL extends FontBitmaps {
 	}
 
 	void _fillBoundedArea(int x1, int y1, int x2, int y2, int color) {
-		if (x2 < x1) swap(x1, x2);
+		if (x2 < x1) { int t = x2; x2 = x1; x1 = t; }
 		if (x1 >= _width) return;
-		if (y2 < y1) swap(y1, y2);
+		if (y2 < y1) {int t = y2; y2 = y1; y1 = t; }
 		if (y1 >= _height) return;
 		if (x1 < 0) x1 = 0;
 		if (x2 >= _width) x2 = _width-1;

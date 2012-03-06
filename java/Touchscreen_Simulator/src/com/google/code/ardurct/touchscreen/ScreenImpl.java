@@ -1,19 +1,34 @@
 package com.google.code.ardurct.touchscreen;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 
-public class ScreenImpl extends MacroDrawing {
+public class ScreenImpl extends ScreenPL 
+implements MouseListener, MouseMotionListener {
 
 	private static final long serialVersionUID = 1L;
 	
-	BufferedImage img = null;
+	BufferedImage img = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
 	
 	private double radianAngle = 0;
 	private int maxSize = 0;
-		
+	int mouseX;
+	int mouseY;
+
+	public void clear() {
+		fillAreaImpl(0, 0, getWidthImpl()-1, getHeightImpl()-1, BLACK);
+		repaint();
+	}
+
 	public Image getScreen() {
 		AffineTransform tx = new AffineTransform();
 		tx.rotate(radianAngle, maxSize, maxSize);
@@ -28,16 +43,20 @@ public class ScreenImpl extends MacroDrawing {
 		radianAngle = 0;
 	}
 
+	public BufferedImage getScreenPhoto() {
+		BufferedImage bi = new BufferedImage(getWidthImpl()+2, getHeightImpl()+2, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = (Graphics2D) bi.getGraphics();
+		g2d.setColor(new Color(0, 0, 0));
+		g2d.fillRect(0, 0, getWidthImpl()+2, getHeightImpl()+2);	
+		g2d.drawImage(getScreen(), 1, 1, this);
+		return bi;
+
+	}
+	
 	void setRotationImpl(int rotation) {
-		if (rotation == _rotation) return;
-		AffineTransform tx = new AffineTransform();
-		radianAngle = (double)(rotation-_rotation)* Math.PI/2;
-		tx.rotate(radianAngle, maxSize/2, maxSize/2);
-		AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
-		img = op.filter(img, null);
 	}
 
-	int getARGBColor(int color565) {
+	public int getARGBColor(int color565) {
 		int red = (color565 & 0xF800) >> 8;
 		red = red * 0xFF / 0xF8;
 		int green = (color565 & 0x07E0) >> 3;
@@ -60,6 +79,7 @@ public class ScreenImpl extends MacroDrawing {
 		}
 	}
 
+	
 	// Draws the bitmap
 	void pasteBitmapImpl(int bitmap[], int x, int y, int width, int height) {
 		int buffer[] = new int[width*height];
@@ -94,5 +114,48 @@ public class ScreenImpl extends MacroDrawing {
 		return 320;
 	}
 
+	protected void paintComponent(Graphics g) {
+		Graphics2D g2d = (Graphics2D)g;
+		g2d.setColor(new Color(0, 0, 0));
+		g2d.fillRect(0, 0, getBounds().width, getBounds().height);	
+		//g2d.scale(SCALE_X, SCALE_Y);
+		g2d.drawImage(getScreen(), 0, 0, this);
+	}
+
+	public Dimension getPreferredSize() {
+		return new Dimension(Math.round(getWidthImpl()), Math.round(getHeightImpl()));
+	}
+
+	// should be in Touchscreen.cpp
+	public int getTouchXYZ(int[] x, int[] y, int[] z) {
+		x[0] = mouseX;
+		y[0] = mouseY;
+		if (mouseX == TOUCHSCREEN_NO_TOUCH) return TOUCHSCREEN_NO_TOUCH;
+		return 10;
+	}
+	
+	public void mousePressed(MouseEvent me) {
+		mouseX = me.getX();
+		mouseY = me.getY();
+	}
+
+	public void mouseReleased(MouseEvent me) {
+		mouseX = TOUCHSCREEN_NO_TOUCH;
+		mouseY = TOUCHSCREEN_NO_TOUCH;
+	}
+
+	public void mouseDragged(MouseEvent me) {
+		mouseX = me.getX();
+		mouseY = me.getY();		
+	}
+
+	/* Unused */
+	public void mouseClicked(MouseEvent arg0) { }
+
+	public void mouseEntered(MouseEvent arg0) { }
+
+	public void mouseExited(MouseEvent arg0) { }
+
+	public void mouseMoved(MouseEvent arg0) { }
 
 }
