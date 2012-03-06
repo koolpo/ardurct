@@ -42,9 +42,7 @@
 #include "TouchScreen_UserInterface.hpp"
 #endif
 
-
-#define TOUCHSCREEN_NO_TOUCH 0xFFFF
-#define TOUCHSCREEN_PRESSURE_NOT_VALID 0xFFFE
+#define TOUCHSCREEN_NO_TOUCH 0
 
 typedef struct {
 	int32_t a;
@@ -68,15 +66,15 @@ class TouchScreen: public ScreenHAL {
 		
 		uint8_t getBacklight();
 		
-		uint16_t getTouchX();
+		int16_t getTouchX();
 		
 		bool isTouched();
 
-		uint16_t getTouchY();
+		int16_t getTouchY();
 		
-		uint16_t getTouchZ();
+		int16_t getTouchZ();
 		
-		uint16_t getTouchXYZ(int16_t *x, int16_t *y, int16_t *z);
+		int16_t getTouchXYZ(int16_t *x, int16_t *y, int16_t *z);
 		
 		bool calibrateTouchPanel(bool force = false);
 

@@ -209,20 +209,23 @@ void S6D04H0::setRotationImpl(uint8_t rotation) {
 }
 
 #if defined(CONFIGURATION_BUS_IS_SHARED_WITH_TOUCHPANEL)
-void S6D04H0::highZBusImpl() {
+
+void S6D04H0::selectScreen() {
+	// complete the write started at unselectScreen()
+	*_wrPort |= _wrHigh;
+	ScreenPL::selectScreen();
+}
+
+void S6D04H0::unselectScreen() {
+	ScreenPL::unselectScreen();
+	/*
 	if (_cs == 0xFF) {
 		// to put the bus in HighZ, we have to dummy write to the screen
-		_writeCommand(S6D04H0_NOP);
-		*_cdPort |= _cdBitMask;
 		*_wrPort &= _wrLow;
 	}
+	*/
 }
 
-
-void S6D04H0::deHighZBusImpl() {
-	// complete the write started at highZBus()
-	if (_cs == 0xFF)  *_wrPort |= _wrHigh;
-}
 #endif
 
 /* ---------------- Private functions -------------------------- */

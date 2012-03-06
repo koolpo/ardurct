@@ -62,13 +62,14 @@ void ScreenPL::write(uint8_t chr) {
 #endif
 }
 
+
 void ScreenPL::selectScreen() {
 	if (_screenSelected) return;
 #if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)	
 	// if SPI is active, disable it but remember that we disabled it
 	if (SPCR & _BV(SPE)) {
 		SPCR &= ~_BV(SPE);
-		_spiUsed = 1;
+		_spiUsed = true;
 	}
 #endif
 	// set the direction to output
@@ -79,6 +80,7 @@ void ScreenPL::selectScreen() {
 	*_cdPort |= _cdBitMask;
 	_screenSelected = true;
 }
+
 
 void ScreenPL::unselectScreen() {
 	// unselect the screen

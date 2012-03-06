@@ -535,18 +535,6 @@ void ScreenHAL::drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, in
 	if (selectAndUnselectScreen) unselectScreen();
 }
 
-/* ---------------- Protected functions ------------------------ */
-
-#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_TOUCHPANEL)
-void ScreenHAL::highZBus() {
-	if (_cs == 0xFF) deHighZBusImpl();
-}
-
-void ScreenHAL::deHighZBus() {
-	if (_cs == 0xFF) deHighZBusImpl();
-}
-#endif
-
 
 /* ---------------- Private functions ------------------------ */
 

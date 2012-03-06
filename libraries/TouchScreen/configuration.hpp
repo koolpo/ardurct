@@ -65,13 +65,11 @@
 // -----------
 // max delta in measures for points to be considered equal 
 #define CONFIGURATION_TOUCHPANEL_DISTANCE_EQUAL 4
-// number of measures averaged to define the point, 2 or 3 is fine, 3 is more secure
-#define CONFIGURATION_TOUCHPANEL_NB_MEASURES 3
-// whether or not to calculate the pressure: this uses float calculation and associated code overhead
-#define CONFIGURATION_TOUCHPANEL_CALCULATE_PRESSURE 1
+// number of measures averaged to define the point, 2 or 3 is fine
+#define CONFIGURATION_TOUCHPANEL_NB_MEASURES 2
 // resistance of the X plane
 #define CONFIGURATION_TOUCHPANEL_X_PLANE_RESISTANCE 300
-// from which value the pressure is considered valid
+// from which value the pressure is considered valid, not less than 1
 #define CONFIGURATION_TOUCHPANEL_PRESSURE_THRESHOLD 10
 // to which value the pressure is considered valid
 #define CONFIGURATION_TOUCHPANEL_PRESSURE_MAX 2000
@@ -91,9 +89,9 @@
 // Comment this if you don't want to use the pre-configured user interface
 #define CONFIGURATION_HAS_UI 1
 // minimum time in milliseconds separating the handling of the ui (used for debouncing)
-#define CONFIGURATION_UI_LOOP_LENGTH 50
+#define CONFIGURATION_UI_LOOP_LENGTH 20
 // how many times do we debounce
-#define CONFIGURATION_UI_DEBOUNCE_STEPS 3
+#define CONFIGURATION_UI_DEBOUNCE_STEPS 4
 
 // Macros
 //-------

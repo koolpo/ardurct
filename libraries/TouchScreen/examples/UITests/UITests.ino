@@ -23,37 +23,37 @@
  */
  
 /**
- *	To help draw the UI, the coordinates of the UI elements can be expressed relative to other UI elements
- *		UI_AUTO_SIZE							for with and height: will surround the text with UI_ELEMENT_TOP_MARGIN or UI_ELEMENT_LEFT_MARGIN
- *		UI_SAME_AS + uiElementId				will return the corresponding coordinate value from uiElementId
- *		UI_LEFT_OF + uiElementId				will return the left coordinate of uiElementId
- *		UI_RIGHT_OF	+ uiElementId				will return the right coordinate of uiElementId
- *		UI_RIGHT_OF_WITH_MARGIN	+ uiElementId	will return the right coordinate of uiElementId plus UI_ELEMENT_LEFT_MARGIN
- *		UI_TOP_OF + uiElementId					will return the top coordinate of uiElementId
- *		UI_BOTTOM_OF + uiElementId				will return the bottom coordinate of uiElementId
- *		UI_BOTTOM_OF_WITH_MARGIN + uiElementId	will return the bottom coordinate of uiElementId plus UI_ELEMENT_TOP_MARGIN
+ * To help draw the UI, the coordinates of the UI elements can be expressed relative to other UI elements
+ *   UI_AUTO_SIZE                               for with and height: will surround the text with UI_ELEMENT_TOP_MARGIN or UI_ELEMENT_LEFT_MARGIN
+ *   UI_SAME_AS + uiElementId                   will return the corresponding coordinate value from uiElementId
+ *   UI_LEFT_OF + uiElementId                   will return the left coordinate of uiElementId
+ *   UI_RIGHT_OF    + uiElementId               will return the right coordinate of uiElementId
+ *   UI_RIGHT_OF_WITH_MARGIN    + uiElementId   will return the right coordinate of uiElementId plus UI_ELEMENT_LEFT_MARGIN
+ *   UI_TOP_OF + uiElementId                    will return the top coordinate of uiElementId
+ *   UI_BOTTOM_OF + uiElementId                 will return the bottom coordinate of uiElementId
+ *   UI_BOTTOM_OF_WITH_MARGIN + uiElementId     will return the bottom coordinate of uiElementId plus UI_ELEMENT_TOP_MARGIN
  **/ 
  
 #include <TouchScreen.h>
 
-#define TEST_ID     100
+#define TEST_ID       100
 #define PUSH_1_ID     101
 #define PUSH_2_ID     102
 #define PUSH_3_ID     103
 #define T1_ID         110
 #define T2_ID         111
-#define LABEL_1_ID     120
-#define LABEL_2_ID     125
-#define LABEL_3_ID     127
-#define GAUGE_1_ID     130
-#define SLIDER_1_ID 140
-#define GAUGE_2_ID     150
-#define SLIDER_2_ID 160
+#define LABEL_1_ID    120
+#define LABEL_2_ID    125
+#define LABEL_3_ID    127
+#define GAUGE_1_ID    130
+#define SLIDER_1_ID   140
+#define GAUGE_2_ID    150
+#define SLIDER_2_ID   160
 
-#define SLIDER_R_ID 200
-#define SLIDER_G_ID 201
-#define SLIDER_B_ID 202
-#define LABEL_R_ID     205
+#define SLIDER_R_ID   200
+#define SLIDER_G_ID   201
+#define SLIDER_B_ID   202
+#define LABEL_R_ID    205
 #define AREA_COLOR_ID 210
 
 #define GROUP_1 3
@@ -65,6 +65,8 @@ uint8_t testsTab;
 uint8_t colorsTab;
 
 void setup() {
+    Serial.begin(57600);
+	
     // initialize the screen
     touchscreen.begin(BLACK, WHITE, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
     touchscreen.setBacklight(180);

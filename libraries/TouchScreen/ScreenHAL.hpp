@@ -170,10 +170,6 @@ class ScreenHAL: public ILI932X {
 		bool _isFontBold;
 		bool _isFontOverlay;
 		int8_t _thickness;
-
-		void highZBus();
-
-		void deHighZBus();
 		
 	private:
 		uint16_t _width;

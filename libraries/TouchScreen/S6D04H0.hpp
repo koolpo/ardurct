@@ -52,9 +52,9 @@ class S6D04H0: public ScreenPL {
 		void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
 
 #if defined(CONFIGURATION_BUS_IS_SHARED_WITH_TOUCHPANEL)
-		void highZBusImpl();
+		void selectScreen();
 
-		void deHighZBusImpl();
+		void unselectScreen();
 #endif		
 
 	private:

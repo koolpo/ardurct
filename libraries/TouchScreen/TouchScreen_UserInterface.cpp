@@ -61,8 +61,8 @@ int16_t TouchScreen::addUITab(char *text, void (*handleCallback)(uint8_t id), vo
 	_uiTab[_uiNbTabs].text = (uint8_t *)text;
 	_uiTabHeight = getFontHeight(UI_TAB_FONT) + 2 + UI_TAB_TOP_MARGIN*2;
 	_uiTab[_uiNbTabs].width = getStringWidth((char *)(_uiTab[_uiNbTabs].text), UI_TAB_FONT) + UI_TAB_LEFT_MARGIN * 2;
-	_uiTab[_uiNbElements].drawCallback = drawCallback;
-	_uiTab[_uiNbElements].handleCallback = handleCallback;
+	_uiTab[_uiNbTabs].drawCallback = drawCallback;
+	_uiTab[_uiNbTabs].handleCallback = handleCallback;
 	return _uiNbTabs++;
 }
 
@@ -143,7 +143,7 @@ void TouchScreen::handleUI() {
 	// get the touched point
 	getTouchXYZ(&x, &y, &z);
 	
-Serial.print(x, DEC); Serial.print(" "); Serial.println(y);	
+//Serial.print(x, DEC); Serial.print(" "); Serial.println(y);	
 
 	// check if we need to change tab, no need to debounce
 	for (uint8_t i=0; i<_uiNbTabs; i++) {
@@ -170,7 +170,6 @@ Serial.print(x, DEC); Serial.print(" "); Serial.println(y);
 		_uiPotentialActiveElement = activeElement;
 		return;
 	}
-	
 	// update the visual state of previously active element
 	if ((_uiActiveElement != -1) && (activeElement != _uiActiveElement)) {
 		// draw the old active element as released
@@ -180,6 +179,7 @@ Serial.print(x, DEC); Serial.print(" "); Serial.println(y);
 		}
 	}
 	if ((activeElement != -1) && ((activeElement != _uiActiveElement) || (_uiElement[activeElement].type == UI_SLIDER))) {
+Serial.println(activeElement);	
 		if (_uiElement[activeElement].editable) {
 			boolean hasValueChanged = _updateUIElementValue(&(_uiElement[activeElement]), UI_PUSHED, x, y);
 			if (hasValueChanged) {

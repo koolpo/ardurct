@@ -97,43 +97,98 @@ void TouchScreen::setupTouchPanel(uint8_t xm, uint8_t xp, uint8_t ym, uint8_t yp
 }
 
 
-uint16_t TouchScreen::getTouchX() {
+int16_t TouchScreen::getTouchX() {
 	int16_t x, y, z;
-	if (getTouchXYZ(&x, &y, &z) != TOUCHSCREEN_NO_TOUCH) return x;
+	if (getTouchXYZ(&x, &y, &z) > 0) return x;
 	return TOUCHSCREEN_NO_TOUCH;
 }
 
 
-uint16_t TouchScreen::getTouchY() {
+int16_t TouchScreen::getTouchY() {
 	int16_t x, y, z;
-	if (getTouchXYZ(&x, &y, &z) != TOUCHSCREEN_NO_TOUCH) return y;
+	if (getTouchXYZ(&x, &y, &z)) return y;
 	return TOUCHSCREEN_NO_TOUCH;
 }
 
 
-uint16_t TouchScreen::getTouchZ() {
+int16_t TouchScreen::getTouchZ() {
 	int16_t x, y, z;
-	if (getTouchXYZ(&x, &y, &z) != TOUCHSCREEN_NO_TOUCH) return z;
+	if (getTouchXYZ(&x, &y, &z) > 0) return z;
 	return TOUCHSCREEN_NO_TOUCH;
 }
 
 
 bool TouchScreen::isTouched() {
 	int16_t x, y, z;
-	return (getTouchXYZ(&x, &y, &z) != TOUCHSCREEN_NO_TOUCH);
+	return (getTouchXYZ(&x, &y, &z) != 0);
 }
 
 
-uint16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
+int16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	if (_xm == 0xFF) return TOUCHSCREEN_NO_TOUCH;
+	
 #if defined(CONFIGURATION_BUS_IS_SHARED_WITH_TOUCHPANEL)	
-	highZBus();
-	uint16_t valid = _measureTouchXYZ(x, y, z);
-	deHighZBus();
-	return valid;
-#else
-	return _measureTouchXYZ(x, y, z);
+	unselectScreen();
 #endif
+
+	// void the values
+	*x = TOUCHSCREEN_NO_TOUCH;
+	*y = TOUCHSCREEN_NO_TOUCH;
+	*z = TOUCHSCREEN_NO_TOUCH;
+	
+	// restore the analog reference: just in case...
+	analogReference(DEFAULT);
+	
+	// measure X
+	pinMode(_yp, INPUT);
+	pinMode(_ym, INPUT);  
+	*_ypPort &= ~_ypBitMask;
+	*_ymPort &= ~_ymBitMask;
+	pinMode(_xp, OUTPUT);
+	pinMode(_xm, OUTPUT);
+	*_xpPort |= _xpBitMask;
+	*_xmPort &= ~_xmBitMask;
+//Serial.print("X="); 
+	int16_t X = _analogAverage(_yp);
+// Serial.println(X, DEC);	
+	if (X == TOUCHSCREEN_NO_TOUCH) return TOUCHSCREEN_NO_TOUCH;
+	
+	// measure Y
+	pinMode(_xp, INPUT);
+	pinMode(_xm, INPUT);
+	*_xpPort &= ~_xpBitMask;
+	pinMode(_yp, OUTPUT);
+	pinMode(_ym, OUTPUT);
+	*_ypPort |= _ypBitMask;
+//Serial.print("Y="); 
+	int16_t Y = _analogAverage(_xm);
+// Serial.println(Y, DEC);	
+	if (Y == TOUCHSCREEN_NO_TOUCH) return TOUCHSCREEN_NO_TOUCH;
+	
+	// we return with XP and YM as outputs
+	// and XM and YP as inputs, no pull-up
+	pinMode(_xp, OUTPUT);
+	*_ymPort |= _ymBitMask;
+	pinMode(_yp, INPUT);
+	*_ypPort &= ~_ypBitMask;
+
+	// Measure Z
+	int16_t val1 = analogRead(_xm);
+	int16_t val2 = analogRead(_yp);	
+	float Z = val2;
+	Z /= val1;
+	Z -= 1;
+	Z *= (X * CONFIGURATION_TOUCHPANEL_X_PLANE_RESISTANCE) / 1024;
+	*z = abs(Z); 
+		
+	if ((*z >= CONFIGURATION_TOUCHPANEL_PRESSURE_THRESHOLD) && (*z < CONFIGURATION_TOUCHPANEL_PRESSURE_MAX)) {
+	// convert the measures according to the calibration
+		_getDisplayXY(&X, &Y);
+		*x = X;
+		*y = Y;
+		return *z;
+	}
+	return TOUCHSCREEN_NO_TOUCH;
 }
 
 
@@ -264,66 +319,5 @@ int16_t TouchScreen::_analogAverage(uint8_t pin) {
 }
 
 uint16_t TouchScreen::_measureTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
-	// void the values
-	*x = TOUCHSCREEN_NO_TOUCH;
-	*y = TOUCHSCREEN_NO_TOUCH;
-	*z = TOUCHSCREEN_NO_TOUCH;
-	
-	// restore the analog reference: just in case...
-	analogReference(DEFAULT);
-	
-	// measure X
-	pinMode(_yp, INPUT);
-	pinMode(_ym, INPUT);  
-	*_ypPort &= ~_ypBitMask;
-	*_ymPort &= ~_ymBitMask;
-	pinMode(_xp, OUTPUT);
-	pinMode(_xm, OUTPUT);
-	*_xpPort |= _xpBitMask;
-	*_xmPort &= ~_xmBitMask;
-//Serial.print("X="); 
-	int16_t X = _analogAverage(_yp);
-// Serial.println(X, DEC);	
-	if (X == TOUCHSCREEN_NO_TOUCH) return TOUCHSCREEN_NO_TOUCH;
-	
-	// measure Y
-	pinMode(_xp, INPUT);
-	pinMode(_xm, INPUT);
-	*_xpPort &= ~_xpBitMask;
-	pinMode(_yp, OUTPUT);
-	pinMode(_ym, OUTPUT);
-	*_ypPort |= _ypBitMask;
-//Serial.print("Y="); 
-	int16_t Y = _analogAverage(_xm);
-// Serial.println(Y, DEC);	
-	if (Y == TOUCHSCREEN_NO_TOUCH) return TOUCHSCREEN_NO_TOUCH;
-	
-	// we return with XP and YM as outputs
-	// and XM and YP as inputs, no pull-up
-	pinMode(_xp, OUTPUT);
-	*_ymPort |= _ymBitMask;
-	pinMode(_yp, INPUT);
-	*_ypPort &= ~_ypBitMask;
 
-	// convert the measures according to the calibration
-	_getDisplayXY(&X, &Y);
-	*x = X;
-	*y = Y;
-
-#if defined(CONFIGURATION_TOUCHPANEL_CALCULATE_PRESSURE)
-	// Measure Z
-	int16_t val1 = analogRead(_xm);
-	int16_t val2 = analogRead(_yp);	
-	float Z = val2;
-	Z /= val1;
-	Z -= 1;
-	Z *= (X * CONFIGURATION_TOUCHPANEL_X_PLANE_RESISTANCE) / 1024;
-	*z = Z; 
-//Serial.print("Z="); Serial.println(*z, DEC);
-		
-	if ((*z >= CONFIGURATION_TOUCHPANEL_PRESSURE_THRESHOLD) && (*z < CONFIGURATION_TOUCHPANEL_PRESSURE_MAX)) return *z;
-#endif
-
-	return TOUCHSCREEN_PRESSURE_NOT_VALID;
-	
 }
