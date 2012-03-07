@@ -76,7 +76,7 @@ void setup() {
     
     // add tabs at the top
     listTab = touchscreen.addUITab("List");
-    testsTab = touchscreen.addUITab("Tests", &uiActionCallback);
+    testsTab = touchscreen.addUITab("Tests", &doTestsAction);
     colorsTab = touchscreen.addUITab("Colors", &setColor, &drawColor);
     
     // populate the tests tab
@@ -114,7 +114,7 @@ void loop() {
     delay(5);
 }
 
-void uiActionCallback(uint8_t id) {
+void doTestsAction(uint8_t id) {
     if (id == SLIDER_1_ID) touchscreen.setUIElementValue(GAUGE_1_ID, touchscreen.getUIElementValue(SLIDER_1_ID));
     else if (id == SLIDER_2_ID) touchscreen.setUIElementValue(GAUGE_2_ID, touchscreen.getUIElementValue(SLIDER_2_ID));
 }

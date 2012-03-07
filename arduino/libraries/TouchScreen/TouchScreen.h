@@ -124,6 +124,8 @@ class TouchScreen: public ScreenHAL {
 		int16_t getUIElementValue(uint8_t id);
 		
 		void setUIElementEditable(uint8_t id, bool editable);
+		
+		void setUIElementTab(uint8_t id, uint8_t tab);
 #endif
 		
 	private:

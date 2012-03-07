@@ -236,6 +236,14 @@ void TouchScreen::setUIElementEditable(uint8_t id, bool editable) {
 	_uiElement[index].editable = editable;	
 }
 
+void TouchScreen::setUIElementTab(uint8_t id, uint8_t tab) {
+	int16_t index = _getUIElementIndex(id);
+	if (index == UI_ERROR) return;
+	_uiElement[index].tab = tab;	
+	if ((_uiActiveTab != -1) && (_uiElement[index].tab != _uiActiveTab)) 
+		fillRectangle(_uiX+_uiElement[index].x, _uiY+_uiTabHeight+_uiElement[index].y, _uiElement[index].width, _uiElement[index].height, UI_COLOR_BACKGROUND);
+}
+
 /* ---------------- Private functions ------------------------ */
 
 int16_t TouchScreen::_addUIElement(int16_t type, int16_t tab, uint8_t id, int16_t group, int16_t x, int16_t y, int16_t width, int16_t height, int16_t value, uint8_t *text, 
