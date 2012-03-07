@@ -30,16 +30,17 @@ TouchScreen touchscreen;
 void setup() {
     Serial.begin(57600);
     touchscreen.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD);
+	// uncomment the following line if you want to recalibrate the touch panel
+    //touchscreen.resetTouchPanelCalibration();
     touchscreen.setupTouchPanel();
     touchscreen.setBacklight(180);
-    //touchscreen.calibrateTouchPanel(true);
 }
 
 void loop() {
     int16_t x, y, z;
     
     if (touchscreen.getTouchXYZ(&x, &y, &z)) {
-        Serial_printf("x=%d, y=%d, z=%d", x, y, z);
+        Serial_printf("x=%d, y=%d, z=%d\n", x, y, z);
         touchscreen.fillRectangle(x-5, y-5, 10, 10, BLUE);
     }
     delay(100);

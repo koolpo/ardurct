@@ -84,7 +84,6 @@ void TouchScreen::setupTouchPanel(uint8_t xm, uint8_t xp, uint8_t ym, uint8_t yp
 	_ymBitMask = digitalPinToBitMask(ym);
 	_ypBitMask = digitalPinToBitMask(yp);
 	// calibrate the touch panel if required
-	_xCalibrationEquation.divider = 0;
 	if (!calibrateTouchPanel()) return;
 	// read the matrix from eeprom if not already set by calibrateTouchPanel
 	if (_xCalibrationEquation.divider == 0) {
@@ -189,12 +188,17 @@ int16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 }
 
 
+void TouchScreen::resetTouchPanelCalibration() {
+	eeprom_write_uint8_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_DONE, 0xFF);
+}
+
+
 bool TouchScreen::calibrateTouchPanel(bool force) {
+	// prohibit calculation of display points
+	_xCalibrationEquation.divider = 0;
 	// check if we are calibrated or forced to calibrate
 	if (!force && (eeprom_read_uint8_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_DONE) != 0xFF)) return true;
 	
-	// reset the X calibration divider to prohibit calculation of display points
-	_xCalibrationEquation.divider = 0;
 	// set the rotation to 0
 	setRotation(SCREEN_ROTATION_0);
 
@@ -303,20 +307,19 @@ void TouchScreen::_getDisplayXY(int16_t *x, int16_t *y) {
 int16_t TouchScreen::_analogAverage(uint8_t pin) {
 #if (CONFIGURATION_TOUCHPANEL_NB_MEASURES <= 1)
 	return analogRead(pin);
+#elif (CONFIGURATION_TOUCHPANEL_NB_MEASURES == 2)
+	int16_t val1 = analogRead(pin);
+	int16_t val2 = analogRead(pin);
+	if (abs(val1-val2) > CONFIGURATION_TOUCHPANEL_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
+	return (val1+val2)/2;
 #else
 	int16_t val1 = analogRead(pin);
-//	Serial.print(val1, DEC);Serial.print(" "); 
 	int32_t average = val1;
 	for (uint8_t i=1; i<CONFIGURATION_TOUCHPANEL_NB_MEASURES; i++) {
 		int16_t val2 = analogRead(pin);
-// Serial.print(val2, DEC);Serial.print(" ");
 		if (abs(val1-val2) > CONFIGURATION_TOUCHPANEL_DISTANCE_EQUAL) return TOUCHSCREEN_NO_TOUCH;
 		average += val2;
 	}
 	return average / CONFIGURATION_TOUCHPANEL_NB_MEASURES;
 #endif
-}
-
-uint16_t TouchScreen::_measureTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
-
 }

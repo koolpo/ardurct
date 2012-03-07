@@ -79,6 +79,8 @@ class TouchScreen: public ScreenHAL {
 		int16_t getTouchXYZ(int16_t *x, int16_t *y, int16_t *z);
 		
 		bool calibrateTouchPanel(bool force = false);
+		
+		void resetTouchPanelCalibration();
 
 #if defined(CONFIGURATION_HAS_MACROS)
 		uint8_t *executeMacro(uint8_t *macro, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1, 
@@ -211,8 +213,6 @@ class TouchScreen: public ScreenHAL {
 		int16_t _getUIElementIndex(uint8_t id);
 #endif
 		int16_t _analogAverage(uint8_t pin);
-		
-		uint16_t _measureTouchXYZ(int16_t *x, int16_t *y, int16_t *z);
 		
 		bool _calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tsX, int32_t *tsY);
 		
