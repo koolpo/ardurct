@@ -1,0 +1,27 @@
+#######################################
+# Syntax Coloring Map ButtonMonitor
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ButtonMonitor	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+add	KEYWORD2
+remove	KEYWORD2
+isDepressed	KEYWORD2
+isReleased	KEYWORD2
+isRepeating	KEYWORD2
+isFastRepeating	KEYWORD2
+isPressed	KEYWORD2
+getState	KEYWORD2
+update	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################

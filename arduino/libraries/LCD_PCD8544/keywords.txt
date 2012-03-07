@@ -1,0 +1,47 @@
+#######################################
+# Syntax Coloring Map LCD_PCD8544[_VG]
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+LCD_PCD8544_VG	KEYWORD1
+LCD_PCD8544	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+stop	KEYWORD2
+clear	KEYWORD2
+clearLine	KEYWORD2
+setPower	KEYWORD2
+display	KEYWORD2
+noDisplay	KEYWORD2
+setInverse	KEYWORD2
+home	KEYWORD2
+setCursor	KEYWORD2
+drawBitmap	KEYWORD2
+drawPixel	KEYWORD2
+drawLine	KEYWORD2
+drawRectangle	KEYWORD2
+drawCircle	KEYWORD2
+drawEllipse	KEYWORD2
+fillRectangle	KEYWORD2
+fillCircle	KEYWORD2
+fillEllipse	KEYWORD2
+drawProgressBar	KEYWORD2
+drawToggleSwitch	KEYWORD2
+updateDisplay	KEYWORD2
+drawMediumFontValueRA	KEYWORD2
+drawMediumFontTime	KEYWORD2
+drawSmallFontText	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+ON	LITERAL1
+OFF	LITERAL1
