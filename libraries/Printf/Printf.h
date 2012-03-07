@@ -11,5 +11,8 @@
  
 extern void Stream_printf_progmem(Print &out, PGM_P format, ...);
 
+#define Serial_printf(format, ...) Stream_printf_progmem(Serial, PSTR(format), ##__VA_ARGS__)
+#define Stream_printf(stream, format, ...) Stream_printf_progmem(stream, PSTR(format), ##__VA_ARGS__)
+
 #endif
  
