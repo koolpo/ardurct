@@ -6,6 +6,8 @@
  * Posted on July 20, 2011 by David Pankhurst 
  **/
  
+#include <Arduino.h>
+#include <inttypes.h>
 #include <avr/pgmspace.h>
 #include <stdarg.h>
  
