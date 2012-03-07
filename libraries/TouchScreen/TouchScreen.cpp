@@ -25,6 +25,7 @@
 #include "TouchScreen.h"
 #include "eepromUtils.hpp"
 
+//#include "../Printf/Printf.cpp"
 
 TouchScreen::TouchScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
 	setupScreen(port, cd, wr, rd, cs, reset);
@@ -148,9 +149,7 @@ int16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	pinMode(_xm, OUTPUT);
 	*_xpPort |= _xpBitMask;
 	*_xmPort &= ~_xmBitMask;
-//Serial.print("X="); 
 	int16_t X = _analogAverage(_yp);
-// Serial.println(X, DEC);	
 	if (X == TOUCHSCREEN_NO_TOUCH) return TOUCHSCREEN_NO_TOUCH;
 	
 	// measure Y
@@ -160,9 +159,7 @@ int16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	pinMode(_yp, OUTPUT);
 	pinMode(_ym, OUTPUT);
 	*_ypPort |= _ypBitMask;
-//Serial.print("Y="); 
 	int16_t Y = _analogAverage(_xm);
-// Serial.println(Y, DEC);	
 	if (Y == TOUCHSCREEN_NO_TOUCH) return TOUCHSCREEN_NO_TOUCH;
 	
 	// we return with XP and YM as outputs
@@ -182,7 +179,7 @@ int16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	*z = abs(Z); 
 		
 	if ((*z >= CONFIGURATION_TOUCHPANEL_PRESSURE_THRESHOLD) && (*z < CONFIGURATION_TOUCHPANEL_PRESSURE_MAX)) {
-	// convert the measures according to the calibration
+		// convert the measures according to the calibration
 		_getDisplayXY(&X, &Y);
 		*x = X;
 		*y = Y;
@@ -196,6 +193,8 @@ bool TouchScreen::calibrateTouchPanel(bool force) {
 	// check if we are calibrated or forced to calibrate
 	if (!force && (eeprom_read_uint8_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_DONE) != 0xFF)) return true;
 	
+	// reset the X calibration divider to prohibit calculation of display points
+	_xCalibrationEquation.divider = 0;
 	// set the rotation to 0
 	setRotation(SCREEN_ROTATION_0);
 
@@ -268,7 +267,7 @@ bool TouchScreen::_calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tpX
 	drawHorizontalLine(dX-10, dX+11, dY, BLACK, 2);
 	drawVerticalLine(dX, dY-10, dY+11, BLACK, 2);
 	while (wait < 100) {
-		if (getTouchXYZ(&x, &y, &z) != TOUCHSCREEN_NO_TOUCH) {
+		if (getTouchXYZ(&x, &y, &z)) {
 			*tpX = x;
 			*tpY = y;
 			// debounce the touchscreen

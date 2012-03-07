@@ -51,12 +51,6 @@ class S6D04H0: public ScreenPL {
 		// required by the ScreenHAL superclass
 		void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
 
-#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_TOUCHPANEL)
-		void selectScreen();
-
-		void unselectScreen();
-#endif		
-
 	private:
 		uint8_t _wrPortLowWR;
 		uint8_t _wrPortHighWR;

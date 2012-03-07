@@ -66,6 +66,8 @@ getUIElementWidth	KEYWORD2
 setUIElementValue	KEYWORD2
 getUIElementValue	KEYWORD2
 setUIElementEditable	KEYWORD2
+setBacklight KEYWORD2
+calibrateTouchpanel	KEYWORD2
 
 #######################################
 #	Instances	(KEYWORD2)

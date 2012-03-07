@@ -23,6 +23,7 @@
  */
  
 #include <TouchScreen.h>
+#include <Printf.h>
 
 TouchScreen touchscreen;
 
@@ -31,18 +32,14 @@ void setup() {
     touchscreen.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD);
     touchscreen.setupTouchPanel();
     touchscreen.setBacklight(180);
+    //touchscreen.calibrateTouchPanel(true);
 }
 
 void loop() {
     int16_t x, y, z;
     
-    if (touchscreen.getTouchXYZ(&x, &y, &z) != TOUCHSCREEN_NO_TOUCH) {
-        Serial.print("x=");
-        Serial.print(x);
-        Serial.print(", y=");
-        Serial.print(y);
-        Serial.print(", z=");
-        Serial.println(z);
+    if (touchscreen.getTouchXYZ(&x, &y, &z)) {
+        Serial_printf("x=%d, y=%d, z=%d", x, y, z);
         touchscreen.fillRectangle(x-5, y-5, 10, 10, BLUE);
     }
     delay(100);

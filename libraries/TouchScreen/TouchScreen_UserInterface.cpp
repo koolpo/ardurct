@@ -53,13 +53,13 @@ void TouchScreen::setupUI(int16_t x, int16_t y, uint16_t width, uint16_t height,
 }
 
 int16_t TouchScreen::addUITab(char *text, void (*handleCallback)(uint8_t id), void (*drawCallback)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value)) {
-	if (_uiNbTabs == UI_MAX_TABS) return UI_ERROR;
+	if (_uiNbTabs == CONFIGURATION_UI_MAX_TABS) return UI_ERROR;
 	if (_uiNbTabs == 0) _uiTab[_uiNbTabs].x = UI_TAB_LEFT_MARGIN;
 	else _uiTab[_uiNbTabs].x = _uiTab[_uiNbTabs-1].x+_uiTab[_uiNbTabs-1].width-1;
 	if (_uiTab[_uiNbTabs].x > _uiWidth) return UI_ERROR;
 	_uiTab[_uiNbTabs].y = 2;
 	_uiTab[_uiNbTabs].text = (uint8_t *)text;
-	_uiTabHeight = getFontHeight(UI_TAB_FONT) + 2 + UI_TAB_TOP_MARGIN*2;
+	if (_uiNbTabs > 0) _uiTabHeight = getFontHeight(UI_TAB_FONT) + 2 + UI_TAB_TOP_MARGIN*2;
 	_uiTab[_uiNbTabs].width = getStringWidth((char *)(_uiTab[_uiNbTabs].text), UI_TAB_FONT) + UI_TAB_LEFT_MARGIN * 2;
 	_uiTab[_uiNbTabs].drawCallback = drawCallback;
 	_uiTab[_uiNbTabs].handleCallback = handleCallback;
@@ -92,8 +92,10 @@ int16_t TouchScreen::addUISlider(int16_t tab, uint8_t id, int16_t x, int16_t y, 
 
 
 void TouchScreen::setUITab(uint8_t tabId) {
+	if (tabId >= CONFIGURATION_UI_MAX_TABS) return; 
 	_uiActiveTab = tabId;
 	_uiActiveElement = -1;
+	_uiPotentialActiveElement = -1;
 	if (_uiNbTabs > 1) {
 		fillRectangle(_uiX, _uiY, _uiWidth, _uiTabHeight, UI_COLOR_BACKGROUND);
 		// draw screen headers	
@@ -136,37 +138,46 @@ void TouchScreen::handleUI() {
 	if ((int32_t)(millis() - _uiNextHandleTime) < 0) return;
 	_uiNextHandleTime = millis() + CONFIGURATION_UI_LOOP_LENGTH;
 	
-	int16_t x;
-	int16_t y;
-	int16_t z;
-	
-	// get the touched point
-	getTouchXYZ(&x, &y, &z);
-	
-//Serial.print(x, DEC); Serial.print(" "); Serial.println(y);	
-
-	// check if we need to change tab, no need to debounce
-	for (uint8_t i=0; i<_uiNbTabs; i++) {
-		if (_isTouchInUITab(&(_uiTab[i]), x, y)) {
-			if (i != _uiActiveTab) setUITab(i);
-			return;
-		}
-	}
-
 	// find out which item is active
 	int16_t activeElement = -1;
-	// find a new active element 
-	for (uint8_t i=0; i<_uiNbElements; i++) {
-		if ((_uiElement[i].tab == _uiActiveTab) && (_isTouchInUIElement(&(_uiElement[i]), x, y))) {
-			activeElement = i;
-			break;
+	int16_t x, y, z;
+	if (getTouchXYZ(&x, &y, &z)) {
+		// check if we need to change tab, no need to debounce
+		for (uint8_t i=0; i<_uiNbTabs; i++) {
+			if (_isTouchInUITab(&(_uiTab[i]), x, y)) {
+				if (i != _uiActiveTab) setUITab(i);
+				return;
+			}
 		}
+
+		// find a new active element 
+		for (uint8_t i=0; i<_uiNbElements; i++) {
+			if ((_uiElement[i].tab == _uiActiveTab) && (_isTouchInUIElement(&(_uiElement[i]), x, y))) {
+				activeElement = i;
+				break;
+			}
+		}
+	}
+	
+	// take care of sliders, no debouncing
+	if ((activeElement != -1) && (_uiElement[activeElement].type == UI_SLIDER)) {
+		_uiActiveElement = activeElement;
+		if (!_uiElement[activeElement].editable) return;
+		boolean hasValueChanged = _updateUIElementValue(&(_uiElement[activeElement]), UI_PUSHED, x, y);
+		if (hasValueChanged) {
+			_drawUIElement(&(_uiElement[activeElement]));
+			// try to run the active tab handler or if not defined, the default handler
+			if (_uiTab[_uiActiveTab].handleCallback) (*(_uiTab[_uiActiveTab].handleCallback))(_uiElement[activeElement].id);
+			else if (_uiHandleCallback) (*_uiHandleCallback)(_uiElement[activeElement].id);
+		}
+		return;
 	}
 	
 	// debounce 
 	if (_uiDebounceSteps <= CONFIGURATION_UI_DEBOUNCE_STEPS) {
 		if ((_uiDebounceSteps != 0) && (activeElement != _uiPotentialActiveElement)) _uiDebounceSteps = 0;
 		else _uiDebounceSteps ++;
+		if (_uiDebounceSteps > CONFIGURATION_UI_DEBOUNCE_STEPS+1) _uiDebounceSteps = CONFIGURATION_UI_DEBOUNCE_STEPS+1;
 		_uiPotentialActiveElement = activeElement;
 		return;
 	}
@@ -178,7 +189,7 @@ void TouchScreen::handleUI() {
 			_drawUIElement(&(_uiElement[_uiActiveElement]));
 		}
 	}
-	if ((activeElement != -1) && ((activeElement != _uiActiveElement) || (_uiElement[activeElement].type == UI_SLIDER))) {
+	if ((activeElement != -1) && (activeElement != _uiActiveElement)) {
 Serial.println(activeElement);	
 		if (_uiElement[activeElement].editable) {
 			boolean hasValueChanged = _updateUIElementValue(&(_uiElement[activeElement]), UI_PUSHED, x, y);
@@ -229,7 +240,7 @@ void TouchScreen::setUIElementEditable(uint8_t id, bool editable) {
 
 int16_t TouchScreen::_addUIElement(int16_t type, int16_t tab, uint8_t id, int16_t group, int16_t x, int16_t y, int16_t width, int16_t height, int16_t value, uint8_t *text, 
 		int16_t min, int16_t max) {
-	if (_uiNbElements == UI_MAX_ELEMENTS) return UI_ERROR;
+	if (_uiNbElements == CONFIGURATION_UI_MAX_ELEMENTS) return UI_ERROR;
 	_uiElement[_uiNbElements].type = type;		
 	_uiElement[_uiNbElements].tab = tab;
 	_uiElement[_uiNbElements].id = id;
@@ -244,17 +255,17 @@ int16_t TouchScreen::_addUIElement(int16_t type, int16_t tab, uint8_t id, int16_
 	if (value > max) _uiElement[_uiNbElements].value = max;
 	else if (value < min) _uiElement[_uiNbElements].value = min;
 	else _uiElement[_uiNbElements].value = value;
-	if ((type == UI_GAUGE) || (type == UI_LABEL)) _uiElement[_uiNbElements].editable = false;
+	if ((type == UI_GAUGE) || (type == UI_LABEL) || (type == UI_AREA)) _uiElement[_uiNbElements].editable = false;
 	else _uiElement[_uiNbElements].editable = true;
 	if (width == UI_AUTO_SIZE) {
-		if (text) _uiElement[_uiNbElements].width = getStringWidth((char *)text, UI_FONT) + (type == UI_LABEL ? 0 : UI_ELEMENT_LEFT_MARGIN * 2);
+		if (text) _uiElement[_uiNbElements].width = getStringWidth((char *)text, UI_ELEMENT_FONT) + (type == UI_LABEL ? 0 : UI_ELEMENT_LEFT_MARGIN * 2);
 		else return UI_ERROR;
 	} else if ((width & UI_SAME_AS) != 0) {
 		int16_t ref = _getUIElementIndex(x & ~UI_PLACE_MODIFIER_MASK);
 		if (ref == -1) return UI_ERROR;
 		_uiElement[_uiNbElements].width = _uiElement[ref].width;
 	}
-	if (height == UI_AUTO_SIZE) _uiElement[_uiNbElements].height = getFontHeight(UI_FONT) + UI_ELEMENT_TOP_MARGIN * 2;
+	if (height == UI_AUTO_SIZE) _uiElement[_uiNbElements].height = getFontHeight(UI_ELEMENT_FONT) + UI_ELEMENT_TOP_MARGIN * 2;
 	else if ((height & UI_SAME_AS) != 0) {
 		int16_t ref = _getUIElementIndex(x & ~UI_PLACE_MODIFIER_MASK);
 		if (ref == -1) return UI_ERROR;
@@ -285,21 +296,21 @@ void TouchScreen::_drawUIElement(touchScreen_UIElement_t *elt) {
 	switch (elt->type) {
 		case UI_LABEL:
 			setBackgroundColor(UI_COLOR_BACKGROUND);
-			drawString((char *)(elt->text), _uiX+elt->x, _uiY+_uiTabHeight+elt->y+1+(elt->height-getFontHeight(UI_FONT))/2, BLACK, UI_FONT, UI_FONT_IS_BOLD, false);
+			drawString((char *)(elt->text), _uiX+elt->x, _uiY+_uiTabHeight+elt->y+1+(elt->height-getFontHeight(UI_ELEMENT_FONT))/2, BLACK, UI_ELEMENT_FONT, UI_ELEMENT_FONT_IS_BOLD, false);
 			break;
 		case UI_BUTTON:
 			fillRoundedRectangle(_uiX+elt->x, _uiY+_uiTabHeight+elt->y, elt->width, elt->height, 6, color);
 			drawRoundedRectangle(_uiX+elt->x, _uiY+_uiTabHeight+elt->y, elt->width, elt->height, 6, BLACK, 1);
 			setBackgroundColor(color);
-			drawString((char *)(elt->text), _uiX+elt->x+(elt->width-getStringWidth((char *)(elt->text), UI_FONT))/2, 
-					_uiY+_uiTabHeight+elt->y+1+(elt->height-getFontHeight(UI_FONT))/2, BLACK, UI_FONT, UI_FONT_IS_BOLD, false);
+			drawString((char *)(elt->text), _uiX+elt->x+(elt->width-getStringWidth((char *)(elt->text), UI_ELEMENT_FONT))/2, 
+					_uiY+_uiTabHeight+elt->y+1+(elt->height-getFontHeight(UI_ELEMENT_FONT))/2, BLACK, UI_ELEMENT_FONT, UI_ELEMENT_FONT_IS_BOLD, false);
 			break;
 		case UI_PUSH_BUTTON:
 			fillRectangle(_uiX+elt->x, _uiY+_uiTabHeight+elt->y, elt->width, elt->height, color);
 			drawRectangle(_uiX+elt->x, _uiY+_uiTabHeight+elt->y, elt->width, elt->height, BLACK, 1);
 			setBackgroundColor(color);
-			drawString((char *)(elt->text), _uiX+elt->x+(elt->width-getStringWidth((char *)(elt->text), UI_FONT))/2, 
-					_uiY+_uiTabHeight+elt->y+1+(elt->height-getFontHeight(UI_FONT))/2, BLACK, UI_FONT, UI_FONT_IS_BOLD, false);
+			drawString((char *)(elt->text), _uiX+elt->x+(elt->width-getStringWidth((char *)(elt->text), UI_ELEMENT_FONT))/2, 
+					_uiY+_uiTabHeight+elt->y+1+(elt->height-getFontHeight(UI_ELEMENT_FONT))/2, BLACK, UI_ELEMENT_FONT, UI_ELEMENT_FONT_IS_BOLD, false);
 			break;
 		case UI_AREA:
 			if (_uiTab[elt->tab].drawCallback) (*(_uiTab[elt->tab].drawCallback))(elt->id, _uiX+elt->x, _uiY+_uiTabHeight+elt->y, elt->width, elt->height, elt->value);

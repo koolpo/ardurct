@@ -66,9 +66,9 @@ class ScreenPL: public Print {
 		uint8_t _cs;
 		uint8_t _reset;
 
-		virtual void selectScreen();
+		void selectScreen();
 		
-		virtual void unselectScreen();		
+		void unselectScreen();		
 			
 	private:
 #if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)

@@ -34,6 +34,8 @@
 #include "configuration.hpp"
 #include "ScreenHAL.hpp"
 
+//#include "../Printf/Printf.h"
+
 #if defined(CONFIGURATION_HAS_MACROS)
 #include "TouchScreen_Macros.hpp"
 #endif
@@ -144,12 +146,12 @@ class TouchScreen: public ScreenHAL {
 		
 #if defined(CONFIGURATION_HAS_UI)
 		uint32_t _uiNextHandleTime;
-		touchScreen_UIElement_t _uiElement[UI_MAX_ELEMENTS];
+		touchScreen_UIElement_t _uiElement[CONFIGURATION_UI_MAX_ELEMENTS];
 		uint8_t _uiNbElements;
 		int16_t _uiActiveElement;
 		int16_t _uiPotentialActiveElement;
 		uint8_t _uiDebounceSteps;
-		touchScreen_UITab_t _uiTab[UI_MAX_TABS];
+		touchScreen_UITab_t _uiTab[CONFIGURATION_UI_MAX_TABS];
 		uint8_t _uiNbTabs;
 		int8_t _uiActiveTab;
 		int16_t _uiX;
@@ -159,7 +161,6 @@ class TouchScreen: public ScreenHAL {
 		uint8_t _uiTabHeight;
 		void (*_uiDrawCallback)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value);
 		void (*_uiHandleCallback)(uint8_t id);
-
 #endif
 #if defined(CONFIGURATION_HAS_MACROS)
 		int16_t _mThickness;
@@ -216,9 +217,6 @@ class TouchScreen: public ScreenHAL {
 		bool _calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tsX, int32_t *tsY);
 		
 		void _getDisplayXY(int16_t *x, int16_t *y);
-		
-
-
 };
 
 #endif

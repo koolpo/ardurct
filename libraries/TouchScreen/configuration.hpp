@@ -92,6 +92,10 @@
 #define CONFIGURATION_UI_LOOP_LENGTH 20
 // how many times do we debounce
 #define CONFIGURATION_UI_DEBOUNCE_STEPS 4
+// max number of tabs for the UI
+#define CONFIGURATION_UI_MAX_TABS 6
+// max number of elements for all the tabs
+#define CONFIGURATION_UI_MAX_ELEMENTS 30
 
 // Macros
 //-------
