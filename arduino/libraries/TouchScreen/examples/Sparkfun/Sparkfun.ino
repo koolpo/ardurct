@@ -1,5 +1,5 @@
 /*
- * Sparkfun - Tests the macros (see Macros.cpp for manual)
+ * Sparkfun - Tests the macros (see TouchScreen_Macros.cpp for language)
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -24,7 +24,7 @@
  
 #include <TouchScreen.h>
 
-#define SCALE 2
+#define LOGO_SCALE 2
 #define LOGO_WIDTH 57
 #define LOGO_HEIGHT 88
 
@@ -50,9 +50,9 @@ TouchScreen touchscreen;
  **/
 uint8_t sparkfun[] = "w 0 "\
     "pc F800 "\
-    "pts 7 "\
     "tf 0 42 44 42 0 88 "\
     "afe 27 35 30 "\
+    "pts 7 "\
     "annw 25 79 17 "\
     "afnw 17 42 17 "\
     "rf 17 35 11 7 "\
@@ -64,23 +64,27 @@ uint8_t sparkfun[] = "w 0 "\
     "afnne 32 14 14 "\
     "tf 49 18 49 14 51 17";
     
-void setup() {
-    Serial.begin(57600);
-    
+void setup() {    
     touchscreen.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
     touchscreen.setBacklight(180);
     
+    // center the drawing on the screen
+    int16_t x = (touchscreen.getWidth()-LOGO_WIDTH*LOGO_SCALE)/2;
+    int16_t y = (touchscreen.getWidth()-LOGO_HEIGHT*LOGO_SCALE)/2;
+    
     // execute the macro without the initial write in slot 0
-    touchscreen.executeMacro(&sparkfun[3], (touchscreen.getWidth()-57*SCALE)/2, (touchscreen.getHeight()-88*SCALE)/2, SCALE, 1, true);
-    delay(3000);
+    touchscreen.executeMacro(&sparkfun[3], x, y, LOGO_SCALE, 1, true);
 
     // write the macro to eeprom slot 0
     touchscreen.executeMacro(sparkfun);
+
+    delay(3000);
+    
     // erase the drawing
-    touchscreen.fillRectangle((touchscreen.getWidth()-57*SCALE)/2-2, (touchscreen.getHeight()-88*SCALE)/2-2, 57*SCALE+4, 88*SCALE+4, WHITE);
+    touchscreen.fillRectangle(x-2, y-2, LOGO_WIDTH*LOGO_SCALE+4, LOGO_HEIGHT*LOGO_SCALE+4, WHITE);
 
     // execute the macro stored in slot 0. Any time we need the logo, in whatever scale, we can reuse "e 0"
-    touchscreen.executeMacro((uint8_t *)"e 0", (touchscreen.getWidth()-57*SCALE)/2, (touchscreen.getHeight()-88*SCALE)/2, SCALE, 1);
+    touchscreen.executeMacro((uint8_t *)"e 0", x, y, LOGO_SCALE, 1);
 }
 
 void loop() {
