@@ -221,7 +221,7 @@ uint8_t *TouchScreen::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t sc
 				} else if ((s[i+1] == 'E') && (s[i+2] == ' ')) mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_E;
 				else if ((s[i+1] == 'W') && (s[i+2] == ' ')) mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_W;
 				else return 0;
-				while (s[i+1] = ' ') i++;
+				while (s[i+1] != ' ') i++;
 				break;
 			case 'R':
 				if (s[i+1] == 'R') {
@@ -370,8 +370,7 @@ uint8_t *TouchScreen::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t sc
 			for (int j=0; j<wBufferPtr; j++) eeprom_write_uint8_t(SCREEN_MACRO_MAX_NUMBER + wBufferNb*SCREEN_MACRO_MAX_SIZE+j, wBuffer[j]);
 		}
 	}
-	wBuffer[wBufferPtr] = 0;
-	Serial.println((char *)wBuffer);
+	wBuffer[wBufferPtr] = 0;	
 	return wBuffer;
 }
 
@@ -413,7 +412,6 @@ void TouchScreen::_initializeMacros() {
 
 void TouchScreen::_formatMacroSentence(uint8_t *s) {
 	uint16_t i=0;
-	Serial.println((char *)s);
 	while (s[i] != 0) {
 		// before quotes, convert lower into higher
 		while ((s[i] != 0) && (s[i] != '"')) {
@@ -441,7 +439,6 @@ void TouchScreen::_formatMacroSentence(uint8_t *s) {
 		if (s[i] == 0) break;
 		i++;
 	}
-	Serial.println((char *)s);
 }
 
 
@@ -485,16 +482,20 @@ void TouchScreen::_executeMacroCommand(touchScreen_macroCommand_t *mc, int16_t x
 		if (mc->nbParams < 2) return;
 		if (mc->cmd == SCREEN_MACRO_CMD_LINE) {
 			if (mc->nbParams > 2) {
-				sX2 = x + mc->param[SCREEN_MACRO_PARAM_X2] * sMul/sDiv;
-				sY2 = y + mc->param[SCREEN_MACRO_PARAM_Y2] * sMul/sDiv;
+				sX2 = mc->param[SCREEN_MACRO_PARAM_X2];
+				sX2 = x + sX2 * sMul/sDiv;
+				sY2 = mc->param[SCREEN_MACRO_PARAM_Y2];
+				sY2 = y + sY2 * sMul/sDiv;
 				// p2 becomes the end point
 				_mX = mc->param[SCREEN_MACRO_PARAM_X2];
 				_mY = mc->param[SCREEN_MACRO_PARAM_Y2];
 			} else {
 				sX2 = sX;
 				sY2 = sY;
-				sX = x + _mX * sMul/sDiv;
-				sY = y + _mY * sMul/sDiv;	
+				sX = _mX;
+				sX = x + sX * sMul/sDiv;
+				sY = _mY;	
+				sY = y + sY * sMul/sDiv;	
 				// p1 becomes the end point
 				_mX = mc->param[SCREEN_MACRO_PARAM_X1];
 				_mY = mc->param[SCREEN_MACRO_PARAM_Y1];
@@ -503,17 +504,23 @@ void TouchScreen::_executeMacroCommand(touchScreen_macroCommand_t *mc, int16_t x
 			// delta values
 			if (mc->nbParams > 2) {
 				// p2 = p1+delta
-				sX2 = x + (mc->param[SCREEN_MACRO_PARAM_X1] + mc->param[SCREEN_MACRO_PARAM_X2]) * sMul/sDiv;
-				sY2 = y + (mc->param[SCREEN_MACRO_PARAM_Y1] + mc->param[SCREEN_MACRO_PARAM_Y2]) * sMul/sDiv;
+				sX2 = mc->param[SCREEN_MACRO_PARAM_X1] + mc->param[SCREEN_MACRO_PARAM_X2];
+				sX2 = x + sX2 * sMul/sDiv;
+				sY2 = mc->param[SCREEN_MACRO_PARAM_Y1] + mc->param[SCREEN_MACRO_PARAM_Y2];
+				sY2 = y + sY2 * sMul/sDiv;
 				// p1+delta becomes the end point
 				_mX = mc->param[SCREEN_MACRO_PARAM_X1] + mc->param[SCREEN_MACRO_PARAM_X2];
 				_mY = mc->param[SCREEN_MACRO_PARAM_Y1] + mc->param[SCREEN_MACRO_PARAM_Y2];
 			} else {
 				// p2 = old_point+delta
-				sX2 = x + (_mX + mc->param[SCREEN_MACRO_PARAM_X1]) * sMul/sDiv;
-				sY2 = y + (_mY + mc->param[SCREEN_MACRO_PARAM_Y1]) * sMul/sDiv;
-				sX = x + _mX * sMul/sDiv;
-				sY = y + _mY * sMul/sDiv;	
+				sX2 = _mX + mc->param[SCREEN_MACRO_PARAM_X1];
+				sX2 = x + sX2 * sMul/sDiv;
+				sY2 = _mY + mc->param[SCREEN_MACRO_PARAM_Y1];
+				sY2 = y + sY2 * sMul/sDiv;
+				sX = _mX;
+				sX = x + sX * sMul/sDiv;
+				sY = _mY;	
+				sY = y + sY * sMul/sDiv;	
 				// old_point+delta  becomes the end point
 				_mX += mc->param[SCREEN_MACRO_PARAM_X1];
 				_mY += mc->param[SCREEN_MACRO_PARAM_Y1];
@@ -532,14 +539,16 @@ void TouchScreen::_executeMacroCommand(touchScreen_macroCommand_t *mc, int16_t x
 		if (mc->nbParams == 1) {
 			sRadius = mc->param[SCREEN_MACRO_PARAM_ARC_1];
 			sRadius = sRadius * sMul/sDiv;
-			int sArcStartX = _getArcEnd(sRadius, mc->param[SCREEN_MACRO_PARAM_ARC_OCTANT], !reversed, true);
-			int sArcStartY = _getArcEnd(sRadius, mc->param[SCREEN_MACRO_PARAM_ARC_OCTANT], !reversed, false);
-			int sArcEndX = _getArcEnd(sRadius, mc->param[SCREEN_MACRO_PARAM_ARC_OCTANT], reversed, true);
-			int sArcEndY = _getArcEnd(sRadius, mc->param[SCREEN_MACRO_PARAM_ARC_OCTANT], reversed, false);
-			sX = x + _mX * sMul/sDiv - sArcStartX;
-			sY = y + _mY * sMul/sDiv - sArcStartY;
-			_mX += (sArcEndX - sArcStartX) * sDiv/sMul;
-			_mY += (sArcEndY - sArcStartY) * sDiv/sMul;
+			int32_t sArcStartX = _getArcEnd(sRadius, mc->param[SCREEN_MACRO_PARAM_ARC_OCTANT], !reversed, true);
+			int32_t sArcStartY = _getArcEnd(sRadius, mc->param[SCREEN_MACRO_PARAM_ARC_OCTANT], !reversed, false);
+			int32_t sArcEndX = _getArcEnd(sRadius, mc->param[SCREEN_MACRO_PARAM_ARC_OCTANT], reversed, true);
+			int32_t sArcEndY = _getArcEnd(sRadius, mc->param[SCREEN_MACRO_PARAM_ARC_OCTANT], reversed, false);
+			sX = _mX;
+			sX = x + sX * sMul/sDiv - sArcStartX;
+			sY = _mY;
+			sY = y + sY * sMul/sDiv - sArcStartY;
+			_mX += sArcEndX - sArcStartX;
+			_mY += sArcEndY - sArcStartY;
 
 		} else if (mc->nbParams == 3) {
 			sRadius = mc->param[SCREEN_MACRO_PARAM_ARC_3];
@@ -587,14 +596,14 @@ void TouchScreen::_executeMacroCommand(touchScreen_macroCommand_t *mc, int16_t x
 	if (group == SCREEN_MACRO_CMD_GROUP_TRIANGLE) {
 		// we need at least 6 parameters
 		if (mc->nbParams < 6) return;
-		int32_t sX2 = x + mc->param[SCREEN_MACRO_PARAM_X2];
-		sX2 = sX2 * sMul/sDiv;
-		int32_t sY2 = y + mc->param[SCREEN_MACRO_PARAM_Y2];
-		sY2 = sY2 * sMul/sDiv;
-		int32_t sX3 = x + mc->param[SCREEN_MACRO_PARAM_X3];
-		sX3 = sX3 * sMul/sDiv;
-		int32_t sY3 = y + mc->param[SCREEN_MACRO_PARAM_Y3];
-		sY3 = sY3 * sMul/sDiv;
+		int32_t sX2 = mc->param[SCREEN_MACRO_PARAM_X2];
+		sX2 = x + sX2 * sMul/sDiv;
+		int32_t sY2 = mc->param[SCREEN_MACRO_PARAM_Y2];
+		sY2 = y + sY2 * sMul/sDiv;
+		int32_t sX3 = mc->param[SCREEN_MACRO_PARAM_X3];
+		sX3 = x + sX3 * sMul/sDiv;
+		int32_t sY3 = mc->param[SCREEN_MACRO_PARAM_Y3];
+		sY3 = y + sY3 * sMul/sDiv;
 		if (mc->cmd == SCREEN_MACRO_CMD_TRIANGLE) drawTriangle(sX, sY, sX2, sY2, sX3, sY3, _mForegroundColor, sThickness, false);
 		else if (mc->cmd == SCREEN_MACRO_CMD_TRIANGLE_FILLED) fillTriangle(sX, sY, sX2, sY2, sX3, sY3, _mForegroundColor, false);
 		return;
@@ -641,8 +650,8 @@ void TouchScreen::_executeMacroCommand(touchScreen_macroCommand_t *mc, int16_t x
 
 
 
-int8_t TouchScreen::_parseMacroCommandHexColor(uint8_t *s, uint16_t n, touchScreen_macroCommand_t *mc) {
-	uint16_t i = n;
+int8_t TouchScreen::_parseMacroCommandHexColor(uint8_t *s, int16_t n, touchScreen_macroCommand_t *mc) {
+	int16_t i = n;
 	mc->color = 0;
 	// remove front spaces
 	while ((s[i] != 0) && (s[i] <= ' ')) i++;
@@ -657,8 +666,8 @@ int8_t TouchScreen::_parseMacroCommandHexColor(uint8_t *s, uint16_t n, touchScre
 	return i-n;
 }
 
-int8_t TouchScreen::_parseMacroCommandParameter(uint8_t *s, uint16_t n, touchScreen_macroCommand_t *mc, uint8_t paramId) {
-	uint16_t i = n;
+int8_t TouchScreen::_parseMacroCommandParameter(uint8_t *s, int16_t n, touchScreen_macroCommand_t *mc, uint8_t paramId) {
+	int16_t i = n;
 	boolean negative = false;
 	// remove front spaces
 	while ((s[i] != 0) && (s[i] <= ' ')) i++;

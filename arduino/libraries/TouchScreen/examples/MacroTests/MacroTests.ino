@@ -1,5 +1,5 @@
 /*
- * MacroTests - Tests the macros (see Macros.cpp for manual)
+ * MacroTests - Tests the macros (see TouchScreen_Macros.cpp for manual)
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *

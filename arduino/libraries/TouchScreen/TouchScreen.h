@@ -185,9 +185,9 @@ class TouchScreen: public ScreenHAL {
 		
 		int16_t _parseMacroCommandParameters(uint8_t *s, touchScreen_macroCommand_t *mc);
 
-		int8_t _parseMacroCommandHexColor(uint8_t *s, uint16_t n, touchScreen_macroCommand_t *mc);
+		int8_t _parseMacroCommandHexColor(uint8_t *s, int16_t n, touchScreen_macroCommand_t *mc);
 
-		int8_t _parseMacroCommandParameter(uint8_t *s, uint16_t n, touchScreen_macroCommand_t *mc, uint8_t paramId);
+		int8_t _parseMacroCommandParameter(uint8_t *s, int16_t n, touchScreen_macroCommand_t *mc, uint8_t paramId);
 		
 		void _executeMacroCommand(touchScreen_macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1);
 		
