@@ -1,13 +1,15 @@
 package com.google.code.ardurct.touchscreen;
 
 
-public class UserInterface extends ScreenHAL {
+public class TouchScreen_UserInterface extends ScreenHAL {
 
 	public class uiTab_t {
 		int[] text;
 		int x;
 		int y;
 		int width;
+		IUIDrawCallback drawer; 
+		IUIActionCallback handler; 
 	}
 	
 	public class uiElement_t {
@@ -23,8 +25,6 @@ public class UserInterface extends ScreenHAL {
 		public int value;
 		int min;
 		int max;
-		IUIDrawCallback drawer; 
-		IUIActionCallback handler; 
 		boolean editable;
 	}
 
@@ -73,7 +73,9 @@ public class UserInterface extends ScreenHAL {
 	int _uiWidth;
 	int _uiHeight;
 	int _uiTabHeight;
-		
+	IUIDrawCallback _uiDrawer; 
+	IUIActionCallback _uiHandler; 
+	
 	public void setupUI(int x, int y, int width, int height) {
 		_uiX = x;
 		_uiY = y;
@@ -86,9 +88,51 @@ public class UserInterface extends ScreenHAL {
 		_uiActiveElement = -1;
 		_uiNbTabs = 0;
 		_uiActiveTab = -1;
+		_uiDrawer = null; 
+		_uiHandler = null; 
 	}
 	
+	public void setupUI(int x, int y, int width, int height, IUIActionCallback handler) {
+		_uiX = x;
+		_uiY = y;
+		_uiWidth = width;
+		_uiHeight = height;
+		_uiTabHeight = 0;
+		_uiElement = new uiElement_t[UI_MAX_ELEMENTS];
+		_uiTab = new uiTab_t[UI_MAX_TABS];
+		_uiNbElements = 0;
+		_uiActiveElement = -1;
+		_uiNbTabs = 0;
+		_uiActiveTab = -1;
+		_uiDrawer = null; 
+		_uiHandler = handler; 
+	}
+
+	public void setupUI(int x, int y, int width, int height, IUIActionCallback handler, IUIDrawCallback drawer) {
+		_uiX = x;
+		_uiY = y;
+		_uiWidth = width;
+		_uiHeight = height;
+		_uiTabHeight = 0;
+		_uiElement = new uiElement_t[UI_MAX_ELEMENTS];
+		_uiTab = new uiTab_t[UI_MAX_TABS];
+		_uiNbElements = 0;
+		_uiActiveElement = -1;
+		_uiNbTabs = 0;
+		_uiActiveTab = -1;
+		_uiDrawer = drawer; 
+		_uiHandler = handler; 
+	}
+
 	public int addUITab(int[] text) {
+		return addUITab(text, null, null);
+	}
+	
+	public int addUITab(int[] text, IUIActionCallback handler) {
+		return addUITab(text, handler, null);
+	}
+	
+	public int addUITab(int[] text, IUIActionCallback handler, IUIDrawCallback drawer) {
 		if (_uiNbTabs == UI_MAX_TABS) return UI_ERROR;
 		_uiTab[_uiNbTabs] = new uiTab_t();
 		if (_uiNbTabs == 0) _uiTab[_uiNbTabs].x = UI_TAB_LEFT_MARGIN;
@@ -96,37 +140,38 @@ public class UserInterface extends ScreenHAL {
 		if (_uiTab[_uiNbTabs].x > _uiWidth) return UI_ERROR;
 		_uiTab[_uiNbTabs].y = 2;
 		_uiTab[_uiNbTabs].text = text;
-		_uiTabHeight = this.getFontHeight(UI_TAB_FONT) + 2 + UI_TAB_TOP_MARGIN*2;
+		if (_uiNbTabs > 0) _uiTabHeight = this.getFontHeight(UI_TAB_FONT) + 2 + UI_TAB_TOP_MARGIN*2;
 		_uiTab[_uiNbTabs].width = getStringWidth(_uiTab[_uiNbTabs].text, UI_TAB_FONT) + UI_TAB_LEFT_MARGIN * 2;
+		_uiTab[_uiNbTabs].drawer = drawer;
+		_uiTab[_uiNbTabs].handler = handler;
 		return _uiNbTabs++;
 	}
 	
-	public int addUIButton(int tab, int id, int x, int y, int width, int height, int[] text, IUIActionCallback handler) {
-		return _addUIElement(UI_BUTTON,tab, id, 0, x, y, width, height, UI_RELEASED, text, UI_RELEASED, UI_PUSHED, handler, null);
+	public int addUIButton(int tab, int id, int x, int y, int width, int height, int[] text) {
+		return _addUIElement(UI_BUTTON,tab, id, 0, x, y, width, height, UI_RELEASED, text, UI_RELEASED, UI_PUSHED);
 	}
 
 	public int addUILabel(int tab, int id, int x, int y, int width, int height, int[] text) {
-		return _addUIElement(UI_LABEL, tab, id, 0, x, y, width, height, UI_UNSELECTED, text, 0, 0, null, null);
+		return _addUIElement(UI_LABEL, tab, id, 0, x, y, width, height, UI_UNSELECTED, text, 0, 0);
 	}
 
-	public int addUIPushButton(int tab, int id, int group, int x, int y, int width, int height, int[] text, int state, IUIActionCallback handler) {
-		return _addUIElement(UI_PUSH_BUTTON, tab, id, group, x, y, width, height, state, text, UI_UNSELECTED, UI_SELECTED, handler, null);
+	public int addUIPushButton(int tab, int id, int group, int x, int y, int width, int height, int[] text, int state) {
+		return _addUIElement(UI_PUSH_BUTTON, tab, id, group, x, y, width, height, state, text, UI_UNSELECTED, UI_SELECTED);
 	}
 
-	public int addUIArea(int tab, int id, int x, int y, int width, int height, IUIActionCallback handler, IUIDrawCallback drawer) {
-		return _addUIElement(UI_AREA, tab, id, 0, x, y, width, height, 0, null, 0, 0xFFFF, handler, drawer);
+	public int addUIArea(int tab, int id, int x, int y, int width, int height) {
+		return _addUIElement(UI_AREA, tab, id, 0, x, y, width, height, 0, null, 0, 0xFFFF);
 	}
 
 	public int addUIGauge(int tab, int id, int x, int y, int width, int height, int value, int min, int max) {
-		return _addUIElement(UI_GAUGE, tab, id, 0, x, y, width, height, value, null, min, max, null, null);
+		return _addUIElement(UI_GAUGE, tab, id, 0, x, y, width, height, value, null, min, max);
 	}
 
-	public int addUISlider(int tab, int id, int x, int y, int width, int height, int value, int min, int max, IUIActionCallback handler) {
-		return _addUIElement(UI_SLIDER, tab, id, 0, x, y, width, height, value, null, min, max, handler, null);
+	public int addUISlider(int tab, int id, int x, int y, int width, int height, int value, int min, int max) {
+		return _addUIElement(UI_SLIDER, tab, id, 0, x, y, width, height, value, null, min, max);
 	}
 
-	private int _addUIElement(int type, int tab, int id, int group, int x, int y, int width, int height, int value, int[] text, int min, int max,
-			IUIActionCallback handler, IUIDrawCallback drawer) {
+	private int _addUIElement(int type, int tab, int id, int group, int x, int y, int width, int height, int value, int[] text, int min, int max) {
 		if (_uiNbElements == UI_MAX_ELEMENTS) return UI_ERROR;
 		_uiElement[_uiNbElements] = new uiElement_t();
 		_uiElement[_uiNbElements].type = type;		
@@ -143,8 +188,6 @@ public class UserInterface extends ScreenHAL {
 		if (value > max) _uiElement[_uiNbElements].value = max;
 		else if (value < min) _uiElement[_uiNbElements].value = min;
 		else _uiElement[_uiNbElements].value = value;
-		_uiElement[_uiNbElements].drawer = drawer;
-		_uiElement[_uiNbElements].handler = handler;
 		if ((type == UI_GAUGE) || (type == UI_LABEL)) _uiElement[_uiNbElements].editable = false;
 		else _uiElement[_uiNbElements].editable = true;
 		if (width == UI_AUTO_SIZE) {
@@ -236,7 +279,8 @@ public class UserInterface extends ScreenHAL {
 						_uiY+_uiTabHeight+elt.y+1+(elt.height-getFontHeight(UI_FONT))/2, BLACK, UI_FONT, UI_FONT_IS_BOLD, false);
 				break;
 			case UI_AREA:
-				if (elt.drawer != null) elt.drawer.uiDrawCallback(elt.id, _uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, elt.value);
+				if (_uiTab[elt.tab].drawer != null) _uiTab[elt.tab].drawer.uiDrawCallback(elt.id, _uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, elt.value);
+				else if (_uiDrawer != null) _uiDrawer.uiDrawCallback(elt.id, _uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, elt.value);
 				break;
 			case UI_GAUGE:
 				fillRectangle(_uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, UI_COLOR_BACKGROUND);
@@ -325,8 +369,9 @@ public class UserInterface extends ScreenHAL {
 				boolean hasValueChanged = _updateUIElementValue(_uiElement[activeElement], UI_PUSHED, x[0], y[0]);
 				if (hasValueChanged) {
 					_drawUIElement(_uiElement[activeElement]);
-					if (_uiElement[activeElement].handler != null) 
-						_uiElement[activeElement].handler.uiActionCallback(_uiElement[activeElement].id);
+					if (_uiTab[_uiElement[activeElement].tab].handler != null) 
+						_uiTab[_uiElement[activeElement].tab].handler.uiActionCallback(_uiElement[activeElement].id);
+					else if (_uiHandler != null) _uiHandler.uiActionCallback(_uiElement[activeElement].id);
 				}
 			}
 			

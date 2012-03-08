@@ -12,7 +12,7 @@ class macroCommand_t {
 	int text[] = new int[1];	
 } 
 
-public class Macros extends UserInterface {
+public class TouchScreen_Macros extends TouchScreen_UserInterface {
 
 	/* 
 	 *	A macro is a serie of drawing commands which can chain together.
@@ -409,8 +409,9 @@ public class Macros extends UserInterface {
 				for (int j=0; j<wBufferPtr; j++) eeprom_write_uint8_t(SCREEN_MACRO_MAX_NUMBER + wBufferNb*SCREEN_MACRO_MAX_SIZE+j, wBuffer[j]);
 			}
 		}
-		return wBuffer;
+		System.out.println(wBufferPtr);
 		//debugArray(wBuffer, wBufferPtr, 1, 2);
+		return wBuffer;
 	}
 
 	void _formatMacroSentence(int s[]) {
@@ -858,7 +859,7 @@ public class Macros extends UserInterface {
 			if (mc.cmd == SCREEN_MACRO_CMD_PRESET_ERASE) return i; 
 			if (mc.cmd == SCREEN_MACRO_CMD_PRESET_THICKNESS) { 
 				mc.param[SCREEN_MACRO_PARAM_THICKNESS] = buffer[i++];
-				if ((mc.param[SCREEN_MACRO_PARAM_THICKNESS_IS_SCALABLE] & 0x80) != 0) mc.param[SCREEN_MACRO_PARAM_THICKNESS_IS_SCALABLE] = 1;
+				if ((mc.param[SCREEN_MACRO_PARAM_THICKNESS] & 0x80) != 0) mc.param[SCREEN_MACRO_PARAM_THICKNESS_IS_SCALABLE] = 1;
 				mc.param[SCREEN_MACRO_PARAM_THICKNESS] = mc.param[SCREEN_MACRO_PARAM_THICKNESS] & 0x7F;
 				return i;
 			}
