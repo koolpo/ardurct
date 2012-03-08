@@ -29,7 +29,7 @@ implements ActionListener {
 	
 	private static final long serialVersionUID = -8128231225228032474L;
 
-	public Touchscreen touchscreen;
+	public TouchScreen touchscreen;
 	public HardwareSerial serial;
 	public String exampleName = "Example";
 	
@@ -59,7 +59,7 @@ implements ActionListener {
 		menuBar.add(menu);		
 		this.setJMenuBar(menuBar);
 
-		touchscreen = new Touchscreen();
+		touchscreen = new TouchScreen();
 		touchscreen.addMouseListener(touchscreen);
 		touchscreen.addMouseMotionListener(touchscreen);
 		serial = new HardwareSerial();

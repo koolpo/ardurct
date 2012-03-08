@@ -1,6 +1,6 @@
 package com.google.code.ardurct.touchscreen;
 
-public class Touchscreen extends Macros {
+public class TouchScreen extends TouchScreen_Macros {
 	
 	private static final long serialVersionUID = 1L;
 

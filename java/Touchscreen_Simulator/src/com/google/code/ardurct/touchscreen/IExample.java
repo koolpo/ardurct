@@ -8,7 +8,7 @@ public interface IExample {
 	
 	public void loop();
 	
-	public void setTouchscreen(Touchscreen touchscreen);
+	public void setTouchscreen(TouchScreen touchscreen);
 	
 	public void setHardwareSerial(HardwareSerial serial);
 

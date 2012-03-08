@@ -4,14 +4,14 @@ import com.google.code.ardurct.HardwareSerial;
 import com.google.code.ardurct.Wiring;
 import com.google.code.ardurct.touchscreen.IDefines;
 import com.google.code.ardurct.touchscreen.IExample;
-import com.google.code.ardurct.touchscreen.Touchscreen;
+import com.google.code.ardurct.touchscreen.TouchScreen;
 
 public class Example extends Wiring 
 implements IExample, Runnable, IDefines {
 	
 	private Thread t = null;
 	private boolean setupComplete = false;
-	public Touchscreen touchscreen = null;
+	public TouchScreen touchscreen = null;
 	public HardwareSerial Serial = null;
 	
 	public Example() {
@@ -21,7 +21,7 @@ implements IExample, Runnable, IDefines {
 		this.Serial = serial;
 	}
 
-	public void setTouchscreen(Touchscreen touchscreen) {
+	public void setTouchscreen(TouchScreen touchscreen) {
 		setupComplete = false;
 		this.touchscreen = touchscreen;
 	}

@@ -790,18 +790,14 @@ implements IFontBitmaps {
 		
 		while (y >= x) {
 			if (fill) {
-				if ((octant & (SCREEN_ARC_SSW + SCREEN_ARC_SSE)) != 0) _fillBoundedArea(x0-x, y0+y, x0+x, y0+y, color);
-				else if ((octant & SCREEN_ARC_SSW) != 0) _fillBoundedArea(x0, y0+y, x0-x, y0+y, color);
-				else if ((octant & SCREEN_ARC_SSE) != 0) _fillBoundedArea(x0, y0+y, x0+x, y0+y, color);
-				if ((octant & (SCREEN_ARC_SWW | SCREEN_ARC_SEE)) != 0) _fillBoundedArea(x0-y, y0+x, x0+y, y0+x, color);
-				else if ((octant & SCREEN_ARC_SWW) != 0) _fillBoundedArea(x0, y0+x, x0-y, y0+x, color);
-				else if ((octant & SCREEN_ARC_SEE) != 0) _fillBoundedArea(x0, y0+x, x0+y, y0+x, color);
-				if ((octant & (SCREEN_ARC_NNW | SCREEN_ARC_NNE)) != 0) _fillBoundedArea(x0-x, y0-y, x0+x, y0-y, color);
-				else if ((octant & SCREEN_ARC_NNW) != 0) _fillBoundedArea(x0, y0-y, x0-x, y0-y, color);
-				else if ((octant & SCREEN_ARC_NNE) != 0) _fillBoundedArea(x0, y0-y, x0+x, y0-y, color);
-				if ((octant & (SCREEN_ARC_NWW | SCREEN_ARC_NEE)) != 0) _fillBoundedArea(x0-y, y0-x, x0+y, y0-x, color);		
-				else if ((octant & SCREEN_ARC_NWW) != 0) _fillBoundedArea(x0, y0-x, x0-y, y0-x, color);		
-				else if ((octant & SCREEN_ARC_NEE) != 0) _fillBoundedArea(x0, y0-x, x0+y, y0-x, color);
+				if ((octant & SCREEN_ARC_SSW) != 0) _fillBoundedArea(x0, y0+y, x0-x, y0+y, color);
+				if ((octant & SCREEN_ARC_SSE) != 0) _fillBoundedArea(x0, y0+y, x0+x, y0+y, color);
+				if ((octant & SCREEN_ARC_SWW) != 0) _fillBoundedArea(x0, y0+x, x0-y, y0+x, color);
+				if ((octant & SCREEN_ARC_SEE) != 0) _fillBoundedArea(x0, y0+x, x0+y, y0+x, color);
+				if ((octant & SCREEN_ARC_NNW) != 0) _fillBoundedArea(x0, y0-y, x0-x, y0-y, color);
+				if ((octant & SCREEN_ARC_NNE) != 0) _fillBoundedArea(x0, y0-y, x0+x, y0-y, color);
+				if ((octant & SCREEN_ARC_NWW) != 0) _fillBoundedArea(x0, y0-x, x0-y, y0-x, color);		
+				if ((octant & SCREEN_ARC_NEE) != 0) _fillBoundedArea(x0, y0-x, x0+y, y0-x, color);
 			} else if (thickness != 1) {
 				if ((octant & SCREEN_ARC_SSE) != 0) _fillBoundedArea(x0+x-t1, y0+y-t1, x0+x+t2, y0+y+t2, color);
 				if ((octant & SCREEN_ARC_SEE) != 0) _fillBoundedArea(x0+y-t1, y0+x-t1, x0+y+t2, y0+x+t2, color);
