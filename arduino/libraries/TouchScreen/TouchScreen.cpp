@@ -33,7 +33,6 @@ TouchScreen::TouchScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8
 	_backlightPin = backlightPin;
 }
 
-
 void TouchScreen::begin(uint16_t foregroundColor, uint16_t backgroundColor, uint8_t fontSize, bool fontBold, bool fontOverlay) {
 	initScreen();
 #if defined(CONFIGURATION_HAS_MACROS)	
@@ -46,6 +45,37 @@ void TouchScreen::begin(uint16_t foregroundColor, uint16_t backgroundColor, uint
 	if (_backlightPin != 0xFF) setBacklight(0);
 	if (backgroundColor != BLACK) fillRectangle(0, 0, getWidth(), getHeight(), backgroundColor);
 	if (_backlightPin != 0xFF) setBacklight(128);
+	// set the touch panel
+	setupTouchPanel();
+}
+
+
+void TouchScreen::setupTouchPanel(uint8_t xm, uint8_t xp, uint8_t ym, uint8_t yp) {
+	if (xm == 0xFF) return;
+	_xm = xm;
+	_ym = ym;
+	_xp = xp;
+	_yp = yp;
+	_xmPort = portOutputRegister(digitalPinToPort(xm));
+	_xpPort = portOutputRegister(digitalPinToPort(xp));
+	_ymPort = portOutputRegister(digitalPinToPort(ym));
+	_ypPort = portOutputRegister(digitalPinToPort(yp));
+	_xmBitMask = digitalPinToBitMask(xm);
+	_xpBitMask = digitalPinToBitMask(xp);
+	_ymBitMask = digitalPinToBitMask(ym);
+	_ypBitMask = digitalPinToBitMask(yp);
+	_calibrationStatus = TOUCHSCREEN_CALIBRATION_UNDEFINED;
+	// read the matrix from eeprom if it is defined
+	uint8_t eepromCalibrationStatus = eeprom_read_uint8_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_DONE);
+	if (eepromCalibrationStatus == TOUCHSCREEN_CALIBRATION_DONE) {
+		_calibrationStatus = TOUCHSCREEN_CALIBRATION_DONE;
+		_xCalibrationEquation.a = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_A);
+		_xCalibrationEquation.b = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_B);
+		_xCalibrationEquation.divider = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_DIVIDER);
+		_yCalibrationEquation.a = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_A);
+		_yCalibrationEquation.b = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_B);
+		_yCalibrationEquation.divider = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_DIVIDER);
+	}
 }
 
 
@@ -68,34 +98,6 @@ void TouchScreen::setBacklight(uint8_t value) {
 uint8_t TouchScreen::getBacklight() {
 	return _backlight;
 }
-
-
-void TouchScreen::setupTouchPanel(uint8_t xm, uint8_t xp, uint8_t ym, uint8_t yp) {
-	_xm = xm;
-	_ym = ym;
-	_xp = xp;
-	_yp = yp;
-	_xmPort = portOutputRegister(digitalPinToPort(xm));
-	_xpPort = portOutputRegister(digitalPinToPort(xp));
-	_ymPort = portOutputRegister(digitalPinToPort(ym));
-	_ypPort = portOutputRegister(digitalPinToPort(yp));
-	_xmBitMask = digitalPinToBitMask(xm);
-	_xpBitMask = digitalPinToBitMask(xp);
-	_ymBitMask = digitalPinToBitMask(ym);
-	_ypBitMask = digitalPinToBitMask(yp);
-	// calibrate the touch panel if required
-	if (!calibrateTouchPanel()) return;
-	// read the matrix from eeprom if not already set by calibrateTouchPanel
-	if (_xCalibrationEquation.divider == 0) {
-		_xCalibrationEquation.a = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_A);
-		_xCalibrationEquation.b = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_B);
-		_xCalibrationEquation.divider = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_DIVIDER);
-		_yCalibrationEquation.a = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_A);
-		_yCalibrationEquation.b = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_B);
-		_yCalibrationEquation.divider = eeprom_read_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_DIVIDER);
-	}
-}
-
 
 int16_t TouchScreen::getTouchX() {
 	int16_t x, y, z;
@@ -126,7 +128,15 @@ bool TouchScreen::isTouched() {
 
 int16_t TouchScreen::getTouchXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	if (_xm == 0xFF) return TOUCHSCREEN_NO_TOUCH;
-	
+
+	// the very first call to get the touchscreen coordinates will call the calibration routine if required
+	if (_calibrationStatus == TOUCHSCREEN_CALIBRATION_ERROR) return TOUCHSCREEN_NO_TOUCH;
+	if (_calibrationStatus == TOUCHSCREEN_CALIBRATION_UNDEFINED) {
+		_calibrationStatus = TOUCHSCREEN_CALIBRATION_RUNNING;
+		if (!_calibrateTouchPanel()) _calibrationStatus = TOUCHSCREEN_CALIBRATION_ERROR;
+		return TOUCHSCREEN_NO_TOUCH;
+	}
+		
 #if defined(CONFIGURATION_BUS_IS_SHARED_WITH_TOUCHPANEL)	
 	unselectScreen();
 #endif
@@ -193,11 +203,14 @@ void TouchScreen::resetTouchPanelCalibration() {
 }
 
 
-bool TouchScreen::calibrateTouchPanel(bool force) {
-	// prohibit calculation of display points
-	_xCalibrationEquation.divider = 0;
+
+/* ------------------------------ Private functions ------------------------------------ */
+
+bool TouchScreen::_calibrateTouchPanel() {
+	// prohibit calculation of display points, will return raw values
+	//_xCalibrationEquation.divider = 0;
 	// check if we are calibrated or forced to calibrate
-	if (!force && (eeprom_read_uint8_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_DONE) != 0xFF)) return true;
+	//if (!force && (eeprom_read_uint8_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_DONE) != 0xFF)) return true;
 	
 	// set the rotation to 0
 	setRotation(SCREEN_ROTATION_0);
@@ -249,50 +262,59 @@ bool TouchScreen::calibrateTouchPanel(bool force) {
 	_yCalibrationEquation.divider = tpY1 - tpY0;
 	
     // persist the calibration factors to EEPROM
-    eeprom_write_uint8_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_DONE, 1);
+    eeprom_write_uint8_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_DONE, TOUCHSCREEN_CALIBRATION_DONE);
     eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_A, _xCalibrationEquation.a);
     eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_B, _xCalibrationEquation.b);
     eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_X_DIVIDER, _xCalibrationEquation.divider);
     eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_A, _yCalibrationEquation.a);
     eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_B, _yCalibrationEquation.b);
     eeprom_write_int32_t(CONFIGURATION_EEPROM_ADDRESS_TOUCHPANEL_CALIBRATION_Y_DIVIDER, _yCalibrationEquation.divider);
-	
+
+	_calibrationStatus = TOUCHSCREEN_CALIBRATION_DONE;
 	return true;
 }
-
-
-/* ------------------------------ Private functions ------------------------------------ */
 
 bool TouchScreen::_calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tpX, int32_t *tpY) {
 	int16_t x, y, z;
 	uint8_t wait = 0;
+	uint8_t fh = getFontHeight(FONT_MEDIUM);
+	uint8_t fcw = getFontCharWidth(FONT_MEDIUM);
 	
-	// draw a cross
-	drawHorizontalLine(dX-10, dX+11, dY, BLACK, 2);
-	drawVerticalLine(dX, dY-10, dY+11, BLACK, 2);
-	while (wait < 100) {
+	// draw a cross and a message
+	drawString("Touch the cross", (getWidth()-sizeof("Touch the cross")*fcw)/2, (getHeight()-fh)/2, BLACK, FONT_MEDIUM, FONT_BOLD);
+	drawHorizontalLine(dX-15, dX+15, dY, FAST_BLUE, 3);
+	drawVerticalLine(dX, dY-15, dY+15, FAST_BLUE, 3);
+	while (wait < 50) {
 		if (getTouchXYZ(&x, &y, &z)) {
 			*tpX = x;
 			*tpY = y;
+			// erase the cross and tell the use we have a successfull touch
+			drawHorizontalLine(dX-15, dX+15, dY, WHITE, 3);
+			drawVerticalLine(dX, dY-15, dY+15, WHITE, 3);
+			fillRectangle((getWidth()-sizeof("Touch the cross")*fcw)/2-2, (getHeight()-fh)/2-2, sizeof("Touch the cross")*fcw+4, fh+4, WHITE);
+			drawString("OK", (getWidth()-sizeof("OK")*fcw)/2, (getHeight()-fh)/2, BLACK, FONT_MEDIUM, FONT_BOLD);
 			// debounce the touchscreen
-			while (isTouched()) delay(100);
 			delay(300);
-			while (isTouched()) delay(100);
+			while (isTouched()) delay(50);
+			delay(300);
+			while (isTouched()) delay(50);
 			break;
 		}
 		// wait 10 seconds maximum for a touch panel contact
-		delay(100);
+		delay(200);
 		wait ++;
 	}
-	// erase the cross
-	drawHorizontalLine(dX-10, dX+11, dY, WHITE, 2);
-	drawVerticalLine(dX, dY-10, dY+11, WHITE, 2);
-	delay(200);
-	return (wait < 200);
+	// erase the message
+	delay(500);
+	if (wait >= 50) {
+		drawString("Calibration failure", (getWidth()-sizeof("Calibration failure")*fcw)/2, (getHeight()-fh)/2, BLACK, FONT_MEDIUM, FONT_BOLD);
+		delay(5000);
+	} else fillRectangle((getWidth()-sizeof("OK")*fcw)/2-2, (getHeight()-fh)/2-2, sizeof("OK")*fcw+4, fh+4, WHITE);
+	return (wait < 50);
 }
 
 void TouchScreen::_getDisplayXY(int16_t *x, int16_t *y) {
-	if (_xCalibrationEquation.divider != 0) {
+	if (_calibrationStatus == TOUCHSCREEN_CALIBRATION_DONE) {
 		int32_t X = *x;
 		int32_t Y = *y;		
 		X = (_xCalibrationEquation.a * X + _xCalibrationEquation.b) / _xCalibrationEquation.divider;

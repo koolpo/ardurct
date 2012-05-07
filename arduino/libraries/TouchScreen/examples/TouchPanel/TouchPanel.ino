@@ -30,9 +30,8 @@ TouchScreen touchscreen;
 void setup() {
     Serial.begin(57600);
     touchscreen.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD);
-	// uncomment the following line if you want to recalibrate the touch panel
-    //touchscreen.resetTouchPanelCalibration();
-    touchscreen.setupTouchPanel();
+    // uncomment the following line if you want to recalibrate the touch panel
+    touchscreen.resetTouchPanelCalibration();
     touchscreen.setBacklight(180);
 }
 

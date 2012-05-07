@@ -85,6 +85,8 @@ void ScreenPL::selectScreen() {
 void ScreenPL::unselectScreen() {
 	// unselect the screen
 	if (_cs != 0xFF) digitalWrite(_cs, HIGH);
+	// release the SCK line, to switch off the led
+	digitalWrite(SCK, LOW);
 #if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)		
 	// restore the SPI if it was active
 	if (_spiUsed) {

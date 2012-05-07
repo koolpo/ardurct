@@ -47,6 +47,7 @@ TouchScreen touchscreen;
  *    pc F800                set color to red
  *    afnne 32 14 14         fill NNE arc at top right
  *    tf 49 18 49 14 51 17   fill triangle at top right
+ *	  0
  **/
 uint8_t sparkfun[] = "w 0 "\
     "pc F800 "\
@@ -62,7 +63,8 @@ uint8_t sparkfun[] = "w 0 "\
     "cf 43 11 8 "\
     "pc F800 "\
     "afnne 32 14 14 "\
-    "tf 49 18 49 14 51 17";
+    "tf 49 18 49 14 51 17"\
+	"\0";
     
 void setup() {    
     touchscreen.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
@@ -70,18 +72,18 @@ void setup() {
     
     // center the drawing on the screen
     int16_t x = (touchscreen.getWidth()-LOGO_WIDTH*LOGO_SCALE)/2;
-    int16_t y = (touchscreen.getWidth()-LOGO_HEIGHT*LOGO_SCALE)/2;
+    int16_t y = (touchscreen.getHeight()-LOGO_HEIGHT*LOGO_SCALE)/2;
     
     // execute the macro without the initial write in slot 0
-    touchscreen.executeMacro(&sparkfun[3], x, y, LOGO_SCALE, 1, true);
+    //touchscreen.executeMacro(&sparkfun[3], x, y, LOGO_SCALE, 1, true);
 
     // write the macro to eeprom slot 0
     touchscreen.executeMacro(sparkfun);
 
-    delay(3000);
+    //delay(3000);
     
     // erase the drawing
-    touchscreen.fillRectangle(x-2, y-2, LOGO_WIDTH*LOGO_SCALE+4, LOGO_HEIGHT*LOGO_SCALE+4, WHITE);
+    //touchscreen.fillRectangle(x-2, y-2, LOGO_WIDTH*LOGO_SCALE+4, LOGO_HEIGHT*LOGO_SCALE+4, WHITE);
 
     // execute the macro stored in slot 0. Any time we need the logo, in whatever scale, we can reuse "e 0"
     touchscreen.executeMacro((uint8_t *)"e 0", x, y, LOGO_SCALE, 1);

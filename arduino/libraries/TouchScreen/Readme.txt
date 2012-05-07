@@ -1,4 +1,4 @@
-In most cases, the only file you may have to change is hardware.hpp
+In most cases, the only file you may have to change is configuration.hpp
 The definitions of that file can be overriden when you initialize the class in your *.ino file
 
 Content

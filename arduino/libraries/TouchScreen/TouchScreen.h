@@ -46,6 +46,11 @@
 
 #define TOUCHSCREEN_NO_TOUCH 0
 
+#define TOUCHSCREEN_CALIBRATION_UNDEFINED 	0
+#define TOUCHSCREEN_CALIBRATION_RUNNING 	1
+#define TOUCHSCREEN_CALIBRATION_DONE 		0xAA
+#define TOUCHSCREEN_CALIBRATION_ERROR 		-1
+
 typedef struct {
 	int32_t a;
 	int32_t b;
@@ -77,8 +82,6 @@ class TouchScreen: public ScreenHAL {
 		int16_t getTouchZ();
 		
 		int16_t getTouchXYZ(int16_t *x, int16_t *y, int16_t *z);
-		
-		bool calibrateTouchPanel(bool force = false);
 		
 		void resetTouchPanelCalibration();
 
@@ -147,13 +150,15 @@ class TouchScreen: public ScreenHAL {
 		uint16_t _pressureThreshold;	
 		tsCalibrationEquation_t _xCalibrationEquation;
 		tsCalibrationEquation_t _yCalibrationEquation;
+		uint8_t _calibrationStatus;
 		
 #if defined(CONFIGURATION_HAS_UI)
+		bool _uiIsShown;
 		uint32_t _uiNextHandleTime;
 		touchScreen_UIElement_t _uiElement[CONFIGURATION_UI_MAX_ELEMENTS];
 		uint8_t _uiNbElements;
 		int16_t _uiActiveElement;
-		int16_t _uiPotentialActiveElement;
+		int16_t _uiDebouncedActiveElement;
 		uint8_t _uiDebounceSteps;
 		touchScreen_UITab_t _uiTab[CONFIGURATION_UI_MAX_TABS];
 		uint8_t _uiNbTabs;
@@ -204,6 +209,8 @@ class TouchScreen: public ScreenHAL {
 #if defined(CONFIGURATION_HAS_UI)
 		int16_t _addUIElement(int16_t type, int16_t tab, uint8_t id, int16_t group, int16_t x, int16_t y, int16_t width, int16_t height, int16_t value, uint8_t *text, int16_t min, int16_t max);
 		
+		void _drawActiveUITab();
+
 		void _drawUIElement(touchScreen_UIElement_t *elt);
 		
 		bool _isTouchInUITab(touchScreen_UITab_t *tab, int16_t x, int16_t y);
@@ -214,9 +221,11 @@ class TouchScreen: public ScreenHAL {
 		
 		int16_t _getUIElementIndex(uint8_t id);
 #endif
-		int16_t _analogAverage(uint8_t pin);
+		bool _calibrateTouchPanel();
 		
 		bool _calibrateTouchPanelPoint(int32_t dX, int32_t dY, int32_t *tsX, int32_t *tsY);
+
+		int16_t _analogAverage(uint8_t pin);
 		
 		void _getDisplayXY(int16_t *x, int16_t *y);
 };

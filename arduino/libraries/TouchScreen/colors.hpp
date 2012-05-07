@@ -29,14 +29,20 @@
 
 /*		NAME		RGB565			RGB	  */
 
+// fast colors
 #define BLACK 		0x0000		/* 000000 */
+#define WHITE 		0xFFFF 		/* FFFFFF */
+#define FAST_BLUE	0x5A5A		/*        */
+#define FAST_RED	0xE8E8		/*        */
+#define FAST_GREEN	0x2727		/*        */
+
+// normal colors
 #define RED 		0xF800		/* FF0000 */
 #define GREEN 		0x07E0 		/* 00FF00 */
 #define BLUE 		0x001F 		/* 0000FF */
 #define CYAN 		0x07FF 		/* 00FFFF */
 #define MAGENTA 	0xF81F 		/* FF00FF */
 #define YELLOW 		0xFFE0 		/* FFFF00 */
-#define WHITE 		0xFFFF 		/* FFFFFF */
 #define LIGHT_GREY 	0xCE79 		/* CCCCCC */
 #define GREY 		0x9CD3 		/* 999999 */
 #define DARK_GREY 	0x632C 		/* 666666 */

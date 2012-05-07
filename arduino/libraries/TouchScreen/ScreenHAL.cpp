@@ -183,8 +183,16 @@ uint8_t ScreenHAL::getFontHeight(uint8_t fontSize) {
 	return (fontDef->height + fontDef->lineSpacing) * fontScale;
 }
 
+uint8_t ScreenHAL::getFontCharWidth(uint8_t fontSize) {
+	uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
+	uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
+	fontDefinition_t *fontDef = &fontDefinition_small;
+	if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = &fontDefinition_medium;
+	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
+	return (fontDef->width + fontDef->charSpacing) * fontScale;
+}
 
-void ScreenHAL::setCursor(uint8_t x, uint8_t y) {
+void ScreenHAL::setCursor(int16_t x, int16_t y) {
 	_x = x;
 	_y = y;
 }

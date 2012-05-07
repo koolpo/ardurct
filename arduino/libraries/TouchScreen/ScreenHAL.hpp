@@ -109,6 +109,8 @@ class ScreenHAL: public ILI932X {
 		
 		uint8_t getFontHeight(uint8_t fontSize);
 
+		uint8_t getFontCharWidth(uint8_t fontSize);
+		
 		uint16_t getWidth();
 
 		uint16_t getHeight();
@@ -121,7 +123,7 @@ class ScreenHAL: public ILI932X {
 		
 		bool isVertical();
 
-		void setCursor(uint8_t x, uint8_t y);
+		void setCursor(int16_t x, int16_t y);
 
 		void drawChar(uint8_t chr, int16_t x, int16_t y, uint16_t color, uint8_t fontSize = 1, bool isBold = false, bool overlay = false, bool selectAndUnselectScreen = true);
 
@@ -174,8 +176,8 @@ class ScreenHAL: public ILI932X {
 	private:
 		uint16_t _width;
 		uint16_t _height;
-		uint16_t _x;
-		uint16_t _y;
+		int16_t _x;
+		int16_t _y;
 		uint16_t _margin;
 		uint8_t _rotation;
 		fontDefinition_t *_fontDef;
