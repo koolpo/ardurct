@@ -3,7 +3,6 @@
 
 /**
  * Approximation of sparkfun logo, 57 x 88
- *    w 0                    write to eeprom slot 0
  *    pc F800                set color to red
  *    tf 0 42 44 42 0 88     fill bottom left triangle
  *    afe 27 35 30           fill right half circle
