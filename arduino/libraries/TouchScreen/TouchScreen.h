@@ -120,7 +120,17 @@ class TouchScreen: public ScreenHAL {
 		
 		void handleUI();
 		
+		void showUIPopup(uint8_t *title, uint8_t *message, uint16_t color) ;
+		
+		void hideUIPopups();
+		
+		int16_t getUIElementX(uint8_t id);
+		
+		int16_t getUIElementY(uint8_t id);
+		
 		uint16_t getUIElementWidth(uint8_t id);
+		
+		uint16_t getUIElementHeight(uint8_t id);
 		
 		void setUIElementValue(uint8_t id, int16_t value);
 		
@@ -129,6 +139,15 @@ class TouchScreen: public ScreenHAL {
 		void setUIElementEditable(uint8_t id, bool editable);
 		
 		void setUIElementTab(uint8_t id, uint8_t tab);
+		
+		uint8_t *getUIElementLabel(uint8_t id);
+		
+		void setUIElementLabel(uint8_t id, uint8_t *text);
+				
+		void setUITabEnabled(uint8_t tabId, bool enabled);
+
+		int8_t getUIGroupElement(uint8_t groupId);
+		
 #endif
 		
 	private:
@@ -168,6 +187,7 @@ class TouchScreen: public ScreenHAL {
 		uint16_t _uiWidth;
 		uint16_t _uiHeight;
 		uint8_t _uiTabHeight;
+		uint8_t _uiPopupState;
 		void (*_uiDrawCallback)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value);
 		void (*_uiHandleCallback)(uint8_t id);
 #endif

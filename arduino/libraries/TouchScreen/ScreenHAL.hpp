@@ -108,8 +108,12 @@ class ScreenHAL: public ILI932X {
 		uint16_t getStringWidth(char *s, uint8_t fontSize);
 		
 		uint8_t getFontHeight(uint8_t fontSize);
+		
+		uint8_t getLineHeight(uint8_t fontSize);
 
 		uint8_t getFontCharWidth(uint8_t fontSize);
+		
+		void getStringBoundingBox(uint8_t * s, uint8_t fontSize, bool isBold, int16_t marginX, uint16_t *width, uint16_t *height);
 		
 		uint16_t getWidth();
 
@@ -127,7 +131,7 @@ class ScreenHAL: public ILI932X {
 
 		void drawChar(uint8_t chr, int16_t x, int16_t y, uint16_t color, uint8_t fontSize = 1, bool isBold = false, bool overlay = false, bool selectAndUnselectScreen = true);
 
-		void drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_t fontSize = 1, bool isBold = false, bool overlay = false, bool selectAndUnselectScreen = true);
+		void drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_t fontSize = 1, bool isBold = false, bool overlay = false, uint16_t rightMargin = 0, bool selectAndUnselectScreen = true);
 
 		void drawPixel(int16_t x, int16_t y, uint16_t color, bool selectAndUnselectScreen = true);
 

@@ -39,7 +39,7 @@
 #define CONFIGURATION_WR 	22
 #define CONFIGURATION_RD 	23
 #define CONFIGURATION_CS 	0xFF
-#define CONFIGURATION_RESET 	0xFF
+#define CONFIGURATION_RESET 0xFF
 
 #define CONFIGURATION_BACKLIGHT 5
 
@@ -90,13 +90,13 @@
 #define CONFIGURATION_HAS_UI 1
 // minimum time in milliseconds separating the handling of the ui (used for debouncing)
 #define CONFIGURATION_UI_LOOP_LENGTH 25
-// how many times do we debounce
+// how many times do we debounce, the higher the value, the slower the response, but the better the glitch suppression: 4 to 6 seems fine
 #define CONFIGURATION_UI_DEBOUNCE_STEPS 6
 // max number of tabs for the UI
 #define CONFIGURATION_UI_MAX_TABS 6
 // max number of elements for all the tabs
 #define CONFIGURATION_UI_MAX_ELEMENTS 30
-// style of the UI: 1 is finger, commented out is pen
+// style of the UI: 1 is finger (BIG buttons), commented out is pen (smaller buttons)
 #define CONFIGURATION_UI_STYLE_FINGER 1
 
 // Macros

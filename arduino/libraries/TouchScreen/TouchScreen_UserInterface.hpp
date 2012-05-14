@@ -34,6 +34,14 @@
 #define UI_COLOR_BUTTON_PUSHED 0x9494
 #define UI_COLOR_BUTTON_RELEASED LIGHT_GREY
 #define UI_COLOR_GAUGE 0x7C7C
+#define UI_COLOR_POPUP_BACKGROUND 0xF6F6
+
+#define UI_POPUP_MARGIN 15
+#define UI_POPUP_PADDING 10
+#define UI_POPUP_TITLE_FONT FONT_MEDIUM
+#define UI_POPUP_TITLE_FONT_IS_BOLD FONT_BOLD
+#define UI_POPUP_MESSAGE_FONT FONT_SMALL
+#define UI_POPUP_MESSAGE_FONT_IS_BOLD FONT_PLAIN
 
 #ifdef CONFIGURATION_UI_STYLE_FINGER
 
@@ -70,7 +78,7 @@
 #define UI_PUSHED 1
 #define UI_RELEASED 0
 
-#define UI_ERROR 0
+#define UI_ERROR -1
 
 #define UI_AUTO_SIZE 0
 #define UI_SELECTED 1
@@ -88,11 +96,14 @@
 
 #define UI_PLACE_MODIFIER_MASK 0x7800
 
+#define UI_DRAW_CALLBACK_TAB_ID 0xFF
+
 typedef struct {
 	uint8_t *text;
 	int16_t x;
 	int16_t y;
 	uint16_t width;
+	bool enabled;
 	void (*drawCallback)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value);
 	void (*handleCallback)(uint8_t id);
 } touchScreen_UITab_t;

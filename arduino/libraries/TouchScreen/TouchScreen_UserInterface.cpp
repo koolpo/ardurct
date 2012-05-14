@@ -34,6 +34,11 @@
 #define UI_SLIDER 5
 #define UI_LABEL 6
 
+#define UI_POPUP_NONE 0
+#define UI_POPUP_APPEARING 1
+#define UI_POPUP_DISAPPEARING 2
+#define UI_POPUP_SHOWN 3
+
 void TouchScreen::setupUI(int16_t x, int16_t y, uint16_t width, uint16_t height, void (*handleCallback)(uint8_t id), 
 		void (*drawCallback)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value)) {
 	if (_xm = 0xFF) setupTouchPanel();
@@ -51,6 +56,7 @@ void TouchScreen::setupUI(int16_t x, int16_t y, uint16_t width, uint16_t height,
 	_uiHandleCallback = handleCallback;
 	_uiNextHandleTime = 0;
 	_uiIsShown = false;
+	_uiPopupState = UI_POPUP_NONE;
 }
 
 int16_t TouchScreen::addUITab(char *text, void (*handleCallback)(uint8_t id), void (*drawCallback)(uint8_t id, int16_t x, int16_t y, uint16_t width, uint16_t height, int16_t value)) {
@@ -59,6 +65,7 @@ int16_t TouchScreen::addUITab(char *text, void (*handleCallback)(uint8_t id), vo
 	else _uiTab[_uiNbTabs].x = _uiTab[_uiNbTabs-1].x+_uiTab[_uiNbTabs-1].width-1;
 	if (_uiTab[_uiNbTabs].x > _uiWidth) return UI_ERROR;
 	_uiTab[_uiNbTabs].y = 2;
+	_uiTab[_uiNbTabs].enabled = true;
 	_uiTab[_uiNbTabs].text = (uint8_t *)text;
 	if (_uiNbTabs > 0) _uiTabHeight = getFontHeight(UI_TAB_FONT) + 2 + UI_TAB_TOP_MARGIN*2;
 	_uiTab[_uiNbTabs].width = getStringWidth((char *)(_uiTab[_uiNbTabs].text), UI_TAB_FONT) + UI_TAB_LEFT_MARGIN * 2;
@@ -124,9 +131,28 @@ void TouchScreen::handleUI() {
 	// check if enough time has elapsed to run the handler
 	if ((int32_t)(millis() - _uiNextHandleTime) < 0) return;
 	_uiNextHandleTime = millis() + CONFIGURATION_UI_LOOP_LENGTH;
+
+	int16_t x, y, z;
+	// handle the popups
+	if ((_uiPopupState == UI_POPUP_APPEARING) || (_uiPopupState == UI_POPUP_DISAPPEARING)) {
+		// debounce the button which made the popup appear
+		if (getTouchXYZ(&x, &y, &z) == TOUCHSCREEN_NO_TOUCH) _uiDebounceSteps ++;
+		else _uiDebounceSteps = 0;
+		if (_uiDebounceSteps >= CONFIGURATION_UI_DEBOUNCE_STEPS) {
+			if (_uiPopupState == UI_POPUP_APPEARING) _uiPopupState = UI_POPUP_SHOWN;
+			else _uiPopupState = UI_POPUP_NONE;
+		}
+		return;
+	} else if (_uiPopupState == UI_POPUP_SHOWN) {
+		if (getTouchXYZ(&x, &y, &z) != TOUCHSCREEN_NO_TOUCH) _uiDebounceSteps ++;
+		else _uiDebounceSteps = 0;
+		if (_uiDebounceSteps < CONFIGURATION_UI_DEBOUNCE_STEPS) return;
+		_uiPopupState = UI_POPUP_DISAPPEARING;
+		_uiIsShown = false;
+		return;
+	}
 		
 	// find out which item is active
-	int16_t x, y, z;
 	int16_t activeElement = -1;
 	if (getTouchXYZ(&x, &y, &z)) {
 		// check if we need to change tab, no need to debounce
@@ -192,6 +218,46 @@ void TouchScreen::handleUI() {
 	_uiDebounceSteps = 0;
 }
 
+void TouchScreen::showUIPopup(uint8_t *title, uint8_t *message, uint16_t color) {
+	// let all the buttons be shown as released
+	for (int i=0; i<_uiNbElements; i++) {
+		if ((_uiElement[i].tab == _uiActiveTab) && (_uiElement[i].type == UI_BUTTON)) {
+			_uiElement[i].value = UI_RELEASED;
+			_drawUIElement(&(_uiElement[i]));
+		}
+	}
+	// calculate the window width and height
+	uint16_t height = 0;
+	uint16_t width = 0;
+	uint16_t titleHeight = 0;
+	if (title) {
+		getStringBoundingBox(title, UI_POPUP_TITLE_FONT, UI_POPUP_TITLE_FONT_IS_BOLD, UI_POPUP_MARGIN + UI_POPUP_PADDING, &width, &height);
+		titleHeight = height+3;
+	}
+	if (message) {
+		uint16_t w, h;
+		getStringBoundingBox(message, UI_POPUP_MESSAGE_FONT, UI_POPUP_MESSAGE_FONT_IS_BOLD, UI_POPUP_MARGIN + UI_POPUP_PADDING, &w, &h);
+		height += (height != 0 ? 3 : 0) + h;
+		if (w > width) width = w;
+	}
+	// popup the window
+	if (_uiPopupState != UI_POPUP_SHOWN) _uiPopupState = UI_POPUP_APPEARING;
+	int16_t popupX = (getWidth()-width-UI_POPUP_MARGIN-UI_POPUP_PADDING)/2;
+	int16_t popupY = (getHeight()-height-UI_POPUP_MARGIN-UI_POPUP_PADDING)/2;
+	uint16_t popupWidth = width + 2*UI_POPUP_PADDING;
+	uint16_t popupHeight = height + 2*UI_POPUP_PADDING;
+	setBackgroundColor(UI_COLOR_POPUP_BACKGROUND);
+	fillRoundedRectangle(popupX, popupY, popupWidth, popupHeight, 6, UI_COLOR_POPUP_BACKGROUND);
+	drawRoundedRectangle(popupX, popupY, popupWidth, popupHeight, 6, BLACK, 2);
+	if (title) drawString((char *)title, popupX+UI_POPUP_PADDING, popupY+UI_POPUP_PADDING, color, UI_POPUP_TITLE_FONT, UI_POPUP_TITLE_FONT_IS_BOLD, NO_OVERLAY, UI_POPUP_MARGIN+UI_POPUP_PADDING);
+	if (message) drawString((char *)message, popupX+UI_POPUP_PADDING, popupY+UI_POPUP_PADDING+titleHeight, BLACK, UI_POPUP_MESSAGE_FONT, UI_POPUP_MESSAGE_FONT_IS_BOLD, NO_OVERLAY, UI_POPUP_MARGIN+UI_POPUP_PADDING);
+}
+
+void TouchScreen::hideUIPopups() {
+	_uiPopupState = UI_POPUP_NONE;
+	_uiIsShown = false;
+}
+
 
 uint16_t TouchScreen::getUIElementWidth(uint8_t id) {
 	int16_t index = _getUIElementIndex(id);
@@ -199,6 +265,24 @@ uint16_t TouchScreen::getUIElementWidth(uint8_t id) {
 	return _uiElement[index].width;
 }
 
+uint16_t TouchScreen::getUIElementHeight(uint8_t id) {
+	int16_t index = _getUIElementIndex(id);
+	if (index == UI_ERROR) return UI_ERROR;
+	return _uiElement[index].height;
+}
+
+int16_t TouchScreen::getUIElementX(uint8_t id) {
+	int16_t index = _getUIElementIndex(id);
+	if (index == UI_ERROR) return UI_ERROR;
+	return _uiElement[index].x;
+}
+
+int16_t TouchScreen::getUIElementY(uint8_t id) {
+	int16_t index = _getUIElementIndex(id);
+	if (index == UI_ERROR) return UI_ERROR;
+	return _uiElement[index].y + _uiY + _uiTabHeight + 1;
+}
+	
 void TouchScreen::setUIElementValue(uint8_t id, int16_t value) {
 	int16_t index = _getUIElementIndex(id);
 	if (index == UI_ERROR) return;
@@ -207,7 +291,7 @@ void TouchScreen::setUIElementValue(uint8_t id, int16_t value) {
 		if (value > _uiElement[index].max) _uiElement[index].value = _uiElement[index].max;
 		else if (value < _uiElement[index].min) _uiElement[index].value = _uiElement[index].min;
 	}
-	if (_uiElement[index].tab == _uiActiveTab) _drawUIElement(&(_uiElement[index]));
+	if ((_uiActiveTab != -1) && (_uiElement[index].tab == _uiActiveTab)) _drawUIElement(&(_uiElement[index]));
 }
 
 int16_t TouchScreen::getUIElementValue(uint8_t id) {
@@ -222,13 +306,41 @@ void TouchScreen::setUIElementEditable(uint8_t id, bool editable) {
 	_uiElement[index].editable = editable;	
 }
 
-void TouchScreen::setUIElementTab(uint8_t id, uint8_t tab) {
+void TouchScreen::setUIElementTab(uint8_t id, uint8_t tabId) {
 	int16_t index = _getUIElementIndex(id);
 	if (index == UI_ERROR) return;
-	_uiElement[index].tab = tab;	
-	if ((_uiActiveTab != -1) && (_uiElement[index].tab != _uiActiveTab)) 
-		fillRectangle(_uiX+_uiElement[index].x, _uiY+_uiTabHeight+_uiElement[index].y, _uiElement[index].width, _uiElement[index].height, UI_COLOR_BACKGROUND);
+	_uiElement[index].tab = tabId;	
+	if (_uiElement[index].tab == tabId) return;
+	if (_uiActiveTab != -1) {
+		if (_uiElement[index].tab == _uiActiveTab) _drawUIElement(&(_uiElement[index]));
+		else fillRectangle(_uiX+_uiElement[index].x, _uiY+_uiTabHeight+_uiElement[index].y, _uiElement[index].width, _uiElement[index].height, UI_COLOR_BACKGROUND);
+	}
 }
+
+uint8_t *TouchScreen::getUIElementLabel(uint8_t id) {
+	int16_t index = _getUIElementIndex(id);
+	if (index == UI_ERROR) return 0;
+	return _uiElement[index].text;
+}
+
+void TouchScreen::setUIElementLabel(uint8_t id, uint8_t *text) {
+	int16_t index = _getUIElementIndex(id);
+	if (index == UI_ERROR) return;
+	_uiElement[index].text = text;
+	if ((_uiActiveTab != -1) && (_uiElement[index].tab == _uiActiveTab)) _drawUIElement(&(_uiElement[index]));
+}
+
+void TouchScreen::setUITabEnabled(uint8_t tabId, bool enabled) {
+	if (tabId >= CONFIGURATION_UI_MAX_TABS) return; 
+	_uiTab[tabId].enabled = enabled;
+}
+
+int8_t TouchScreen::getUIGroupElement(uint8_t groupId) {
+	for (uint8_t i=0; i<_uiNbElements; i++) {
+		if ((_uiElement[i].group == groupId) && (_uiElement[i].value == UI_SELECTED)) return _uiElement[i].id;
+	}
+	return UI_ERROR;
+}	
 
 /* ---------------- Private functions ------------------------ */
 
@@ -286,6 +398,7 @@ int16_t TouchScreen::_addUIElement(int16_t type, int16_t tab, uint8_t id, int16_
 
 void TouchScreen::_drawActiveUITab() {
 	if (_calibrationStatus == TOUCHSCREEN_CALIBRATION_ERROR) return;
+	uint16_t bgColor = getBackgroundColor();
 	if (_uiNbTabs > 1) {
 		fillRectangle(_uiX, _uiY, _uiWidth, _uiTabHeight, UI_COLOR_BACKGROUND);
 		// draw screen headers	
@@ -298,6 +411,7 @@ void TouchScreen::_drawActiveUITab() {
 			} else setBackgroundColor(UI_COLOR_BACKGROUND);
 			drawRectangle(_uiX+_uiTab[i].x, _uiY+_uiTab[i].y, _uiTab[i].width, _uiTabHeight-2, BLACK, 1);
 			drawString((char *)_uiTab[i].text, _uiX+_uiTab[i].x+UI_TAB_LEFT_MARGIN, _uiY+3+UI_TAB_TOP_MARGIN, BLACK, UI_TAB_FONT, UI_TAB_FONT_IS_BOLD, false);
+			if (_uiTab[i].drawCallback) (*(_uiTab[i].drawCallback))(UI_DRAW_CALLBACK_TAB_ID, _uiX+_uiTab[i].x, _uiY+_uiTab[i].y, _uiTab[i].width, _uiTabHeight-2, i == _uiActiveTab);
 			if (i == _uiActiveTab) {
 				ax = _uiX+_uiTab[i].x+1;
 				aw = _uiTab[i].width-3;
@@ -314,12 +428,14 @@ void TouchScreen::_drawActiveUITab() {
 	for (uint8_t i=0; i<_uiNbElements; i++) {
 		if (_uiElement[i].tab == _uiActiveTab) _drawUIElement(&(_uiElement[i]));
 	}
+	setBackgroundColor(bgColor);
 	_uiIsShown = true;
 }
 
 void TouchScreen::_drawUIElement(touchScreen_UIElement_t *elt) {
 	int16_t color = UI_COLOR_BUTTON_RELEASED;
 	if (elt->value == UI_PUSHED) color = UI_COLOR_BUTTON_PUSHED;
+	uint8_t fontSize = UI_ELEMENT_FONT;	
 	switch (elt->type) {
 		case UI_LABEL:
 			setBackgroundColor(UI_COLOR_BACKGROUND);
@@ -329,8 +445,9 @@ void TouchScreen::_drawUIElement(touchScreen_UIElement_t *elt) {
 			fillRoundedRectangle(_uiX+elt->x, _uiY+_uiTabHeight+elt->y, elt->width, elt->height, UI_ELEMENT_TOP_MARGIN*8/10, color);
 			drawRoundedRectangle(_uiX+elt->x, _uiY+_uiTabHeight+elt->y, elt->width, elt->height, UI_ELEMENT_TOP_MARGIN*8/10, BLACK, 1);
 			setBackgroundColor(color);
-			drawString((char *)(elt->text), _uiX+elt->x+(elt->width-getStringWidth((char *)(elt->text), UI_ELEMENT_FONT))/2, 
-					_uiY+_uiTabHeight+elt->y+1+(elt->height-getFontHeight(UI_ELEMENT_FONT))/2, BLACK, UI_ELEMENT_FONT, UI_ELEMENT_FONT_IS_BOLD, false);
+			if (((elt->text[0] == '+') || (elt->text[0] == '-')) && (elt->text[1] == 0)) fontSize = FONT_HUGE;
+			drawString((char *)(elt->text), _uiX+elt->x+(elt->width-getStringWidth((char *)(elt->text), fontSize))/2, 
+					_uiY+_uiTabHeight+elt->y+1+(elt->height-getFontHeight(fontSize))/2, BLACK, fontSize, UI_ELEMENT_FONT_IS_BOLD, false);
 			break;
 		case UI_PUSH_BUTTON:
 			fillRectangle(_uiX+elt->x, _uiY+_uiTabHeight+elt->y, elt->width, elt->height, color);

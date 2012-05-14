@@ -171,10 +171,20 @@ uint16_t ScreenHAL::getStringWidth(char *s, uint8_t fontSize) {
 	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
 	uint16_t nbChr = 0;
 	while (s[nbChr] != 0) nbChr ++;
+	if (nbChr == 1) return fontDef->width * fontScale;
 	return nbChr * (fontDef->width + fontDef->charSpacing) * fontScale;
 }
 
 uint8_t ScreenHAL::getFontHeight(uint8_t fontSize) {
+	uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
+	uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
+	fontDefinition_t *fontDef = &fontDefinition_small;
+	if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = &fontDefinition_medium;
+	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
+	return fontDef->height * fontScale;
+}
+
+uint8_t ScreenHAL::getLineHeight(uint8_t fontSize) {
 	uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
 	uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
 	fontDefinition_t *fontDef = &fontDefinition_small;
@@ -190,6 +200,30 @@ uint8_t ScreenHAL::getFontCharWidth(uint8_t fontSize) {
 	if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = &fontDefinition_medium;
 	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
 	return (fontDef->width + fontDef->charSpacing) * fontScale;
+}
+
+void ScreenHAL::getStringBoundingBox(uint8_t * s, uint8_t fontSize, bool isBold, int16_t marginX, uint16_t *width, uint16_t *height) {
+	uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
+	uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
+	fontDefinition_t *fontDef = &fontDefinition_small;
+	if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = &fontDefinition_medium;
+	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
+	uint8_t lineHeight = (fontDef->height + fontDef->lineSpacing + (isBold ? 1 : 0)) * fontScale;
+	uint8_t chrWidth = (fontDef->width + fontDef->charSpacing) * fontScale;
+	*width = 0;
+	*height = lineHeight;
+	int16_t x = 0;
+	uint16_t i = 0;
+	while (s[0] != 0) {
+		if (s[0] == '\n') *height += lineHeight;
+		else if (s[0] != '\n') x += chrWidth;
+		if (x > *width) *width = x;
+		if (x > getWidth()-2*marginX-chrWidth) {
+			x = 0;
+			*height += lineHeight;
+		}
+		s++;
+	}
 }
 
 void ScreenHAL::setCursor(int16_t x, int16_t y) {
@@ -222,7 +256,7 @@ void ScreenHAL::drawChar(uint8_t chr, int16_t x, int16_t y, uint16_t color, uint
 }
 
 
-void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_t fontSize, bool isBold, bool overlay, bool selectAndUnselectScreen) {
+void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_t fontSize, bool isBold, bool overlay, uint16_t rightMargin, bool selectAndUnselectScreen) {
 	if ((x < 0) || (y < 0)) return;
 	uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
 	uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
@@ -230,12 +264,14 @@ void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_
 	if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = &fontDefinition_medium;
 	else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
 	if ((x + fontDef->width * fontScale >= _width) || (y + fontDef->height * fontScale >= _height)) return;
+	uint8_t lineHeight = (fontDef->height + fontDef->lineSpacing + (isBold ? 1 : 0)) * fontScale;
+	uint8_t chrWidth = (fontDef->width + fontDef->charSpacing) * fontScale;
 	
 	if (selectAndUnselectScreen) selectScreen();
 	int16_t lx = x;
 	while (s[0] != 0) {
 		if (s[0] == '\n') {
-			y += (fontDef->height + fontDef->lineSpacing + (isBold ? 1 : 0)) * fontScale;
+			y += lineHeight;
 			if (y >= _height) break;
 			lx = x;
 		} else if (s[0] == '\r') {
@@ -244,10 +280,10 @@ void ScreenHAL::drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_
 			uint8_t validChr = s[0];
 			if ((validChr < fontDef->firstChar) || (validChr > fontDef->lastChar)) validChr = '?';
 			_drawValidChar(validChr, lx, y, color, validFontSize, fontDef, fontScale, isBold, overlay);
-			lx += (fontDef->width + fontDef->charSpacing) * fontScale;
-			if (lx > _width) {
+			lx += chrWidth;
+			if (lx > _width-rightMargin-chrWidth) {
 				lx = x;
-				y += (fontDef->height + fontDef->lineSpacing + (isBold ? 1 : 0)) * fontScale;
+				y += lineHeight;
 				if (y >= _height) break;
 			}
 		}
