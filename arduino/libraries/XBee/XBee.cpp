@@ -36,9 +36,7 @@
 #define XBEE_CMD_DL_READ 'e'
 #define XBEE_CMD_GUARD_WRITE 'G'
 #define XBEE_CMD_RADIO_DB_READ 'r'
-#define XBEE_CMD_ENABLE_64B_ADRESSING_AND_SET_30MS_GUARD '0'
 #define XBEE_CMD_ENABLE_64B_ADRESSING 'A'
-#define XBEE_CMD_SET_DIO6_AS_RTS '6'
 
 // States
 #define XBEE_IDLE 0
@@ -187,21 +185,6 @@ bool XBee::enable64BitsAdressing() {
 }
 
 		
-bool XBee::enable64BitsAdressingAndSet30msGuardTime() {
-	if (isInCommandMode()) return false;
-	_temp = 30;
-	_command = XBEE_CMD_ENABLE_64B_ADRESSING_AND_SET_30MS_GUARD;
-	return true;
-}
-
-
-bool XBee::setDIO6AsRTS() {
-	if (isInCommandMode()) return false;
-	_command = XBEE_CMD_SET_DIO6_AS_RTS;
-	return true;
-}
-
-
 bool XBee::isInCommandMode() {
     return (_command != XBEE_CMD_NONE);
 }
@@ -295,14 +278,8 @@ void XBee::processCommand() {
                 case XBEE_CMD_RADIO_DB_READ:
                     print("ATDB,CN\n");
                     break;
-				case XBEE_CMD_ENABLE_64B_ADRESSING_AND_SET_30MS_GUARD:
-					print("ATMYFFFF\n");
-                    break;
 				case XBEE_CMD_ENABLE_64B_ADRESSING:
 					print("ATMYFFFF,WR,CN\n");
-					break;
-				case XBEE_CMD_SET_DIO6_AS_RTS:
-					print("ATD61,WR,CN\n");
 					break;
                 default:
                     break;
@@ -313,7 +290,6 @@ void XBee::processCommand() {
                 case XBEE_CMD_DHDL_WRITE:
                 case XBEE_CMD_GUARD_WRITE:
 				case XBEE_CMD_ENABLE_64B_ADRESSING:
-				case XBEE_CMD_SET_DIO6_AS_RTS:
 					// prepare to wait
 					_waitUntilTime = millis() + XBEE_WRITE_TIME;
 					_state = XBEE_WRITING;
@@ -345,10 +321,6 @@ void XBee::processCommand() {
 			// we have the end of line
 			if ((_counter > 0) && (_buffer[_counter-1] == '\n'))  {
 				switch (_command) {
-					case XBEE_CMD_ENABLE_64B_ADRESSING_AND_SET_30MS_GUARD:
-						_command = XBEE_CMD_GUARD_WRITE;
-						_state = XBEE_SEND_COMMAND;
-						break;
 					case XBEE_CMD_ID_READ:
 						for (uint8_t i=0; i<4; i++) _id[i] = '0';
 						for (uint8_t i=0; i<_counter; i++) _id[3-i] = _buffer[_counter-1-i];

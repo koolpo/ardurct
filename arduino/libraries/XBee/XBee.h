@@ -30,7 +30,7 @@
 #include "WProgram.h"
 #include "../NewSoftSerial/NewSoftSerial.h"
 
-#include "XBee_Config.cpp"
+#include "XBee_Configuration.hpp"
 
 #define XBEE_BUFFER_LENGTH (8+2)
 
@@ -80,13 +80,7 @@ class XBee : public Print {
 
 		// Enable 64bits addressing 
 		bool enable64BitsAdressing();
-		
-		// Enable 64bits adressing and set guardTime as 30ms
-		bool enable64BitsAdressingAndSet30msGuardTime();
-		
-		// Set DIO6 as RTS
-		bool setDIO6AsRTS();
-		
+				
 		// Process the last received command
 		void processCommand();
 		

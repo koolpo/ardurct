@@ -69,8 +69,8 @@ void setup() {
     xBee.begin(&nss, XBEE_BAUDRATE);
     // initialize the serial
     Serial.begin(SERIAL_BAUDRATE);
-    // set the guard time and the adressing
-    xBee.enable64BitsAdressingAndSet30msGuardTime();
+    // set the adressing
+    //xBee.enable64BitsAdressing();
 }
 
 void loop() {
