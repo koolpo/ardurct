@@ -32,7 +32,7 @@
  *    The elements between brakets are optional. If ommited, the current value is returned
  */
  
-#include <NewSoftSerial.h>
+#include <SoftwareSerial.h>
 #include <XBee.h>
 
 // hardware
@@ -56,7 +56,7 @@
 #define XBEE_CMD_RADIO 'R'
 
 
-NewSoftSerial nss(XBEE_RX, XBEE_TX);
+SoftwareSerial softSerial(XBEE_RX, XBEE_TX);
 XBee xBee;
 
 uint8_t state = STATE_IDLE;
@@ -66,7 +66,7 @@ bool cmdComplete;
 
 void setup() {
     // initialize the xBee on a NewSoftSerial port
-    xBee.begin(&nss, XBEE_BAUDRATE);
+    xBee.begin(&softSerial, XBEE_BAUDRATE);
     // initialize the serial
     Serial.begin(SERIAL_BAUDRATE);
     // set the adressing
@@ -75,7 +75,7 @@ void setup() {
 
 void loop() {
     xBee.processCommand();
-    if (xBee.isInCommandMode()) return;
+    if (xBee.isProcessingCommand()) return;
     
     if (state == STATE_IDLE) {
         while (Serial.available() && (counter != XBEE_CMD_MARKER_REPEAT)) {
@@ -109,7 +109,6 @@ void loop() {
                 state = STATE_IDLE;
                 break;
         }
-        break;
     }
         
     switch (state) {

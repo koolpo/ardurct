@@ -16,11 +16,14 @@ begin	KEYWORD2
 write	KEYWORD2
 available	KEYWORD2
 read	KEYWORD2
+enterCommandMode	KEYWORD2
+exitCommandMode	KEYWORD2
+commitToXBeeFlash	KEYWORD2
 setId	KEYWORD2
 getId	KEYWORD2
 setBaudrate	KEYWORD2
 processCommand	KEYWORD2
-isInCommandMode	KEYWORD2
+isProcessingCommand	KEYWORD2
 setDHDL	KEYWORD2
 getDHDL	KEYWORD2
 getSHSL	KEYWORD2

@@ -22,18 +22,18 @@
  * THE SOFTWARE.
  */
  
-#include <NewSoftSerial.h>
+#include <SoftwareSerial.h>
 #include <XBee.h>
 
 #define XBEE_RX 3
 #define XBEE_TX 2
 #define BAUDRATE 57600
 
-NewSoftSerial nss(XBEE_RX, XBEE_TX);
+SoftwareSerial softSerial(XBEE_RX, XBEE_TX);
 XBee xBee;
 
 void setup() {
-    xBee.begin(&nss, BAUDRATE);
+    xBee.begin(&softSerial, BAUDRATE);
     Serial.begin(BAUDRATE);
 }
 

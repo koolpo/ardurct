@@ -37,6 +37,10 @@
 #define XBEE_CMD_GUARD_WRITE 'G'
 #define XBEE_CMD_RADIO_DB_READ 'r'
 #define XBEE_CMD_ENABLE_64B_ADRESSING 'A'
+#define XBEE_CMD_ENTER_CMD_MODE '+'
+#define XBEE_CMD_EXIT_CMD_MODE '-'
+#define XBEE_CMD_COMMIT 'W'
+
 
 // States
 #define XBEE_IDLE 0
@@ -54,19 +58,24 @@
 #define XBEE_VALID_RADIO_DB	(0x01 << 3)
 
 XBee::XBee() {
-	_nss = NULL;
+#ifdef XBEE_CONFIG_USE_SOFTWARE_SERIAL
+	_softSerial = NULL;
+#endif
 	_serial = NULL;
     _state = XBEE_IDLE;
     _command = XBEE_CMD_NONE;
+	_isInCommandMode = false;
 	_valid = 0;
 }
 
-void XBee::begin(NewSoftSerial *nss, uint32_t baudrate, uint16_t guardTime) {
-	_nss = nss;
+#ifdef XBEE_CONFIG_USE_SOFTWARE_SERIAL
+void XBee::begin(SoftwareSerial *softSerial, uint32_t baudrate, uint16_t guardTime) {
+	_softSerial = softSerial;
 	_guardTime = guardTime;
 	_baudrate = baudrate;
-	_nss->begin(baudrate);
+	_softSerial->begin(baudrate);
 }
+#endif
 
 void XBee::begin(HardwareSerial *serial, uint32_t baudrate, uint16_t guardTime) {
 	_serial = serial;
@@ -77,25 +86,32 @@ void XBee::begin(HardwareSerial *serial, uint32_t baudrate, uint16_t guardTime) 
 
 uint8_t XBee::available() {
     if (_serial) return _serial->available();
-    if (_nss) return _nss->available();
+#ifdef XBEE_CONFIG_USE_SOFTWARE_SERIAL	
+    if (_softSerial) return _softSerial->available();
+#endif
 	return 0;
 }
 
 
 char XBee::read() {
     if (_serial) return _serial->read();
-	if (_nss) return _nss->read();
+#ifdef XBEE_CONFIG_USE_SOFTWARE_SERIAL	
+	if (_softSerial) return _softSerial->read();
+#endif
 	return -1;
 }
 
 
-void XBee::write(uint8_t val) {
+size_t XBee::write(uint8_t val) {
     if (_serial) _serial->print(val);
-	else if (_nss) _nss->print(val);
+#ifdef XBEE_CONFIG_USE_SOFTWARE_SERIAL	
+	else if (_softSerial) _softSerial->print(val);
+#endif
+	return 1;
 }
 
-
 bool XBee::setId(uint8_t *id) {
+	if (!_isInCommandMode) return false;
 	uint8_t i;
 	// check if id is the same
 	for (i=0; i<4; i++) {
@@ -103,22 +119,24 @@ bool XBee::setId(uint8_t *id) {
 	}
 	if (i == 4) return true;
 	// if busy in another command, return
-	if (isInCommandMode()) return false;
-    for (i=0; i<4; i++) _id[i] = id[i];
-    _command = XBEE_CMD_ID_WRITE;
+	if (isProcessingCommand()) return false;
+	for (i=0; i<4; i++) _id[i] = id[i];
+	_command = XBEE_CMD_ID_WRITE;
 	return true;
 }
 
 
 uint8_t *XBee::getId() {
-	if (_valid && XBEE_VALID_ID) return _id;
-	if (isInCommandMode()) return NULL;
+	if ((_valid & XBEE_VALID_ID) != 0) return _id;
+	if (!_isInCommandMode) return NULL;
+	if (isProcessingCommand()) return NULL;
 	 _command = XBEE_CMD_ID_READ;
 	return NULL;
 }
 
 
 bool XBee::setDHDL(uint8_t *dhdl) {
+	if (!_isInCommandMode) return false;
 	uint8_t i;
 	// check if dhdl is the same
 	for (i=0; i<16; i++) {
@@ -126,43 +144,65 @@ bool XBee::setDHDL(uint8_t *dhdl) {
 	}
 	if (i == 16) return true;
 	// if busy in another command, return
-	if (isInCommandMode()) return false;
-    for (i=0; i<16; i++) _dhdl[i] = dhdl[i];
-    _command = XBEE_CMD_DHDL_WRITE;
+	if (isProcessingCommand()) return false;
+	for (i=0; i<16; i++) _dhdl[i] = dhdl[i];
+	_command = XBEE_CMD_DHDL_WRITE;
 	return true;
 }
 
 uint8_t *XBee::getDHDL() {
-	if (_valid && XBEE_VALID_DHDL) return _dhdl;
-	if (isInCommandMode()) return NULL;
+	if ((_valid & XBEE_VALID_DHDL) != 0) return _dhdl;
+	if (!_isInCommandMode) return NULL;
+	if (isProcessingCommand()) return NULL;
 	 _command = XBEE_CMD_DH_READ;
 	return NULL;
 }
 
-
 uint8_t *XBee::getSHSL() {
-	if (_valid && XBEE_VALID_SHSL) return _shsl;
-	if (isInCommandMode()) return NULL;
+	if ((_valid & XBEE_VALID_SHSL) != 0) return _shsl;
+	if (!_isInCommandMode) return NULL;
+	if (isProcessingCommand()) return NULL;
 	 _command = XBEE_CMD_SH_READ;
 	return NULL;
 }
 
-
 uint8_t XBee::getRadioDb() {
-	if (_valid && XBEE_VALID_RADIO_DB) {
+	if ((_valid & XBEE_VALID_RADIO_DB) != 0) {
 		// only read once
 		_valid &= ~XBEE_VALID_RADIO_DB;
 		return _radioDb;
 	}
-	if (isInCommandMode()) return XBEE_INVALID;
+	if (!_isInCommandMode) return -1;
+	if (isProcessingCommand()) return -1;
 	 _command = XBEE_CMD_RADIO_DB_READ;
-	return XBEE_INVALID;
+	return -1;
 }
 
 
+bool XBee::enterCommandMode() {
+	if (_isInCommandMode) return true;
+	if (isProcessingCommand()) return false;
+	_command = XBEE_CMD_ENTER_CMD_MODE;
+	return true;
+}
+
+bool XBee::exitCommandMode() {
+	if (!_isInCommandMode) return true;
+	if (isProcessingCommand()) return false;
+	_command = XBEE_CMD_EXIT_CMD_MODE;
+	return true;
+}
+
+bool XBee::commitToXBeeFlash() {
+	if (isProcessingCommand()) return false;
+	_command = XBEE_CMD_COMMIT;
+	return true;
+}
+
 bool XBee::setBaudrate(uint32_t baudrate) {
 	if (baudrate == _baudrate) return true;
-	if (isInCommandMode()) return false;
+	if (!_isInCommandMode) return false;
+	if (isProcessingCommand()) return false;
 	_baudrate = baudrate;
 	_command = XBEE_CMD_BAUDRATE_WRITE;
 	return true;
@@ -171,7 +211,8 @@ bool XBee::setBaudrate(uint32_t baudrate) {
 
 bool XBee::setGuardTime(uint16_t guardTime) {
 	if (guardTime == _guardTime) return true;
-	if (isInCommandMode()) return false;
+	if (!_isInCommandMode) return false;
+	if (isProcessingCommand()) return false;
 	_temp = guardTime;
 	_command = XBEE_CMD_GUARD_WRITE;
 	return true;
@@ -179,175 +220,167 @@ bool XBee::setGuardTime(uint16_t guardTime) {
 
 
 bool XBee::enable64BitsAdressing() {
-	if (isInCommandMode()) return false;
+	if (!_isInCommandMode) return false;
+	if (isProcessingCommand()) return false;
 	_command = XBEE_CMD_ENABLE_64B_ADRESSING;
 	return true;
 }
 
-		
-bool XBee::isInCommandMode() {
-    return (_command != XBEE_CMD_NONE);
+
+bool XBee::isProcessingCommand() {
+	return (_command != XBEE_CMD_NONE);
 }
 
-
 void XBee::processCommand() {
-    // If nothing to do return
-    if (_command == XBEE_CMD_NONE) return;
-    
-    switch (_state) {
-        case XBEE_IDLE:
-            _waitUntilTime = millis() + _guardTime;
-            _state = XBEE_GUARDING_BEFORE;
-            break;
-            
-        case XBEE_GUARDING_BEFORE:
-            // wait for the guard time to elapse
-            if ((int32_t)(millis()-_waitUntilTime) < 0) return;
-            // enter command mode
-            print(XBEE_COMMAND_SEQUENCE);
-            // prepare to wait
-            _waitUntilTime = millis() + _guardTime;
-            _state = XBEE_GUARDING_AFTER;
-            break;
-            
-        case XBEE_GUARDING_AFTER:
-            // wait for the guard time to elapse
-            if ((int32_t)(millis()-_waitUntilTime) < 0) return;
+	// If nothing to do return
+	if (_command == XBEE_CMD_NONE) return;
+	
+	switch (_state) {
+		case XBEE_IDLE:
+			if (!_isInCommandMode) {
+				_waitUntilTime = millis() + _guardTime;
+				_state = XBEE_GUARDING_BEFORE;
+			} else _state = XBEE_SEND_COMMAND;
+			break;
+			
+		case XBEE_GUARDING_BEFORE:
+			// wait for the guard time to elapse
+			if ((uint32_t)(millis()-_waitUntilTime) < 0) return;
+			// enter command mode
+			print(XBEE_COMMAND_SEQUENCE);
+			// prepare to wait
+			_waitUntilTime = millis() + _guardTime;
+			_state = XBEE_GUARDING_AFTER;
+			break;
+			
+		case XBEE_GUARDING_AFTER:
+			// wait for the guard time to elapse
+			if ((uint32_t)(millis()-_waitUntilTime) < 0) return;
 			_state = XBEE_WAIT_FOR_OK;
 			_counter = 0;
 
 		case XBEE_WAIT_FOR_OK:
-			while (available()) {
+			while (available() > 0) {
 				_buffer[_counter++] = read();
 				if ((_buffer[_counter-1] == '\n') || (_counter > 9)) break;
 			}
 			// we have the end of line
 			if ((_counter > 0) && (_buffer[_counter-1] == '\n'))  {
 				// check for OK
-				if ((_counter > 2) && (_buffer[_counter-3] == 'O') && (_buffer[_counter-2] == 'K')) _state = XBEE_SEND_COMMAND;
-			}
-			// there was a mistake, we did not enter command mode
-			if (_counter == 10) {
-				_command = XBEE_CMD_NONE;
-				_state = XBEE_IDLE;
-			}
-			// stay in this state waiting for OK
-			if (_state != XBEE_SEND_COMMAND) return;
+				if ((_counter > 2) && (_buffer[_counter-3] == 'O') && (_buffer[_counter-2] == 'K')) _isInCommandMode = true;
+			}	
+			_command = XBEE_CMD_NONE;
+			_state = XBEE_IDLE;
+			break;
 
 		case XBEE_SEND_COMMAND:
-           switch (_command) {
-                case XBEE_CMD_ID_READ:
-                    print("ATID,CN\n");
-                    break;
-                case XBEE_CMD_ID_WRITE:
-                    print("ATID");
-                    for (uint8_t i=0; i<4; i++) print(_id[i]);
-                    print(",WR,CN\n");
-                    break;
-                case XBEE_CMD_SH_READ:
-					// we will read SL after, so don't close dialog
-                    print("ATDH\n");
-                    break;
-                case XBEE_CMD_SL_READ:
-                    print("ATDL,CN\n");
-                    break;
-                case XBEE_CMD_DH_READ:
-					// we will read DL after, so don't close dialog
-                    print("ATDH\n");
-                    break;
-                case XBEE_CMD_DL_READ:
-                    print("ATDL,CN\n");
-                    break;
-                case XBEE_CMD_DHDL_WRITE:
-                    print("ATDH");
-					for (uint8_t i=0; i<8; i++) print(_dhdl[i]);
-                    print(",ATDL");
-					for (uint8_t i=8; i<16; i++) print(_dhdl[i]);
-					print(",WR,CN\n");
-                    break;
-                case XBEE_CMD_BAUDRATE_WRITE:
-                    print("ATBD");
-                    print(_baudrate, HEX);
-                    print(",WR,CN\n");
-                    break;
-                case XBEE_CMD_GUARD_WRITE:
-                    print("ATGT");
-                    print(_temp, HEX);
-                    print(",WR,CN\n");
-                    break;
-                case XBEE_CMD_RADIO_DB_READ:
-                    print("ATDB,CN\n");
-                    break;
-				case XBEE_CMD_ENABLE_64B_ADRESSING:
-					print("ATMYFFFF,WR,CN\n");
+			switch (_command) {
+				case XBEE_CMD_COMMIT:
+					print("ATWR\n");
 					break;
-                default:
-                    break;
-            }
-            switch (_command) {
-                case XBEE_CMD_ID_WRITE:
-                case XBEE_CMD_BAUDRATE_WRITE:
-                case XBEE_CMD_DHDL_WRITE:
-                case XBEE_CMD_GUARD_WRITE:
+				case XBEE_CMD_EXIT_CMD_MODE:
+					print("ATCN\n");
+					break;
+				case XBEE_CMD_ID_READ:
+					print("ATID\n");
+					break;
+				case XBEE_CMD_ID_WRITE:
+					print("ATID");
+					for (int i=0; i<4; i++) print((char)_id[i]);
+					print("\n");
+					break;
+				case XBEE_CMD_SH_READ:
+					print("ATSH\n");
+					break;
+				case XBEE_CMD_SL_READ:
+					print("ATSL\n");
+					break;
+				case XBEE_CMD_DH_READ:
+					print("ATDH\n");
+					break;
+				case XBEE_CMD_DL_READ:
+					print("ATDL\n");
+					break;
+				case XBEE_CMD_DHDL_WRITE:
+					print("ATDH");
+					for (int i=0; i<8; i++) print((char)_dhdl[i]);
+					print(",DL");
+					for (int i=8; i<16; i++) print((char)_dhdl[i]);
+					print("\n");
+					break;
+				case XBEE_CMD_BAUDRATE_WRITE:
+					print("ATBD");
+					print(_baudrate, HEX);
+					print("\n");
+					break;
+				case XBEE_CMD_GUARD_WRITE:
+					print("ATGT");
+					print(_temp, HEX);
+					print("\n");
+					break;
+				case XBEE_CMD_RADIO_DB_READ:
+					print("ATDB\n");
+					break;
 				case XBEE_CMD_ENABLE_64B_ADRESSING:
-					// prepare to wait
-					_waitUntilTime = millis() + XBEE_WRITE_TIME;
-					_state = XBEE_WRITING;
-                    break;
-                default:
-					_state = XBEE_PROCESSING;
-                    break;
-            }
+					print("ATMYFFFF\n");
+					break;
+				default:
+					break;
+			}
+			_state = XBEE_PROCESSING;
+			if (_command == XBEE_CMD_COMMIT) {
+				_waitUntilTime = millis() + 100;
+				_state = XBEE_WRITING;
+			}
 			_counter = 0;
-            break;
-            
-        case XBEE_WRITING:
-            // wait for the guard time to elapse
-            if ((int32_t)(millis()-_waitUntilTime) < 0) return;
+			break;
+			
+		case XBEE_WRITING:
+			// wait for the guard time to elapse
+			if ((uint32_t)(millis()-_waitUntilTime) < 0) return;
 			// indicate to the hardware to communicate at this baudrate from now on
-			if (_command == XBEE_CMD_BAUDRATE_WRITE) {
-				if (_serial) _serial->begin(_baudrate);
-				else if (_nss) _nss->begin(_baudrate);
-			} else if (_command == XBEE_CMD_ID_WRITE) _valid |= XBEE_VALID_ID;
-			else if (_command == XBEE_CMD_DHDL_WRITE) _valid |= XBEE_VALID_DHDL;
-			else if (_command == XBEE_CMD_GUARD_WRITE) _guardTime = _temp;
 			_state = XBEE_PROCESSING;
 			
 		case XBEE_PROCESSING:
-			while (available()) {
+			if (_command == XBEE_CMD_EXIT_CMD_MODE) _isInCommandMode = false;
+			else if (_command == XBEE_CMD_ID_WRITE) _valid |= XBEE_VALID_ID;
+			else if (_command == XBEE_CMD_DHDL_WRITE) _valid |= XBEE_VALID_DHDL;
+			else if (_command == XBEE_CMD_GUARD_WRITE) _guardTime = _temp;
+			while (available() > 0) {
 				_buffer[_counter++] = read();
 				if ((_buffer[_counter-1] == '\n') || (_counter > 9)) break;
 			}
 			// we have the end of line
 			if ((_counter > 0) && (_buffer[_counter-1] == '\n'))  {
+				_counter--; 	// remove the \n
 				switch (_command) {
 					case XBEE_CMD_ID_READ:
-						for (uint8_t i=0; i<4; i++) _id[i] = '0';
-						for (uint8_t i=0; i<_counter; i++) _id[3-i] = _buffer[_counter-1-i];
+						for (int i=0; i<4; i++) _id[i] = '0';
+						for (int i=0; i<_counter; i++) _id[3-i] = _buffer[_counter-1-i];
 						_valid |= XBEE_VALID_ID;
 						_command = XBEE_CMD_NONE;
 						break;
 					case XBEE_CMD_DH_READ:
-						for (uint8_t i=0; i<8; i++) _dhdl[i] = '0';
-						for (uint8_t i=0; i<_counter; i++) _dhdl[7-i] = _buffer[_counter-1-i];
+						for (int i=0; i<8; i++) _dhdl[i] = '0';
+						for (int i=0; i<_counter; i++) _dhdl[7-i] = _buffer[_counter-1-i];
 						_command = XBEE_CMD_DL_READ;
 						_state = XBEE_SEND_COMMAND;
 						break;
 					case XBEE_CMD_DL_READ:
-						for (uint8_t i=0; i<8; i++) _dhdl[i+8] = '0';
-						for (uint8_t i=0; i<_counter; i++) _dhdl[7-i+8] = _buffer[_counter-1-i];
+						for (int i=0; i<8; i++) _dhdl[i+8] = '0';
+						for (int i=0; i<_counter; i++) _dhdl[7-i+8] = _buffer[_counter-1-i];
 						_valid |= XBEE_VALID_DHDL;
 						_command = XBEE_CMD_NONE;
 						break;
 					case XBEE_CMD_SH_READ:
-						for (uint8_t i=0; i<8; i++) _shsl[i] = '0';
-						for (uint8_t i=0; i<_counter; i++) _shsl[7-i] = _buffer[_counter-1-i];
+						for (int i=0; i<8; i++) _shsl[i] = '0';
+						for (int i=0; i<_counter; i++) _shsl[7-i] = _buffer[_counter-1-i];
 						_command = XBEE_CMD_SL_READ;
 						_state = XBEE_SEND_COMMAND;
 						break;
 					case XBEE_CMD_SL_READ:
-						for (uint8_t i=0; i<8; i++) _shsl[i+8] = '0';
-						for (uint8_t i=0; i<_counter; i++) _shsl[7-i+8] = _buffer[_counter-1-i];
+						for (int i=0; i<8; i++) _shsl[i+8] = '0';
+						for (int i=0; i<_counter; i++) _shsl[7-i+8] = _buffer[_counter-1-i];
 						_valid |= XBEE_VALID_SHSL;
 						_command = XBEE_CMD_NONE;
 						break;
@@ -357,15 +390,22 @@ void XBee::processCommand() {
 						if (_buffer[1] < 'A') _radioDb += _buffer[1]-'0';
 						else _radioDb += _buffer[1]-'A'+10;
 						_valid |= XBEE_VALID_RADIO_DB; 
+						_command = XBEE_CMD_NONE;
+						break;
+					case XBEE_CMD_BAUDRATE_WRITE:
+						if (_serial) _serial->begin(_baudrate);
+#ifdef XBEE_CONFIG_USE_SOFTWARE_SERIAL						
+						else if (_softSerial) _softSerial->begin(_baudrate);
+#endif
 					default:
 						_command = XBEE_CMD_NONE;
 						break;
 				}
 			}
 			// there was an error, we return to no command
-			if ((_state == XBEE_PROCESSING) && (_counter == XBEE_BUFFER_LENGTH)) _command = XBEE_CMD_NONE;
+			if ((_state == XBEE_PROCESSING) && (_counter > 9)) _command = XBEE_CMD_NONE;
 			// if no command, return to IDLE state
-			if (_command = XBEE_CMD_NONE) _state = XBEE_IDLE;
-            break;
+			if (_command == XBEE_CMD_NONE) _state = XBEE_IDLE;
+			break;
 	}
 }

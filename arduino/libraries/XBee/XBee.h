@@ -22,15 +22,25 @@
  * THE SOFTWARE.
  */
  
+/**
+ *	Versions
+ *		1.0		Adapted to Arduino 1.0
+ *		0.1		Initial revision
+ **/ 
+ 
 #ifndef XBEE_H
 #define XBEE_H
 
 #include <inttypes.h>
+#include "Arduino.h"
 #include "Print.h"
-#include "WProgram.h"
-#include "../NewSoftSerial/NewSoftSerial.h"
 
 #include "XBee_Configuration.hpp"
+
+#ifdef XBEE_CONFIG_USE_SOFTWARE_SERIAL
+#include "../SoftwareSerial/SoftwareSerial.h"
+#endif
+
 
 #define XBEE_BUFFER_LENGTH (8+2)
 
@@ -42,11 +52,12 @@ class XBee : public Print {
 		XBee();
 		
 		// begin by attaching a Serial or a NewSoftSerial
-		void begin(HardwareSerial *serial, uint32_t baudrate = XBEE_DEFAULT_BAUD_RATE, uint16_t guardTime = XBEE_DEFAULT_GUARD_TIME);    
-		void begin(NewSoftSerial *nss, uint32_t baudrate = XBEE_DEFAULT_BAUD_RATE, uint16_t guardTime = XBEE_DEFAULT_GUARD_TIME);    
-
+		void begin(HardwareSerial *serial, uint32_t baudrate = XBEE_DEFAULT_BAUD_RATE, uint16_t guardTime = XBEE_DEFAULT_GUARD_TIME);   
+#ifdef XBEE_CONFIG_USE_SOFTWARE_SERIAL 
+		void begin(SoftwareSerial *softSerial, uint32_t baudrate = XBEE_DEFAULT_BAUD_RATE, uint16_t guardTime = XBEE_DEFAULT_GUARD_TIME);    
+#endif
 		// Print superclass requirement
-		virtual void write(uint8_t byte);
+		virtual size_t write(uint8_t chr);
 		
 		// Returns the number of bytes available in the queue
 		uint8_t available();
@@ -84,13 +95,24 @@ class XBee : public Print {
 		// Process the last received command
 		void processCommand();
 		
-		// True if the module is in command mode
-		bool isInCommandMode();
-			
+		// True if the module is processing a command
+		bool isProcessingCommand();
+		
+		// True if we entered command mode
+		bool enterCommandMode();
+		
+		// True if we exited command mode
+		bool exitCommandMode();
+		
+		// True if we sent WR command
+		bool commitToXBeeFlash();
+	
 	private:
 	
 		HardwareSerial *_serial;
-		NewSoftSerial *_nss;
+#ifdef XBEE_CONFIG_USE_SOFTWARE_SERIAL		
+		SoftwareSerial *_softSerial;
+#endif
 		uint8_t _state;
 		uint8_t _command;
 		uint32_t _waitUntilTime;
@@ -104,6 +126,7 @@ class XBee : public Print {
 		uint32_t _baudrate;
 		uint8_t _radioDb;
 		uint8_t _valid;
+		bool _isInCommandMode;
 };
 
 #endif

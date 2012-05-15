@@ -22,13 +22,16 @@
  * THE SOFTWARE.
  */
  
-#ifndef XBEE_CONFIG_H
-#define XBEE_CONFIG_H
+#ifndef XBEE_CONFIGURATION_HPP
+#define XBEE_CONFIGURATION_HPP
 
 #define XBEE_DEFAULT_GUARD_TIME 1000
 #define XBEE_DEFAULT_BAUD_RATE 9600
 
 #define XBEE_WRITE_TIME 5
 #define XBEE_COMMAND_SEQUENCE "+++"
+
+// uncomment the following if you want to use SoftwareSerial to connect to XBee
+//#define XBEE_CONFIG_USE_SOFTWARE_SERIAL 1
 
 #endif
