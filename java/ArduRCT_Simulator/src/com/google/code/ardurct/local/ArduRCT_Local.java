@@ -1,19 +1,17 @@
 package com.google.code.ardurct.local;
 
+import com.google.code.ardurct.libraries.HMC6352;
 import com.google.code.ardurct.libraries.touchscreen.IUIActionCallback;
 import com.google.code.ardurct.libraries.touchscreen.IUIDrawCallback;
+import com.google.code.ardurct.libraries.touchscreen.TouchScreen_UserInterface.uiRectangle_t;
 
 public class ArduRCT_Local extends Radio {
 	
 	static final int BAUDRATES[] = { 9600, 19200, 38400, 57600 };
 	
-	static final int UI_OK_COLOR = GREEN;
-	static final int UI_WARNING_COLOR = ORANGE;
-	static final int UI_ALERT_COLOR = RED;
-		
 	static final long RADIO_WAIT_INACTION_BEFORE_COMMIT_DELAY = 5000;
 
-	public static final int MAIN_LOOP_REPEATS_BEFORE_RESTART = 100;	// 2 seconds MAIN_LOOP_REPEATS_BEFORE_RESTART/(1/MAIN_LOOP_DELAY) 
+	public static final int MAIN_LOOP_REPEATS_BEFORE_RESTART = 1500;	// 30 seconds MAIN_LOOP_REPEATS_BEFORE_RESTART/(1/MAIN_LOOP_DELAY) 
 
 	static final int UI_RADIO_BAUDRATE_9600 = 10;
 	static final int UI_RADIO_BAUDRATE_19200 = 11;
@@ -36,37 +34,33 @@ public class ArduRCT_Local extends Radio {
 	//public static final int UI_RADIO_REMOTE_ADDRESS_2 = 32;
 	//public static final int UI_RADIO_REMOTE_ADDRESS_3 = 33;
 	
-	static final int UI_TELEMETRY_DATA = 50;
-	static final int UI_TELEMETRY_RADAR = 51;
-	
 	static final int UI_ENGINES_RUN = 60;
 	static final int UI_ENGINES_STOP = 61;
 	static final int UI_ENGINES_GROUP = 3;
 	
 	public int radioTab;
-	public int telemetryTab;
 	public int optionsTab;
 	public int enginesTab;
 	public long lastRadioUIChange;
 	public int serial1BaudrateIndex;
 	public int loopCounter;
 	
-	public void setup() {
+	public void setup() {		
 	    touchscreen.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
 	    touchscreen.setBacklight(180);
 	    serial1BaudrateIndex = 0;
 	    radioSetup(BAUDRATES[serial1BaudrateIndex]);
 	    optionsSetup();
+	    telemetrySetup();
 	    
 		lastRadioUIChange = 0;
 		loopCounter = 0;
 		
 	    touchscreen.setupUI(0, 0, touchscreen.getWidth(), touchscreen.getHeight());
-	    telemetryTab = touchscreen.addUITab(stringToArray("    "), null, drawTelemetry);
+	    telemetryTab = touchscreen.addUITab(stringToArray("    "), doTelemetryAction, telemetryDraw);
 	    radioTab = touchscreen.addUITab(stringToArray("    "), doRadioAction, drawRadio);
 	    optionsTab = touchscreen.addUITab(stringToArray("    "), doOptionsAction, drawOptions);
-	    enginesTab = touchscreen.addUITab(stringToArray("    "), doEnginesAction, drawEngines);
-	    
+	    enginesTab = touchscreen.addUITab(stringToArray("    "), doEnginesAction, drawEngines);   
 	    setupRadioTab();
 	    setupTelemetryTab();
 	    setupEnginesTab();
@@ -74,6 +68,8 @@ public class ArduRCT_Local extends Radio {
 	    touchscreen.setUITabEnabled(optionsTab, false);
 	    touchscreen.setUITabEnabled(enginesTab, false);
 	    touchscreen.setUITab(radioTab);
+	    
+		HMC6352.begin();		
 	}
 
 	public void loop() {
@@ -87,17 +83,21 @@ public class ArduRCT_Local extends Radio {
 	    	radioCommitChanges();
 	    }
 	    if (radioStatus != RADIO_STATUS_READY) return;
-	    
-	    switch (loopCounter) {
-	    	case 0:
-	    		radioMeasureRemoteBattery();
-	    		break;
-	    	case 20:
-	    		handleUIIndicators();
-	    		break;
-	    }
+
 	    loopCounter ++;
 	    if (loopCounter == MAIN_LOOP_REPEATS_BEFORE_RESTART) loopCounter = 0;
+
+	    if (loopCounter == 1) radioMeasureRemoteBattery();		// every 30 seconds
+	    if ((loopCounter % 100) == 1) handleTabIndicators();	// every 2 seconds
+	    if ((loopCounter % 5) == 0) {							// every 1/10th second
+			if (enginesAreRunning) {
+				long now = millis();
+				telemetryRunTime += now - enginesStartTime;		// if engines are running, collect run time
+				enginesStartTime = now;
+			}
+			if ((loopCounter % 50) == 0) telemetryRefreshScreen(false);
+			else telemetryRefreshScreen(true);
+	    }	    
 	}
 	
 	public void handleRadioResponse() {
@@ -194,12 +194,15 @@ public class ArduRCT_Local extends Radio {
 	}
 	
 	public void setupTelemetryTab() {
-		touchscreen.addUIArea(telemetryTab, UI_TELEMETRY_DATA, 5, 5, touchscreen.getWidth(), 40);
-		touchscreen.addUIArea(telemetryTab, UI_TELEMETRY_RADAR, 20, 90, touchscreen.getWidth()-40, touchscreen.getWidth()-40);
+		touchscreen.addUIArea(telemetryTab, UI_TELEMETRY_DATA, 1, 1, touchscreen.getWidth()-2, 82);
+		touchscreen.addUIArea(telemetryTab, UI_TELEMETRY_RADAR, 1, UI_BOTTOM_OF + UI_TELEMETRY_DATA, touchscreen.getWidth()-40, 
+				touchscreen.getWidth()-40);
+		touchscreen.addUIArea(telemetryTab, UI_TELEMETRY_ALTITUDE, UI_RIGHT_OF + UI_TELEMETRY_RADAR, UI_SAME_AS + UI_TELEMETRY_RADAR, 
+				40, UI_SAME_AS + UI_TELEMETRY_RADAR);
 	}
 	
 	public void setupEnginesTab() {
-		touchscreen.addUIPushButton(enginesTab, UI_ENGINES_RUN, UI_ENGINES_GROUP, 40, 20, touchscreen.getWidth()-80, 50, "Run", UI_UNSELECTED);
+		touchscreen.addUIPushButton(enginesTab, UI_ENGINES_RUN, UI_ENGINES_GROUP, 40, 50, touchscreen.getWidth()-80, 60, "Run", UI_UNSELECTED);
 		touchscreen.addUIPushButton(enginesTab, UI_ENGINES_STOP, UI_ENGINES_GROUP, UI_SAME_AS + UI_ENGINES_RUN, 
 				UI_BOTTOM_OF_WITH_MARGIN + UI_ENGINES_RUN, UI_SAME_AS + UI_ENGINES_RUN, UI_SAME_AS + UI_ENGINES_RUN, "Stop", UI_SELECTED);
 	}
@@ -228,7 +231,7 @@ public class ArduRCT_Local extends Radio {
 		public void uiActionCallback(int id) {
 			if ((id == UI_RADIO_PAN_ID_MINUS) || (id == UI_RADIO_PAN_ID_PLUS)) {
 				lastRadioUIChange = millis();
-				int index = touchscreen.getUIGroupElement(UI_RADIO_PAN_ID_GROUP) - UI_RADIO_PAN_ID_1;
+				int index = touchscreen.getUIGroupSelectedElement(UI_RADIO_PAN_ID_GROUP) - UI_RADIO_PAN_ID_1;
 				if (id == UI_RADIO_PAN_ID_MINUS) {
 					radioPanId[index] --;
 					if (radioPanId[index] > '9' && radioPanId[index] < 'A') radioPanId[index] = '9';
@@ -256,13 +259,8 @@ public class ArduRCT_Local extends Radio {
 	private EnginesActionCB doEnginesAction = new EnginesActionCB();
 	class EnginesActionCB implements IUIActionCallback {
 		public void uiActionCallback(int id) {
-			if (id == UI_ENGINES_RUN) {
-				enginesAreRunning = true;
-				radioCommandEngines();
-			} else if (id == UI_ENGINES_STOP) {
-				enginesAreRunning = false;
-				radioCommandEngines();
-			}
+			if (id == UI_ENGINES_RUN) radioCommandEngines(false);
+			else if (id == UI_ENGINES_STOP) radioCommandEngines(true);
 		}
 	}
 
@@ -270,6 +268,16 @@ public class ArduRCT_Local extends Radio {
 	class OptionsActionCB implements IUIActionCallback {
 		public void uiActionCallback(int id) {
 			
+		}
+	}
+
+	private TelemetryActionCB doTelemetryAction = new TelemetryActionCB();
+	class TelemetryActionCB implements IUIActionCallback {
+		public void uiActionCallback(int id) {
+			if (id == UI_TELEMETRY_DATA) {
+				telemetryDataTypeIsGPS = !telemetryDataTypeIsGPS;
+				telemetryDataHasChanged = true;
+			}
 		}
 	}
 
@@ -281,51 +289,58 @@ public class ArduRCT_Local extends Radio {
 		}
 	}
 	
-	public void handleUIIndicators() {
-		drawTelemetry.uiDrawCallback(UI_DRAW_CALLBACK_TAB_ID, touchscreen.getUITabX(telemetryTab), touchscreen.getUITabY(telemetryTab), 
-				touchscreen.getUITabWidth(telemetryTab), touchscreen.getUITabHeight(), UI_REFRESH);
-		drawRadio.uiDrawCallback(UI_DRAW_CALLBACK_TAB_ID, touchscreen.getUITabX(radioTab), touchscreen.getUITabY(radioTab), 
-				touchscreen.getUITabWidth(radioTab), touchscreen.getUITabHeight(), UI_REFRESH);
-		drawOptions.uiDrawCallback(UI_DRAW_CALLBACK_TAB_ID, touchscreen.getUITabX(optionsTab), touchscreen.getUITabY(optionsTab), 
-				touchscreen.getUITabWidth(optionsTab), touchscreen.getUITabHeight(), UI_REFRESH);
-		drawEngines.uiDrawCallback(UI_DRAW_CALLBACK_TAB_ID, touchscreen.getUITabX(enginesTab), touchscreen.getUITabY(enginesTab), 
-				touchscreen.getUITabWidth(enginesTab), touchscreen.getUITabHeight(), UI_REFRESH);
+	public void handleTabIndicators() {
+		int tabHeight = touchscreen.getUITabHeight();
+		uiRectangle_t bounds = touchscreen.getUITabBounds(telemetryTab);
+		telemetryDraw.uiDrawCallback(UI_DRAW_CALLBACK_TAB_ID, bounds.x, bounds.y, bounds.width, bounds.height, UI_REFRESH);
+		bounds = touchscreen.getUITabBounds(radioTab);
+		drawRadio.uiDrawCallback(UI_DRAW_CALLBACK_TAB_ID, bounds.x, bounds.y, bounds.width, tabHeight, UI_REFRESH);
+		bounds = touchscreen.getUITabBounds(optionsTab);
+		drawOptions.uiDrawCallback(UI_DRAW_CALLBACK_TAB_ID, bounds.x, bounds.y, bounds.width, tabHeight, UI_REFRESH);
+		bounds = touchscreen.getUITabBounds(enginesTab);
+		drawEngines.uiDrawCallback(UI_DRAW_CALLBACK_TAB_ID, bounds.x, bounds.y, bounds.width, tabHeight, UI_REFRESH);
 	}
 
 
-	private DrawTelemetryCB drawTelemetry = new DrawTelemetryCB();
+	private DrawTelemetryCB telemetryDraw = new DrawTelemetryCB();
 	class DrawTelemetryCB implements IUIDrawCallback {
 		public void uiDrawCallback(int id, int x, int y, int width, int height, int value) {
-			if (id == UI_DRAW_CALLBACK_TAB_ID) {
-				// draw a GPS
-				x += (width - 26)/2;
-				y += (height - 24)/2;
-				if (value != UI_REFRESH) {
-					drawAndFillRotatedRectangle(x+3, y+2, 6, 3, value == UI_SELECTED ? LIGHT_GREY : WHITE);
-					drawAndFillRotatedRectangle(x+17, y+16, 6, 3,  value == UI_SELECTED ? LIGHT_GREY : WHITE);
-					touchscreen.drawArc(x+10, y+14, 5, SCREEN_ARC_SW, BLACK, 1);
-					touchscreen.drawArc(x+10, y+14, 8, SCREEN_ARC_SW, BLACK, 1);
-					touchscreen.drawArc(x+10, y+14, 11, SCREEN_ARC_SW, BLACK, 1);
+			if (id == UI_DRAW_CALLBACK_TAB_ID) telemetryDrawTabIcon(x, y, width, height, value);
+			else if (id == UI_TELEMETRY_DATA) {
+				touchscreen.setBackgroundColor(WHITE);
+				int lineHeight = touchscreen.getLineHeight(FONT_MEDIUM) + 4;
+				int lx = x + 3;
+				int ly = y + 6;
+					touchscreen.drawString(" Run time:", lx, ly, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+				ly += lineHeight;
+				if (telemetryDataTypeIsGPS) { 
+					touchscreen.drawString(" Latitude:", lx, ly, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+					ly += lineHeight;
+					touchscreen.drawString("Longitude:", lx, ly, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+					ly += lineHeight;
+					touchscreen.drawString(" Altitude:", lx, ly, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+				} else {
+					touchscreen.drawString("    Speed:", lx, ly, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);					
+					ly += lineHeight;
+					touchscreen.drawString(" Distance:", lx, ly, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+					ly += lineHeight;
+					touchscreen.drawString("   Height:", lx, ly, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
 				}
-				drawAndFillRotatedRectangle(x+7, y+11, 7, 9, radioGPSHasLock ? UI_OK_COLOR : UI_ALERT_COLOR);
-			} else if (id == UI_TELEMETRY_DATA) {
-				touchscreen.fillRectangle(x, y, width, height, YELLOW);
+				telemetryDataHasChanged = true;
+				telemetryRefreshData(x, y, width, height, false);
 			} else if (id == UI_TELEMETRY_RADAR) {
-				touchscreen.fillRectangle(x, y, width, height, GREY);				
+				width -= 6;
+				int x0 = x+2+width/2;
+				int y0 = y+2+width/2;
+				int r = width/2;
+				touchscreen.drawCircle(x0, y0, r, BLACK, 2);
+				telemetryRefreshRadar(x, y, width+6, height);
 			}
+			else if (id == UI_TELEMETRY_ALTITUDE) telemetryRefreshAltitude(x, y, width, height);
 		}
 	}
 
-	// Draw  and fill a rectangle rotated 45°
-	// x,y denote the bottom right corner of the non rotated rectangle
-	private void drawAndFillRotatedRectangle(int x, int y, int dx, int dy, int color) {
-		for (int i=0; i<dx; i++) {
-			touchscreen.drawLine(x+i, y+i, x+dy+i, y-dy+i, (i == 0) || (i == dx-1) ? BLACK : color, 1);
-			if (i < dx-1) touchscreen.drawLine(x+1+i, y+i, x+1+dy+i, y-dy+i, color, 1);
-		}
-		touchscreen.drawLine(x, y, x+dx-1, y+dx-1, BLACK, 1);
-		touchscreen.drawLine(x+dy+1, y-dy-1, x+dy+dx, y-dy+dx-2, BLACK, 1);		
-	}
+
 	
 	private DrawRadioCB drawRadio = new DrawRadioCB();
 	class DrawRadioCB implements IUIDrawCallback {

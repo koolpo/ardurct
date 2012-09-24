@@ -1,6 +1,6 @@
 package com.google.code.ardurct.libraries;
 
-import com.google.code.ardurct.hardware.XBeeHardware;
+import com.google.code.ardurct.hardware.XBeeRadio;
 
 
 public class XBee extends Wiring {
@@ -72,11 +72,11 @@ public class XBee extends Wiring {
 	}
 
 	public void begin(HardwareSerial serial, int baudrate) {
-		begin(serial, baudrate, XBeeHardware.XBEE_DEFAULT_GUARD_TIME);
+		begin(serial, baudrate, XBeeRadio.XBEE_DEFAULT_GUARD_TIME);
 	}
 
 	public void begin(HardwareSerial serial) {
-		begin(serial, XBeeHardware.XBEE_DEFAULT_BAUDRATE, XBeeHardware.XBEE_DEFAULT_GUARD_TIME);
+		begin(serial, XBeeRadio.XBEE_DEFAULT_BAUDRATE, XBeeRadio.XBEE_DEFAULT_GUARD_TIME);
 	}
 
 	public int available() {
@@ -88,7 +88,7 @@ public class XBee extends Wiring {
 	}
 	
 	public void print(String s) {
-		hardware.inboundQueue.append(s);
+		hardware.toSendQueue.append(s);
 	}
 	
 	public boolean setId(int[] id) {

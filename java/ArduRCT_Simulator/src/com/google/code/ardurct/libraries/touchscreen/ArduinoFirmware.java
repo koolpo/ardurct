@@ -11,6 +11,7 @@ implements IArduinoFirmware, Runnable, IDefines {
 	public TouchScreen touchscreen = null;
 	public HardwareSerial Serial = null;
 	public HardwareSerial Serial1 = null;
+	private boolean running = false;
 	
 	public ArduinoFirmware() {
 	}
@@ -39,7 +40,7 @@ implements IArduinoFirmware, Runnable, IDefines {
 
 	@Override
 	public void run() {
-		while (true) {
+		while (running) {
 			if (!setupComplete) setup();
 			setupComplete = true;
 			loop();
@@ -54,11 +55,13 @@ implements IArduinoFirmware, Runnable, IDefines {
 	}
 	
 	public void start() {
+		running = true;
 		t = new Thread(this);
 		t.start();
 	}
 	
 	public void stop() {
+		running = false;
 		if (t != null) t.interrupt();
 	}
 }

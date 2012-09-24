@@ -60,8 +60,6 @@ public class Radio extends Options {
 	public int[] radioRemote1Address = new int[8];
 	public int[] radioRemote2Address = new int[8];
 	public int[] radioRemote3Address = new int[8];
-	public int radioStrength = 40;			// 0 to 63
-	public boolean radioGPSHasLock = false;
 	
 	public int[] radioFrame = new int[64];
 	public int radioFramePtr;
@@ -194,7 +192,7 @@ public class Radio extends Options {
 	    		break;
 	    		
 	    	case RADIO_STATUS_SEND_TEST_TO_REMOTE:
-	    		if ((radioConnectionRetries % RADIO_RETRY_CONNECTION_EVERY) == 0) xBee.print("$TX\n");
+	    		if ((radioConnectionRetries % RADIO_RETRY_CONNECTION_EVERY) == 0) xBee.print("$CT\n");
 	    		radioStatus = RADIO_STATUS_RECEIVE_TEST_FROM_REMOTE;
 	    		break;
 	    		
@@ -203,7 +201,7 @@ public class Radio extends Options {
 	    		radioStatus = RADIO_STATUS_CONNECTION_ERROR;
 	    		if (radioConnectionRetries == RADIO_RETRY_CONNECTION_EVERY) radioStatus = RADIO_STATUS_FIRST_CONNECTION_ERROR;
 	    		if (xBee.available() >= 4) {
-	    			if ((xBee.read() == '$') && (xBee.read() == 'R') && (xBee.read() == 'X') && (xBee.read() == '\n')) {
+	    			if ((xBee.read() == '$') && (xBee.read() == '.') && (xBee.read() == 'C') && (xBee.read() == '\n')) {
 	    				radioStatus = RADIO_STATUS_FINALIZING;
 	    			}
 	    		}
@@ -285,15 +283,15 @@ public class Radio extends Options {
 		writeModuleAddressInEeprom(address, eepromAddress);
 	}
 	
-	public void radioCommandEngines() {
-		if (enginesAreRunning) xBee.print("$MR\n");
-		else  xBee.print("$MS\n");
+	public void radioCommandEngines(boolean stop) {
+		if (stop) xBee.print("$MS\n");
+		else xBee.print("$MR\n");
 	}
 	
 	public void radioProcessFrame() {	
 		int i = 0;
 		if ((radioFramePtr > 3) && (radioFrame[radioFramePtr-1] == '\n') && (radioFrame[0] == '$')) {
-			radioFramePtr = 0;
+			boolean absorbFrame = true;
 			// we are receiving Remotuino data
 			switch (radioFrame[1]) {
 				case 'B':	// battery
@@ -302,16 +300,109 @@ public class Radio extends Options {
 					remoteBatteryIsMeasured = true;
 					break;
 				case 'G':	// GPS
-					if (radioFrame[2] == '0') radioGPSHasLock = false;
-					else radioGPSHasLock = true;				
+					absorbFrame = false;
+					break;
+				case 'T':	// Telemetry
+					i = 0;
+					telemetryDataHasChanged = true;
+					switch (radioFrame[2]) {
+						case 'F':	// Fix
+							if (radioFrame[3] == 'Y') telemetryGPSHasLock = true;
+							else telemetryGPSHasLock = false;
+							break;
+						case 'L':	// Longitude
+							copyRadioFrameToField(telemetryLongitudeDisplay, true);
+							break;
+						case 'l':	// latitude
+							copyRadioFrameToField(telemetryLatitudeDisplay, true);							
+							break;
+						case 'A':	// Altitude
+							i = copyRadioFrameToField(telemetryAltitudeDisplay, false);
+							telemetryAltitudeDisplay[i++] = 'm';
+							telemetryAltitudeDisplay[i++] = 0;
+							break;
+						case 's':	// speed
+							i = parseDecimalFromRadioFrame();
+							decimalIntToMeterDisplay(i, telemetrySpeedDisplay);
+							break;
+						case 'D':	// Distance (received as one decimal int)
+							telemetryDistance = parseDecimalFromRadioFrame();
+							decimalIntToMeterDisplay(telemetryDistance, telemetryDistanceDisplay);
+							break;
+						case 'H':	// Height (received as one decimal int)
+							telemetryHeight = parseDecimalFromRadioFrame();
+							decimalIntToMeterDisplay(telemetryHeight, telemetryHeightDisplay);
+							break;
+						case 'a':	// angle (received as one decimal int)
+							telemetryAngle = parseDecimalFromRadioFrame();
+							break;
+						case 'S':	// Stopped
+							break;
+						case 'R':	// Run
+							break;
+					}
+					break;
+				case 'M':
+					if (radioFrame[2] == 'R') {
+						if (!enginesAreRunning) enginesStartTime = millis();
+						enginesAreRunning = true;
+					} else {
+						if (enginesAreRunning) {
+							long now = millis();
+							telemetryRunTime += now - enginesStartTime;
+							enginesStartTime = now;
+						}
+						enginesAreRunning = false;
+					}
 					break;
 				default:
 					break;
 			}
+			if (absorbFrame) radioFramePtr = 0;
 		}
+		i = 0;
 		while (i < radioFramePtr) Serial.print((char)radioFrame[i++]);
 		radioFramePtr = 0;
 		radioStrength = (int) Math.round(Math.abs(Math.random() * 63));
+	}
+	
+	public int copyRadioFrameToField(int[] field, boolean isDMS) {
+		int i = 0;
+		int j = 0;
+		boolean padding = true;
+		while (radioFrame[i+3] != '\n') {
+			if (padding && (radioFrame[i+3] == '0') && (radioFrame[i+4] != '.')) padding = true;		// remove leading 0
+			else padding = false;
+			field[j] = (padding ? ' ' : radioFrame[i+3]);
+			j++;
+			i++;
+			if (isDMS && ((j == 3) || (j == 6) || (j == 9) || (j == 13))) j++;	// keep formating for DMS
+		}
+		field[j] = 0;
+		return j;
+	}
+	
+	public int parseDecimalFromRadioFrame() {
+		int value = 0;
+		int i = 3;
+		while (radioFrame[i] != '\n') value = value * 10 + (radioFrame[i++] - '0');
+		return value;
+	}
+	
+	public void decimalIntToMeterDisplay(int dec, int[] display) {
+		display[DISPLAY_METER_LENGTH] = 'm';
+		int i = DISPLAY_METER_LENGTH - 1;
+		if (dec < 1000) {		// up to 100m, we show the decimal
+			display[i--] = (dec % 10) + '0';
+			display[i--] = '.';
+			display[i] = '0';
+		}
+		dec = dec / 10;
+		while (dec > 0) {
+			display[i--] = (dec % 10) + '0';
+			dec = dec / 10;
+		}
+		while (i >= 0) display[i--] = ' ';
 	}
 	
 	public void radioMeasureRemoteBattery() {

@@ -6,17 +6,17 @@ import java.awt.Dimension;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 
-import com.google.code.ardurct.hardware.XBeeHardware;
+import com.google.code.ardurct.hardware.XBeeRadio;
 
 public class XBeeSimulator extends JFrame {
 	
 	private static final long serialVersionUID = -8128231225228032474L;
 	
-	public XBeeHardware hardware;
+	public XBeeRadio hardware;
 	
 	XBeeSimulator(String title, String id, String shsl, int aBaudrate) {
 		super(title);
-		hardware = new XBeeHardware(id, shsl, aBaudrate);
+		hardware = new XBeeRadio(id, shsl, aBaudrate);
 		hardware.begin(aBaudrate);
 	}
 
@@ -44,7 +44,9 @@ public class XBeeSimulator extends JFrame {
 
 	public static void main(final String[] args) {
 		XBeeSimulator localXBee = XBeeSimulator.createAndShowInstance("XBee - Local", "ABCD", "A87B43CD67AD0235", 9600);
+		localXBee.hardware.setDHDL("B79E12F287CE5431");
 		XBeeSimulator remoteXBee = XBeeSimulator.createAndShowInstance("XBee - Remote", "ABCD", "B79E12F287CE5431", 9600);
+		remoteXBee.hardware.setDHDL("A87B43CD67AD0235");		
 		remoteXBee.setLocation(localXBee.getWidth()+5, 0);
 		localXBee.hardware.start();
 		remoteXBee.hardware.start();

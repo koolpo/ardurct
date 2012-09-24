@@ -606,6 +606,13 @@ implements IFontBitmaps {
 		drawString(buffer , x, y, color, fontSize, isBold, overlay, rightMargin, true);
 	}
 
+	public int getStringWidth(String s, int fontSize) {
+		int buffer[] = new int[s.length()+1];
+		for (int i=0; i<s.length(); i++) buffer[i] = s.charAt(i);
+		buffer[s.length()] = 0;	
+		return getStringWidth(buffer, fontSize);
+	}
+
 	public void drawString(int s[], int x, int y, int color, int fontSize, boolean isBold, boolean overlay) {
 		drawString(s, x, y, color, fontSize, isBold, overlay, 0, true);
 	}

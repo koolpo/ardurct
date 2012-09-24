@@ -15,10 +15,10 @@ public class HardwareSerial extends JPanel {
 	private static final long serialVersionUID = 1L;
 
 	public TextArea receivedQueue;
-	public TextArea inboundQueue;
+	public TextArea toSendQueue;
 	public Label configuration;
 	
-	private int inboundQueueLength = 0;
+	private int toSendQueueLength = 0;
 	private int receivedQueueLength = 0;
 	
 	protected int baudrate = DEFAULT_BAUD_RATE;
@@ -28,22 +28,22 @@ public class HardwareSerial extends JPanel {
 		receivedQueue = new TextArea(5, 20);
 		receivedQueue.setFont(font);
 		receivedQueue.setEditable(false);
-		inboundQueue = new TextArea(5, 20);
-		inboundQueue.setFont(font);
+		toSendQueue = new TextArea(5, 20);
+		toSendQueue.setFont(font);
 		setLayout(new BorderLayout(2, 2));
 		configuration = new Label(aConfiguration);
 		JPanel north = new JPanel();
 		north.setLayout(new BorderLayout(2, 2));
 		north.add(configuration, BorderLayout.NORTH);
-		north.add(inboundQueue, BorderLayout.CENTER);
+		north.add(toSendQueue, BorderLayout.CENTER);
 		add(north, BorderLayout.NORTH);
 		add(receivedQueue, BorderLayout.CENTER);		
 	}
 
 	public void clear() {
 		receivedQueue.setText("");
-		inboundQueue.setText("");
-		inboundQueueLength = 0;
+		toSendQueue.setText("");
+		toSendQueueLength = 0;
 		receivedQueueLength = 0;		
 	}
 	
@@ -125,12 +125,12 @@ public class HardwareSerial extends JPanel {
 	}
 
 	public int available() {
-		return inboundQueue.getText().length() - inboundQueueLength;
+		return toSendQueue.getText().length() - toSendQueueLength;
 	}
 	
 	public int read() {
 		if (available() <= 0) return -1;
-		return inboundQueue.getText().charAt(inboundQueueLength++);
+		return toSendQueue.getText().charAt(toSendQueueLength++);
 	}
 	
 	public int availableFromReceivedQueue() {

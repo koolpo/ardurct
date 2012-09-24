@@ -28,7 +28,8 @@ implements ActionListener {
 		super(title);
 		xBee1 = XBeeSimulator.createAndShowInstance("XBee ONE", "ABCD", "A87B43CD67AD0235", 19200);
 		xBee2 = XBeeSimulator.createAndShowInstance("XBee TWO", "ABCD", "B79E12F287CE5431", 19200);
-		//nullXBee = XBeeSimulator.createAndShowInstance("XBee Null", "0000", "0000000000000000", 19200);
+		xBee1.hardware.setDHDL("B79E12F287CE5431");
+		xBee2.hardware.setDHDL("A87B43CD67AD0235");		
 		nullXBee = new XBeeSimulator("XBee Null", "0000", "0000000000000000", 19200);
 		xBee1.hardware.start();
 		xBee2.hardware.start();
@@ -36,9 +37,9 @@ implements ActionListener {
 		xBee2.hardware.connect(xBee1.hardware);
 
 		arduRC = ArduRCSimulator.createAndShowInstance();
-		arduRC.xBee = nullXBee;
+		arduRC.xBee = xBee1;
 		remotuino = RemotuinoSimulator.createAndShowInstance();
-		remotuino.xBee = nullXBee;
+		remotuino.xBee = xBee2;
 	}
 
 	public void organizeWindows() {
@@ -47,7 +48,7 @@ implements ActionListener {
 		arduRC.setLocation(xBee1.getX()+xBee1.getWidth(), 0);
 		remotuino.setLocation(arduRC.getX()+arduRC.getWidth(), 0);
 		xBee2.setLocation(remotuino.getX(), remotuino.getY() + remotuino.getHeight());
-		xBee1.setLocation(0, /* xBee2. */ getY() + getHeight());
+		xBee1.setLocation(0, getY() + getHeight());
 	}
 	
 	private void buildUI() {	
@@ -57,6 +58,7 @@ implements ActionListener {
 		ButtonGroup group = new ButtonGroup();
 		JRadioButtonMenuItem rbMenuItem = new JRadioButtonMenuItem("Local = XBee ONE, Remote = XBee TWO");
 		group.add(rbMenuItem);
+		rbMenuItem.setSelected(true);
 		rbMenuItem.addActionListener(this);
 		menu.add(rbMenuItem);
 		rbMenuItem = new JRadioButtonMenuItem("Local = XBee TWO, Remote = XBee ONE");
@@ -65,7 +67,6 @@ implements ActionListener {
 		menu.add(rbMenuItem);
 		rbMenuItem = new JRadioButtonMenuItem("Local = , Remote = ");
 		group.add(rbMenuItem);
-		rbMenuItem.setSelected(true);
 		rbMenuItem.addActionListener(this);
 		menu.add(rbMenuItem);
 

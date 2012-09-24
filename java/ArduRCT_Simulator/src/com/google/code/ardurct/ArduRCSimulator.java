@@ -30,14 +30,12 @@ implements ActionListener {
 	
 	public TouchScreen touchscreen;
 	public HardwareSerial serial;
-	XBeeSimulator xBee;
+	XBeeSimulator xBee = new XBeeSimulator(null, null, null, 9600);
 	
 	public ArduRCT_Local application;
 	
 	ArduRCSimulator(String title) {
 		super(title);
-		touchscreen = new TouchScreen();
-		serial = new HardwareSerial("Serial");				
 	}
 	
 	private void buildUI() {	
@@ -63,9 +61,11 @@ implements ActionListener {
 		menuBar.add(menu);		
 		this.setJMenuBar(menuBar);
 
+		touchscreen = new TouchScreen();
+		serial = new HardwareSerial("Serial");				
 		touchscreen.addMouseListener(touchscreen);
 		touchscreen.addMouseMotionListener(touchscreen);
-		
+
 		this.setLayout(new BorderLayout(2, 2));
 		JPanel center = new JPanel();
 		center.setPreferredSize(new Dimension(280, 380));

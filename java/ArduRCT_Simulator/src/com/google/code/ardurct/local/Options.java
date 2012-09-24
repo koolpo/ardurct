@@ -8,6 +8,8 @@ public class Options extends Telemetry {
 	public int remoteBatteryAlert;
 	
 	public boolean enginesAreRunning;
+	public long enginesStartTime;
+
 
 	public void optionsSetup() {
 		remoteBatteryIsMeasured = false;

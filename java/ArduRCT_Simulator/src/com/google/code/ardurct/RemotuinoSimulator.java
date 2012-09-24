@@ -12,6 +12,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.UIManager;
 
+import com.google.code.ardurct.hardware.GPS;
+import com.google.code.ardurct.hardware.ServoBank;
 import com.google.code.ardurct.libraries.HardwareSerial;
 import com.google.code.ardurct.remote.ArduRCT_Remote;
 
@@ -19,14 +21,17 @@ public class RemotuinoSimulator extends JFrame
 implements ActionListener {
 	
 	private static final long serialVersionUID = -8128231225228032474L;
-	
+		
 	public HardwareSerial serial;
 	public XBeeSimulator xBee = new XBeeSimulator(null, null, null, 0);
 	public ArduRCT_Remote application;
+	public GPS gps = null;
+	public ServoBank servoBank;
 	
 	RemotuinoSimulator(String title) {
 		super(title);
 		serial = new HardwareSerial("Serial");		
+		servoBank = new ServoBank(12, "Remotuino");
 	}
 	
 	private void buildUI() {	
@@ -34,23 +39,41 @@ implements ActionListener {
 		JMenuBar menuBar = new JMenuBar();
 		JMenu menu = new JMenu("Actions");
 		
-		ButtonGroup group2 = new ButtonGroup();
+		ButtonGroup group = new ButtonGroup();
 		JRadioButtonMenuItem rbMenuItem = new JRadioButtonMenuItem("Start");
-		group2.add(rbMenuItem);
+		group.add(rbMenuItem);
 		rbMenuItem.addActionListener(this);
 		menu.add(rbMenuItem);
 		rbMenuItem = new JRadioButtonMenuItem("Stop");
-		group2.add(rbMenuItem);
+		group.add(rbMenuItem);
 		rbMenuItem.setSelected(true);
 		rbMenuItem.addActionListener(this);
 		menu.add(rbMenuItem);
 
+		menu.addSeparator();
+
+		ButtonGroup group2 = new ButtonGroup();
+		rbMenuItem = new JRadioButtonMenuItem("Start GPS");
+		group2.add(rbMenuItem);
+		rbMenuItem.addActionListener(this);
+		menu.add(rbMenuItem);
+		rbMenuItem = new JRadioButtonMenuItem("Move GPS");
+		group2.add(rbMenuItem);
+		rbMenuItem.addActionListener(this);
+		menu.add(rbMenuItem);
+		rbMenuItem = new JRadioButtonMenuItem("Stop GPS");
+		group2.add(rbMenuItem);
+		rbMenuItem.setSelected(true);
+		rbMenuItem.addActionListener(this);
+		menu.add(rbMenuItem);
+		
 		menuBar.add(menu);		
 		this.setJMenuBar(menuBar);
 		
 		setLayout(new BorderLayout(2, 2));
-		setPreferredSize(new Dimension(350, 300));
+		serial.setPreferredSize(new Dimension(250, 300));
 		add(serial, BorderLayout.CENTER);
+		add(servoBank, BorderLayout.EAST);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		pack();
 		setVisible(true);
@@ -64,9 +87,20 @@ implements ActionListener {
 			application.setHardwareSerial1(xBee.hardware);
 			application.start();
 		} else if (ae.getActionCommand().equals("Stop")) {
+			if (gps != null) gps.stop();
+			gps = null;
 			xBee.hardware.clear();
 			serial.clear();
 			if (application != null) application.stop();
+		} else if (ae.getActionCommand().equals("Start GPS")) {
+			if (gps == null) gps = new GPS(serial);
+			gps.setMoving(false);
+		} else if (ae.getActionCommand().equals("Move GPS")) {
+			if (gps == null) gps = new GPS(serial);
+			gps.setMoving(true);
+		} else if (ae.getActionCommand().equals("Stop GPS")) {
+			if (gps != null) gps.stop();
+			gps = null;
 		}
 	}
 	

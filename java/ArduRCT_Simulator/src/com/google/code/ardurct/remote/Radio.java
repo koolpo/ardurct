@@ -1,9 +1,7 @@
 package com.google.code.ardurct.remote;
 
-import com.google.code.ardurct.libraries.XBee;
-import com.google.code.ardurct.libraries.touchscreen.ArduinoFirmware;
 
-public class Radio extends ArduinoFirmware {
+public class Radio extends Monitor {
 	
 	public static final int MAIN_LOOP_DELAY = 20;
 
@@ -15,15 +13,12 @@ public class Radio extends ArduinoFirmware {
 	public static final int RADIO_STATUS_READY = 100;
 	public static final int RADIO_STATUS_ENTERING_COMMAND_MODE = 1;
 			
-	public XBee xBee = new XBee();
 	
 	public int radioStatus;
 	public int radioBaudrate;
 	
 	public int[] radioFrame = new int[64];
 	public int radioFramePtr;
-	
-	public int battery;
 	
 	public void radioSetup(int baudrate) {
 		xBee.begin(Serial1, baudrate);
@@ -75,33 +70,23 @@ public class Radio extends ArduinoFirmware {
 
 	
 	public void radioProcessFrame() {
-		int i = 0;
-		int temp;
-		if ((radioFramePtr > 2) && (radioFrame[radioFramePtr-1] == '\n') && (radioFrame[0] == '$')) {
+		if ((radioFramePtr > 2) && (radioFrame[0] == '$')) {
 			radioFramePtr = 0;
 			// we are receiving ArduRC data
 			switch (radioFrame[1]) {
-				case 'T':	// testing
-					xBee.print("$RX\n");
-					break;
-				case 'B':	// battery
-					xBee.print("$B");
-					temp = (battery >> 4) + '0';
-					xBee.print((char)(temp > '9' ? temp + 'A' - '0' - 10 : temp));
-					temp = (battery & 0x0F) + '0';					
-					xBee.print((char)(temp > '9' ? temp + 'A' - '0' - 10 : temp));
-					xBee.print((char)'\n');
+				case 'C':	// testing
+					xBee.print("$.C\n");
 					break;
 				default:
+					monitorProcessFrame(radioFrame, false);
 					break;
 			}
 		}
+		int i = 0;
 		while (i < radioFramePtr) Serial.print((char)radioFrame[i++]);
 		radioFramePtr = 0;
 	}
 	
 
-	public void setup() {}
-	public void loop() { }
 
 }

@@ -5,32 +5,48 @@ import java.util.Date;
 
 public class TouchScreen_UserInterface extends ScreenHAL {
 
-	public class uiTab_t {
+	public class uiRectangle_t {
+		public int x;
+		public int y;
+		public int width;
+		public int height;		
+	}
+	
+	public class uiTab_t extends uiRectangle_t {
+		/* 
+		 * RESTORE in Arduino
+		public int x;
+		public int y;
+		public int width;
+		public int height;
+		*/
 		int[] text;
-		int x;
-		int y;
-		int width;
 		boolean enabled;
 		IUIDrawCallback drawer; 
 		IUIActionCallback handler; 
 	}
 	
-	public class uiElement_t {
-		int type;
-		int tab;
-		public int id;
-		int group;
+	public class uiElement_t extends uiRectangle_t  {
+		/* 
+		 * RESTORE in Arduino
 		public int x;
 		public int y;
 		public int width;
 		public int height;
+		*/
+		int type;
+		int tab;
+		int id;
+		int group;
 		int[] text;
+		int textX;
+		int textY;
 		public int value;
 		int min;
 		int max;
 		boolean editable;
 	}
-
+	
 	private static final long serialVersionUID = 1L;
 	
 	public static final int UI_BUTTON = 1;
@@ -135,14 +151,15 @@ public class TouchScreen_UserInterface extends ScreenHAL {
 	public int addUITab(int[] text, IUIActionCallback handler, IUIDrawCallback drawer) {
 		if (_uiNbTabs == CONFIGURATION_UI_MAX_TABS) return UI_ERROR;
 		_uiTab[_uiNbTabs] = new uiTab_t();
-		if (_uiNbTabs == 0) _uiTab[_uiNbTabs].x = UI_TAB_LEFT_MARGIN;
+		if (_uiNbTabs == 0) _uiTab[_uiNbTabs].x = UI_TAB_LEFT_MARGIN + _uiX;
 		else _uiTab[_uiNbTabs].x = _uiTab[_uiNbTabs-1].x+_uiTab[_uiNbTabs-1].width-1;
 		if (_uiTab[_uiNbTabs].x > _uiWidth) return UI_ERROR;
-		_uiTab[_uiNbTabs].y = 2;
+		_uiTab[_uiNbTabs].y = 2 + _uiY;
 		_uiTab[_uiNbTabs].enabled = true;
 		_uiTab[_uiNbTabs].text = text;
-		if (_uiNbTabs > 0) _uiTabHeight = this.getFontHeight(UI_TAB_FONT) + 2 + UI_TAB_TOP_MARGIN*2;
 		_uiTab[_uiNbTabs].width = getStringWidth(_uiTab[_uiNbTabs].text, UI_TAB_FONT) + UI_TAB_LEFT_MARGIN * 2;
+		_uiTab[_uiNbTabs].height = getFontHeight(UI_TAB_FONT) + UI_TAB_TOP_MARGIN*2;
+		if (_uiNbTabs > 0) _uiTabHeight = _uiTab[_uiNbTabs].height + 2;
 		_uiTab[_uiNbTabs].drawer = drawer;
 		_uiTab[_uiNbTabs].handler = handler;
 		return _uiNbTabs++;
@@ -187,8 +204,8 @@ public class TouchScreen_UserInterface extends ScreenHAL {
 		_uiElement[_uiNbElements].tab = tab;
 		_uiElement[_uiNbElements].id = id;
 		_uiElement[_uiNbElements].group = group;
-		_uiElement[_uiNbElements].x = x;
-		_uiElement[_uiNbElements].y = y;
+		_uiElement[_uiNbElements].x = x + _uiX;
+		_uiElement[_uiNbElements].y = y + _uiY + _uiTabHeight;
 		_uiElement[_uiNbElements].width = width;
 		_uiElement[_uiNbElements].height = height;
 		_uiElement[_uiNbElements].text = stringToArray(text);
@@ -229,6 +246,14 @@ public class TouchScreen_UserInterface extends ScreenHAL {
 			else if ((y & UI_TOP_OF) != 0) _uiElement[_uiNbElements].y = _uiElement[ref].y- _uiElement[_uiNbElements].height+1;
 			if ((y & UI_WITH_MARGIN) != 0) _uiElement[_uiNbElements].y += UI_ELEMENT_TOP_MARGIN;
 		}
+		if (text != null) {
+			int fontSize = UI_ELEMENT_FONT;
+			if (((_uiElement[_uiNbElements].text[0] == '+') || (_uiElement[_uiNbElements].text[0] == '-')) && (_uiElement[_uiNbElements].text[1] == 0)) 
+				fontSize = FONT_HUGE;
+			_uiElement[_uiNbElements].textX = _uiElement[_uiNbElements].x + 
+				(_uiElement[_uiNbElements].width-getStringWidth(_uiElement[_uiNbElements].text, fontSize))/2;
+			_uiElement[_uiNbElements].textY = _uiElement[_uiNbElements].y + 1 + (_uiElement[_uiNbElements].height-getFontHeight(fontSize))/2;
+		}
 		return _uiNbElements++;
 	}
 
@@ -241,7 +266,6 @@ public class TouchScreen_UserInterface extends ScreenHAL {
 	}
 	
 	private void _drawActiveUITab() {
-		int bgColor = getBackgroundColor();
 		if (_uiNbTabs > 1) {
 			this.fillRectangle(_uiX, _uiY, _uiWidth, _uiTabHeight, UI_COLOR_BACKGROUND);
 			// draw screen headers	
@@ -249,15 +273,15 @@ public class TouchScreen_UserInterface extends ScreenHAL {
 			int aw = 0;
 			for (int i=0; i<_uiNbTabs; i++) {
 				if (i != _uiActiveTab) {
-					fillRectangle(_uiX+_uiTab[i].x, _uiY+_uiTab[i].y, _uiTab[i].width, _uiTabHeight-2, UI_COLOR_TAB_UNSELECTED);
+					fillRectangle(_uiX+_uiTab[i].x, _uiY+_uiTab[i].y, _uiTab[i].width, _uiTab[i].height, UI_COLOR_TAB_UNSELECTED);
 					setBackgroundColor(UI_COLOR_TAB_UNSELECTED);
 				} else setBackgroundColor(UI_COLOR_BACKGROUND);
-				drawRectangle(_uiX+_uiTab[i].x, _uiY+_uiTab[i].y, _uiTab[i].width, _uiTabHeight-2, BLACK, 1);
-				drawString(_uiTab[i].text, _uiX+_uiTab[i].x+UI_TAB_LEFT_MARGIN, _uiY+3+UI_TAB_TOP_MARGIN, BLACK, UI_TAB_FONT, UI_TAB_FONT_IS_BOLD, false);
-				if (_uiTab[i].drawer != null) _uiTab[i].drawer.uiDrawCallback(UI_DRAW_CALLBACK_TAB_ID, _uiX+_uiTab[i].x, _uiY+_uiTab[i].y, 
-						_uiTab[i].width, _uiTabHeight-2, i == _uiActiveTab ? UI_SELECTED : UI_UNSELECTED);
+				drawRectangle(_uiTab[i].x, _uiTab[i].y, _uiTab[i].width,  _uiTab[i].height, BLACK, 1);
+				drawString(_uiTab[i].text, _uiTab[i].x+UI_TAB_LEFT_MARGIN, _uiY+3+UI_TAB_TOP_MARGIN, BLACK, UI_TAB_FONT, UI_TAB_FONT_IS_BOLD, false);
+				if (_uiTab[i].drawer != null) _uiTab[i].drawer.uiDrawCallback(UI_DRAW_CALLBACK_TAB_ID, _uiTab[i].x, _uiTab[i].y, 
+						_uiTab[i].width, _uiTab[i].height, i == _uiActiveTab ? UI_SELECTED : UI_UNSELECTED);
 				if (i == _uiActiveTab) {
-					ax = _uiX+_uiTab[i].x+1;
+					ax = _uiTab[i].x+1;
 					aw = _uiTab[i].width-3;
 				}
 			}
@@ -272,69 +296,69 @@ public class TouchScreen_UserInterface extends ScreenHAL {
 		for (int i=0; i<_uiNbElements; i++) {
 			if (_uiElement[i].tab == _uiActiveTab) _drawUIElement(_uiElement[i]);
 		}
-		setBackgroundColor(bgColor);
 		_uiIsShown = true;
 	}
 
 	private void _drawUIElement(uiElement_t elt) {
+		int bgColor = getBackgroundColor();
 		int color = UI_COLOR_BUTTON_RELEASED;
 		if (elt.value == UI_PUSHED) color = UI_COLOR_BUTTON_PUSHED;
+		int fontSize = UI_ELEMENT_FONT;
+		if (elt.text != null) {
+			if (((elt.text[0] == '+') || (elt.text[0] == '-')) && (elt.text[1] == 0)) fontSize = FONT_HUGE;			
+		}
 		switch (elt.type) {
 			case UI_LABEL:
 				setBackgroundColor(UI_COLOR_BACKGROUND);
-				drawString(elt.text, _uiX+elt.x, _uiY+_uiTabHeight+elt.y+1+(elt.height-getFontHeight(UI_ELEMENT_FONT))/2, BLACK, UI_ELEMENT_FONT, UI_ELEMENT_FONT_IS_BOLD, false);
+				drawString(elt.text, elt.x, elt.textY, BLACK, fontSize, UI_ELEMENT_FONT_IS_BOLD, false);
 				break;
 			case UI_BUTTON:
-				fillRoundedRectangle(_uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, UI_ELEMENT_TOP_MARGIN*80/100, color);
-				drawRoundedRectangle(_uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, UI_ELEMENT_TOP_MARGIN*80/100, BLACK, 1);
+				fillRoundedRectangle(elt.x, elt.y, elt.width, elt.height, UI_ELEMENT_TOP_MARGIN*80/100, color);
+				drawRoundedRectangle(elt.x, elt.y, elt.width, elt.height, UI_ELEMENT_TOP_MARGIN*80/100, BLACK, 1);
 				setBackgroundColor(color);
-				int fontSize = UI_ELEMENT_FONT;
-				if (((elt.text[0] == '+') || (elt.text[0] == '-')) && (elt.text[1] == 0)) fontSize = FONT_HUGE;
-				drawString(elt.text, _uiX+elt.x+(elt.width-getStringWidth(elt.text, fontSize))/2, 
-						_uiY+_uiTabHeight+elt.y+1+(elt.height-getFontHeight(fontSize))/2, BLACK, fontSize, UI_ELEMENT_FONT_IS_BOLD, false);
+				drawString(elt.text, elt.textX, elt.textY, BLACK, fontSize, UI_ELEMENT_FONT_IS_BOLD, false);
 				break;
 			case UI_PUSH_BUTTON:
-				fillRectangle(_uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, color);
-				drawRectangle(_uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, BLACK, 1);
+				fillRectangle(elt.x, elt.y, elt.width, elt.height, color);
+				drawRectangle(elt.x, elt.y, elt.width, elt.height, BLACK, 1);
 				setBackgroundColor(color);
-				drawString(elt.text, _uiX+elt.x+(elt.width-getStringWidth(elt.text, UI_ELEMENT_FONT))/2, 
-						_uiY+_uiTabHeight+elt.y+1+(elt.height-getFontHeight(UI_ELEMENT_FONT))/2, BLACK, UI_ELEMENT_FONT, UI_ELEMENT_FONT_IS_BOLD, false);
+				drawString(elt.text, elt.textX, elt.textY, BLACK, fontSize, UI_ELEMENT_FONT_IS_BOLD, false);
 				break;
 			case UI_AREA:
-				if (_uiTab[elt.tab].drawer != null) _uiTab[elt.tab].drawer.uiDrawCallback(elt.id, _uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, elt.value);
-				else if (_uiDrawer != null) _uiDrawer.uiDrawCallback(elt.id, _uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, elt.value);
+				if (_uiTab[elt.tab].drawer != null) _uiTab[elt.tab].drawer.uiDrawCallback(elt.id, elt.x, elt.y, elt.width, elt.height, elt.value);
+				else if (_uiDrawer != null) _uiDrawer.uiDrawCallback(elt.id, elt.x, elt.y, elt.width, elt.height, elt.value);
 				break;
 			case UI_GAUGE:
-				fillRectangle(_uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, UI_COLOR_BACKGROUND);
-				if (elt.width > elt.height) 
-					 fillRectangle(_uiX+elt.x, _uiY+_uiTabHeight+elt.y, 1+(elt.width-1)*elt.value/(elt.max-elt.min), elt.height, UI_COLOR_GAUGE);
-				else fillRectangle(_uiX+elt.x, _uiY+_uiTabHeight+elt.y+1+(elt.height-1)*(elt.max-elt.value)/(elt.max-elt.min),
+				fillRectangle(elt.x, elt.y, elt.width, elt.height, UI_COLOR_BACKGROUND);
+				if (elt.width > elt.height) fillRectangle(elt.x, elt.y, 1+(elt.width-1)*elt.value/(elt.max-elt.min), elt.height, UI_COLOR_GAUGE);
+				else fillRectangle(elt.x, elt.y+1+(elt.height-1)*(elt.max-elt.value)/(elt.max-elt.min),
 							elt.width, (elt.height-1)*elt.value/(elt.max-elt.min), UI_COLOR_GAUGE);
-				drawRectangle(_uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, BLACK, 2);
+				drawRectangle(elt.x, elt.y, elt.width, elt.height, BLACK, 2);
 				break;
 			case UI_SLIDER:
-				fillRectangle(_uiX+elt.x, _uiY+_uiTabHeight+elt.y, elt.width, elt.height, UI_COLOR_BACKGROUND);
+				fillRectangle(elt.x, elt.y, elt.width, elt.height, UI_COLOR_BACKGROUND);
 				int x;
 				int y;
 				int w;
 				int h;
 				if (elt.width > elt.height) {
-					drawLine(_uiX+elt.x+2, _uiY+_uiTabHeight+elt.y+elt.height/2, _uiX+elt.x+elt.width-2, _uiY+_uiTabHeight+elt.y+elt.height/2, BLACK, 4);
+					drawLine(elt.x+2, elt.y+elt.height/2, elt.x+elt.width-2, elt.y+elt.height/2, BLACK, 4);
 					x = elt.x + ((elt.width-UI_SLIDER_KNOB_SIZE)*elt.value)/(elt.max-elt.min);
 					y = elt.y + 2;
 					w = UI_SLIDER_KNOB_SIZE;
 					h = elt.height-2;
 				} else {
-					drawLine(_uiX+elt.x+elt.width/2, _uiY+_uiTabHeight+elt.y+2, _uiX+elt.x+elt.width/2, _uiY+_uiTabHeight+elt.y+elt.height-2, BLACK, 4);
+					drawLine(elt.x+elt.width/2, +elt.y+2, elt.x+elt.width/2, elt.y+elt.height-2, BLACK, 4);
 					x = elt.x + 2;
 					y = elt.y + ((elt.height-UI_SLIDER_KNOB_SIZE)*(elt.max-elt.value))/(elt.max-elt.min);
 					w = elt.width-2;
 					h = UI_SLIDER_KNOB_SIZE;
 				}
-				fillRectangle(_uiX+x, _uiY+_uiTabHeight+y, w, h, UI_COLOR_BUTTON_PUSHED);
-				drawRectangle(_uiX+x, _uiY+_uiTabHeight+y, w, h, BLACK, 1);
+				fillRectangle(x, y, w, h, UI_COLOR_BUTTON_PUSHED);
+				drawRectangle(x, y, w, h, BLACK, 1);
 				break;
 		}	
+		setBackgroundColor(bgColor);
 	}
 	
 	public void stopUI() {
@@ -343,13 +367,12 @@ public class TouchScreen_UserInterface extends ScreenHAL {
 		
 	private boolean _isTouchInUITab(uiTab_t tab, int x, int y) {
 		if (x == TOUCHSCREEN_NO_TOUCH) return false;
-		return ((x >_uiX+tab.x) && (x < _uiX+tab.x+tab.width) && (y < _uiY+_uiTabHeight));
+		return ((x > tab.x) && (x < tab.x+tab.width) && (y < _uiY+_uiTabHeight));
 	}
 
 	private boolean _isTouchInUIElement(uiElement_t elt, int x, int y) {
 		if (x == TOUCHSCREEN_NO_TOUCH) return false;
-		return ((x >_uiX+elt.x) && (y > _uiY+_uiTabHeight+elt.y) && 
-				(x < _uiX+elt.x+elt.width) && (y < _uiY+_uiTabHeight+elt.y+elt.height));
+		return ((x > elt.x) && (y > elt.y) && (x < elt.x+elt.width) && (y < elt.y+elt.height));
 	}
 	
 	private long millis() {
@@ -481,12 +504,12 @@ public class TouchScreen_UserInterface extends ScreenHAL {
 				if (state == UI_PUSHED) {
 					int value = 0;
 					if (elt.width > elt.height) {
-						int minX = _uiX + elt.x;
-						int maxX = _uiX + elt.x + elt.width - 1; 
+						int minX = elt.x;
+						int maxX = elt.x + elt.width - 1; 
 						value = (x - minX) * (elt.max - elt.min) / (maxX - minX);
 					} else {
-						int minY = _uiY + _uiTabHeight + elt.y;
-						int maxY = _uiY + _uiTabHeight + elt.y + elt.height - 1; 
+						int minY = elt.y;
+						int maxY = elt.y + elt.height - 1; 
 						value = elt.max - (y - minY) * (elt.max - elt.min) / (maxY - minY);					
 					}
 					if (value != elt.value) elt.value = value;
@@ -496,31 +519,22 @@ public class TouchScreen_UserInterface extends ScreenHAL {
 		}
 		return hasValueChanged;
 	}
+		
+	public uiRectangle_t getUIElementBounds(int id) {
+		int index = _getUIElementIndex(id);
+		if (index == UI_ERROR) return null;
+		return _uiElement[index];
+	}
+
+	public uiRectangle_t getUITabBounds(int tabId) {
+		if (tabId >= _uiNbTabs) return null;
+		return _uiTab[tabId];
+	}
+
+	public int getUITabHeight() {
+		return _uiTabHeight - 2;
+	}
 	
-	public int getUIElementWidth(int id) {
-		int index = _getUIElementIndex(id);
-		if (index == UI_ERROR) return UI_ERROR;
-		return _uiElement[index].width;
-	}
-
-	public int getUIElementHeight(int id) {
-		int index = _getUIElementIndex(id);
-		if (index == UI_ERROR) return UI_ERROR;
-		return _uiElement[index].height;
-	}
-
-	public int getUIElementX(int id) {
-		int index = _getUIElementIndex(id);
-		if (index == UI_ERROR) return UI_ERROR;
-		return _uiElement[index].x;
-	}
-
-	public int getUIElementY(int id) {
-		int index = _getUIElementIndex(id);
-		if (index == UI_ERROR) return UI_ERROR;
-		return _uiElement[index].y + _uiY + _uiTabHeight + 1;
-	}
-
 	private int _getUIElementIndex(int id) {
 		for (int i=0; i<_uiNbElements; i++) {
 			if (_uiElement[i].id == id) return i;
@@ -571,26 +585,7 @@ public class TouchScreen_UserInterface extends ScreenHAL {
 		_uiTab[tabId].enabled = enabled;
 	}
 
-	public int getUITabX(int tabId) {
-		if (tabId >= _uiNbTabs) return UI_ERROR; 
-		return _uiX + _uiTab[tabId].x;
-	}
-
-	public int getUITabY(int tabId) {
-		if (tabId >= _uiNbTabs) return UI_ERROR; 
-		return _uiY + _uiTab[tabId].y;
-	}
-
-	public int getUITabWidth(int tabId) {
-		if (tabId >= _uiNbTabs) return UI_ERROR; 
-		return _uiTab[tabId].width;
-	}
-
-	public int getUITabHeight() {
-		return _uiTabHeight - 2;
-	}
-	
-	public int getUIGroupElement(int groupId) {
+	public int getUIGroupSelectedElement(int groupId) {
 		for (int i=0; i<_uiNbElements; i++) {
 			if (_uiElement[i].group == groupId && _uiElement[i].value == UI_SELECTED) return _uiElement[i].id;
 		}
@@ -660,5 +655,5 @@ public class TouchScreen_UserInterface extends ScreenHAL {
 	public int getUISelectedTab() {
 		return _uiActiveTab;
 	}
-	
+		
 }
