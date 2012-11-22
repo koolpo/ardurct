@@ -8619,6 +8619,8 @@ Source: http://www.atmel.com/dyn/resources/prod_documents/doc2593.pdf</descripti
 <part name="C11" library="SparkFun" deviceset="CAP" device="0805" value="0.1uF"/>
 <part name="GND22" library="SparkFun" deviceset="GND" device=""/>
 <part name="P+5" library="SparkFun" deviceset="3.3V" device=""/>
+<part name="R6" library="SparkFun" deviceset="RESISTOR" device="0805-RES" value="10k"/>
+<part name="P+9" library="SparkFun" deviceset="3.3V" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -8728,6 +8730,8 @@ or the 4 separate buttons</text>
 <instance part="C11" gate="G$1" x="7.62" y="170.18" rot="MR180"/>
 <instance part="GND22" gate="1" x="7.62" y="160.02"/>
 <instance part="P+5" gate="G$1" x="7.62" y="175.26"/>
+<instance part="R6" gate="G$1" x="142.24" y="86.36" rot="R270"/>
+<instance part="P+9" gate="G$1" x="142.24" y="93.98"/>
 </instances>
 <busses>
 </busses>
@@ -9077,6 +9081,11 @@ or the 4 separate buttons</text>
 <wire x1="7.62" y1="175.26" x2="7.62" y2="172.72" width="0.1524" layer="91"/>
 <pinref part="C11" gate="G$1" pin="2"/>
 <pinref part="P+5" gate="G$1" pin="3.3V"/>
+</segment>
+<segment>
+<pinref part="P+9" gate="G$1" pin="3.3V"/>
+<pinref part="R6" gate="G$1" pin="1"/>
+<wire x1="142.24" y1="93.98" x2="142.24" y2="91.44" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="D0/RX" class="0">
@@ -9617,7 +9626,11 @@ or the 4 separate buttons</text>
 <wire x1="101.6" y1="124.46" x2="134.62" y2="124.46" width="0.1524" layer="91"/>
 <wire x1="134.62" y1="124.46" x2="134.62" y2="63.5" width="0.1524" layer="91"/>
 <pinref part="LCD1" gate="G$1" pin="CS"/>
-<wire x1="134.62" y1="63.5" x2="175.26" y2="63.5" width="0.1524" layer="91"/>
+<wire x1="134.62" y1="63.5" x2="142.24" y2="63.5" width="0.1524" layer="91"/>
+<pinref part="R6" gate="G$1" pin="2"/>
+<wire x1="142.24" y1="63.5" x2="175.26" y2="63.5" width="0.1524" layer="91"/>
+<wire x1="142.24" y1="81.28" x2="142.24" y2="63.5" width="0.1524" layer="91"/>
+<junction x="142.24" y="63.5"/>
 </segment>
 </net>
 <net name="N$3" class="0">
