@@ -1,0 +1,44 @@
+/*
+ * TouScruinoV1 - Screen and 5 ways switch management
+ *
+ * Copyright (c) 2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+#include "TouScruinoV1.h"
+
+//#include "../Printf/Printf.cpp"
+
+ArduRCT_TouScruinoV1::ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
+	setupScreen(cd, cs, reset);
+	_backlightPin = backlightPin;
+}
+
+void ArduRCT_TouScruinoV1::begin(uint16_t foregroundColor, uint16_t backgroundColor, uint8_t fontSize, bool fontBold, bool fontOverlay) {
+	initScreen();
+	if (_backlightPin != 0xFF) setupBacklight(_backlightPin);
+	setFont(fontSize, fontBold, fontOverlay);
+	setBackgroundColor(backgroundColor);
+	setForegroundColor(foregroundColor);
+	if (_backlightPin != 0xFF) setBacklight(0);
+	if (backgroundColor != BLACK) fillRectangle(0, 0, getWidth(), getHeight(), backgroundColor);
+	if (_backlightPin != 0xFF) setBacklight(128);
+}
+
