@@ -22,59 +22,81 @@
  * THE SOFTWARE.
  */
  
-#include <TouScruinoV1.h>
+// Change the version to adapt to your screen
+#define TOUSCRUINO_VERSION 1
+
+#if (TOUSCRUINO_VERSION == 1)
+
+#define BOX_SIZE 16
+#define BOX_SPEED_X 1
+#define BOX_SPEED_Y 2
+
+#define TFT_CS 10
+#define TFT_CD 9
+#define TFT_RST 8
+
+#include <SPI.h>
+#include <ArduRCT_TouScruinoV1.h>
+
+ArduRCT_TouScruinoV1 tft(TFT_CD, TFT_CS, TFT_RST);
+
+#elif (TOUSCRUINO_VERSION == 2)
+
+#define BOX_SIZE 20
+#define BOX_SPEED_X 2
+#define BOX_SPEED_Y 3
+
+#define TFT_PORT 2 // PortB
+#define TFT_CD     21
+#define TFT_WR     22
+#define TFT_RD     23
+#define TFT_CS     0xFF
+#define TFT_RST 0xFF
+#define TFT_BL 5
+
+#include <ArduRCT_TouScruinoV2.h>
+
+ArduRCT_TouScruinoV2 tft(TFT_PORT, TFT_CD, TFT_WR, TFT_RD, TFT_CS, TFT_RST, TFT_BL);
+
+#endif
+
 #include "Box.h"
+
+#define BACKGROUND WHITE
 
 #define REFRESH 30
 
-#define BOX_SPEED_X 2
-#define BOX_SPEED_Y 3
-#define BOX_SIZE 20
+#define NB_BOXES 3
 
-ArduRCT_TouScruinoV1 display;
-
-Box box1(RED, BOX_SIZE);
-Box box2(BLUE, BOX_SIZE);
-Box box3(GREEN, BOX_SIZE);
+Box box[NB_BOXES];
 int16_t maxX;
 int16_t maxY;
 
-
 void setup() {
-    display.begin(BLACK, BACKGROUND);
-    display.setBacklight(180);
-    box1.vectorize(0, 0, BOX_SPEED_X, BOX_SPEED_Y);
-    box2.vectorize(touchscreen.getWidth(), 0, BOX_SPEED_Y, BOX_SPEED_X);
-    box3.vectorize(0, touchscreen.getHeight(), BOX_SPEED_Y, BOX_SPEED_X);
-    maxX = touchscreen.getWidth();
-    maxY = touchscreen.getHeight();
+    tft.begin(BLACK, BACKGROUND);
+    tft.setBacklight(180);
+    maxX = tft.getWidth();
+    maxY = tft.getHeight();
+    box[0].init(RED, BOX_SIZE, 0, 0, BOX_SPEED_X, BOX_SPEED_Y);
+    box[1].init(BLUE, BOX_SIZE, tft.getWidth(), 0, BOX_SPEED_Y, BOX_SPEED_X);
+    box[2].init(GREEN, BOX_SIZE, 0, tft.getHeight(), BOX_SPEED_Y, BOX_SPEED_X);
 }
 
 void loop() {
     // erase the boxes
-    box1.erase(&display);
-    box2.erase(&display);
-    box3.erase(&display);
-    
+    for (uint8_t i=0; i<NB_BOXES; i++) box[i].erase(&tft);
     // move the boxes
-    box1.move();
-    box2.move();
-    box3.move();
-    
+    for (uint8_t i=0; i<NB_BOXES; i++) box[i].move();
     // check inter box collisions
-    box1.checkBoxCollisions(&box2);
-    box1.checkBoxCollisions(&box3);
-    box2.checkBoxCollisions(&box3);
-    
+    for (uint8_t i=0; i<NB_BOXES-1; i++) {
+        for (uint8_t j=i+1; j<NB_BOXES; j++) {
+            box[i].checkBoxCollisions(&box[j]);
+        }
+    }    
     // bounce the box off the walls if necessary.
-    box1.checkWallCollisions(maxX, maxY);
-    box2.checkWallCollisions(maxX, maxY);
-    box3.checkWallCollisions(maxX, maxY);
-    
+    for (uint8_t i=0; i<NB_BOXES; i++) box[i].checkWallCollisions(maxX, maxY);
     // draw the ball
-    box1.draw(&display);
-    box2.draw(&display);
-    box3.draw(&display);
+    for (uint8_t i=0; i<NB_BOXES; i++) box[i].draw(&tft);
     
     // wait
     delay(REFRESH);

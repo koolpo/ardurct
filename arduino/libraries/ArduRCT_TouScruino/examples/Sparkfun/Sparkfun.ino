@@ -22,15 +22,41 @@
  * THE SOFTWARE.
  */
  
+// Change the version to adapt to your screen
+#define TOUSCRUINO_VERSION 1
+
+#if (TOUSCRUINO_VERSION == 1)
+
+#define TFT_CS 10
+#define TFT_CD 9
+#define TFT_RST 8
+
+#include <SPI.h>
 #include <ArduRCT_TouScruinoV1.h>
 
-#define LOGO_SCALE_MUL 3
-#define LOGO_SCALE_DIV 2
+ArduRCT_TouScruinoV1 tft(TFT_CD, TFT_CS, TFT_RST);
+
+#elif (TOUSCRUINO_VERSION == 2)
+
+#define TFT_PORT 2 // PortB
+#define TFT_CD     21
+#define TFT_WR     22
+#define TFT_RD     23
+#define TFT_CS     0xFF
+#define TFT_RST 0xFF
+#define TFT_BL 5
+
+#include <ArduRCT_TouScruinoV2.h>
+
+ArduRCT_TouScruinoV2 tft(TFT_PORT, TFT_CD, TFT_WR, TFT_RD, TFT_CS, TFT_RST, TFT_BL);
+
+#endif
+
+#define LOGO_SCALE_MUL 7
+#define LOGO_SCALE_DIV 5
 
 #define LOGO_WIDTH 57
 #define LOGO_HEIGHT 88
-
-ArduRCT_TouScruinoV1 display;
 
 /**
  * Approximation of sparkfun logo, 57 x 88
@@ -49,7 +75,7 @@ ArduRCT_TouScruinoV1 display;
  *    pc F800                set color to red
  *    afnne 32 14 14         fill NNE arc at top right
  *    tf 49 18 49 14 51 17   fill triangle at top right
- *	  0
+ *      0
  **/
 uint8_t sparkfun[] = "w 0 "\
     "pc F800 "\
@@ -66,29 +92,29 @@ uint8_t sparkfun[] = "w 0 "\
     "pc F800 "\
     "afnne 32 14 14 "\
     "tf 49 18 49 14 51 17"\
-	"\0";
+    "\0";
     
 void setup() {    
-    display.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
-    display.setBacklight(180);
+    tft.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    tft.setBacklight(180);
     
     // center the drawing on the screen
-    int16_t x = (display.getWidth()-LOGO_WIDTH*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
-    int16_t y = (display.getHeight()-LOGO_HEIGHT*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
+    int16_t x = (tft.getWidth()-LOGO_WIDTH*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
+    int16_t y = (tft.getHeight()-LOGO_HEIGHT*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
     
     // execute the macro without the initial write in slot 0
-    display.executeMacro(&sparkfun[3], x, y, LOGO_SCALE_MUL, LOGO_SCALE_DIV, true);
+    tft.executeMacro(&sparkfun[3], x, y, LOGO_SCALE_MUL, LOGO_SCALE_DIV, true);
 
     // write the macro to eeprom slot 0
-    //display.executeMacro(sparkfun);
+    //tft.executeMacro(sparkfun);
 
     //delay(3000);
     
     // erase the drawing
-    //display.fillRectangle(x-2, y-2, LOGO_WIDTH*LOGO_SCALE+4, LOGO_HEIGHT*LOGO_SCALE+4, WHITE);
+    //tft.fillRectangle(x-2, y-2, LOGO_WIDTH*LOGO_SCALE+4, LOGO_HEIGHT*LOGO_SCALE+4, WHITE);
 
     // execute the macro stored in slot 0. Any time we need the logo, in whatever scale, we can reuse "e 0"
-    //display.executeMacro((uint8_t *)"e 0", x, y, LOGO_SCALE, 1);
+    //tft.executeMacro((uint8_t *)"e 0", x, y, LOGO_SCALE, 1);
 }
 
 void loop() {

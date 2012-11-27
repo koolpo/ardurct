@@ -23,10 +23,21 @@
  */
 
 #ifndef ARDURCT_GRAPHICS_HPP
-#define ARDURCT_GRAPHICS_HPP
+#define ARDURCT_GRAPHICS_HPP 1
+
+#if ARDUINO >= 100
+ #include "Arduino.h"
+ #include "Print.h"
+#else
+ #include "WProgram.h"
+#endif
+
+#include <inttypes.h>
+#include <avr/pgmspace.h>
 
 #include "configuration.hpp"
 #include "fonts.hpp"
+#include "colors.hpp"
 
 #if defined(CONFIGURATION_HAS_MACROS)
 #include "Graphics_Macros.hpp"
@@ -64,7 +75,6 @@
 #define OVERLAY true
 #define NO_OVERLAY false
 
-
 class ArduRCT_Graphics: public Print {
    
 	public:
@@ -77,12 +87,18 @@ class ArduRCT_Graphics: public Print {
 #endif
 
 		// used for parallel port screens
-		void setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, bool spiOnBus);
+		void setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, bool spiOnBus = false);
 
 		// used for spi screens
 		void setupScreen(uint8_t cd, uint8_t cs, uint8_t reset);
 
-		void initScreen(uint16_t width, uint16_t height);
+		void begin(uint16_t foregroundColor = WHITE, uint16_t backgroundColor = BLACK, uint8_t fontSize = FONT_SMALL, bool fontBold = false, bool fontOverlay = false);
+
+		void setupBacklight(uint8_t backlightPin);
+		
+		void setBacklight(uint8_t value);
+		
+		uint8_t getBacklight();
 
 		uint16_t getForegroundColor();
 
@@ -172,7 +188,7 @@ class ArduRCT_Graphics: public Print {
 		uint8_t *executeMacro(uint8_t *macro, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1, 
 			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
 
-		void executeMacroCommand(touchScreen_macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
+		void executeMacroCommand(graphics_macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
 			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
 		
 		void executeEepromMacro(uint8_t macroNb, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
@@ -204,13 +220,18 @@ class ArduRCT_Graphics: public Print {
 		uint8_t _csBitMask;
 		uint8_t _cs;
 		uint8_t _reset;
+		uint8_t _backlightPin;
+		uint8_t _backlight;
 		bool _spiUsed;
+		bool _spiOnBus;
 		bool _screenSelected;
+		uint16_t _widthImpl;
+		uint16_t _heightImpl;
 
 		// the following functions are overwritten by the implementing class
 		virtual void initScreenImpl();
 		virtual void fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);
-		virtual void retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+		virtual uint16_t *retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 		virtual void pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 		virtual void setRotationImpl(uint8_t rotation);
 		virtual void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
@@ -218,8 +239,6 @@ class ArduRCT_Graphics: public Print {
 		virtual void unselectScreenImpl();		
 		
 	private:
-		uint16_t _widthImpl;
-		uint16_t _heightImpl;
 		uint16_t _width;
 		uint16_t _height;
 		int16_t _x;
@@ -246,23 +265,23 @@ class ArduRCT_Graphics: public Print {
 
 		void _initializeMacros();
 		
-		int16_t _parseMacroCommandParameters(uint8_t *s, touchScreen_macroCommand_t *mc);
+		int16_t _parseMacroCommandParameters(uint8_t *s, graphics_macroCommand_t *mc);
 
-		int8_t _parseMacroCommandHexColor(uint8_t *s, int16_t n, touchScreen_macroCommand_t *mc);
+		int8_t _parseMacroCommandHexColor(uint8_t *s, int16_t n, graphics_macroCommand_t *mc);
 
-		int8_t _parseMacroCommandParameter(uint8_t *s, int16_t n, touchScreen_macroCommand_t *mc, uint8_t paramId);
+		int8_t _parseMacroCommandParameter(uint8_t *s, int16_t n, graphics_macroCommand_t *mc, uint8_t paramId);
 		
-		void _executeMacroCommand(touchScreen_macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1);
+		void _executeMacroCommand(graphics_macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1);
 		
 		int32_t _getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX);
 		
-		int16_t _compressMacroCommand(touchScreen_macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr);
+		int16_t _compressMacroCommand(graphics_macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr);
 		
-		int16_t _uncompressMacroCommand(uint8_t *buffer, uint16_t n, touchScreen_macroCommand_t *mc);
+		int16_t _uncompressMacroCommand(uint8_t *buffer, uint16_t n, graphics_macroCommand_t *mc);
 		
 		int8_t _compressNumber(int16_t in, uint8_t *out, uint16_t n);
 		
-		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  touchScreen_macroCommand_t *mc, uint8_t paramId);
+		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  graphics_macroCommand_t *mc, uint8_t paramId);
 #endif
 		
 		void _drawValidChar(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, fontDefinition_t *fontDef, uint8_t fontScale, bool fontBold, bool overlay);
@@ -271,6 +290,8 @@ class ArduRCT_Graphics: public Print {
 		
 		void _scaleShiftAndColorizeUnpackedPattern(uint8_t *unpacked, uint16_t *result, uint16_t onColor, uint16_t offColor, uint8_t width, uint8_t height, uint8_t scale, 
 			uint8_t xShift = 0, uint8_t yShift = 0, bool blankFirst = true);
+			
+		void _drawPatternPixelPerPixel(uint16_t *buffer, int16_t x, int16_t y, uint16_t onColor, uint8_t width, uint8_t height);
 		
 		void _fillBoundedArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
 

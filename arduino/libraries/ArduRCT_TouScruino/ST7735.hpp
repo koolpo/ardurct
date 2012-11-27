@@ -32,22 +32,30 @@
 #ifndef ARDURCT_ST7735_HPP
 #define ARDURCT_ST7735_HPP
 
- #include "Graphics.hpp"
+#include "ArduRCT_Graphics.hpp"
  
- class ArduRCT_ST7735: public Graphics {
+class ArduRCT_ST7735: public ArduRCT_Graphics {
    
 	public:
 		ArduRCT_ST7735();
-			
+		
+		void invertDisplay(boolean invert);	
+		
 	protected:
+		// see ArduRCT_Graphics
 		void initScreenImpl();
 		void fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);
-		void retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+		virtual uint16_t *retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 		void pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 		void setRotationImpl(uint8_t rotation);
 		void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
 		void selectScreenImpl();
 		void unselectScreenImpl();		
-}
+	
+	private:		
+		void _setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy);
+		void _writeCommand(uint8_t cmd);
+		
+};
 
 #endif

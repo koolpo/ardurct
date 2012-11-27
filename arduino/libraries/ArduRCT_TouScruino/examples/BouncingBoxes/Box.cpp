@@ -1,6 +1,6 @@
 /*
  * Box - Class to define a box
- *	Part of BoucingBoxes
+ *    Part of BoucingBoxes
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -25,13 +25,13 @@
  
 #include "Box.h"
 
-Box::Box(uint16_t color, uint16_t size) {
-    _color = color;
-    _size = size;
+Box::Box() {
 }
 
 
-void Box::setPositionAndSpeed(int16_t x, int16_t y, int16_t x_speed, int16_t y_speed) {
+void Box::init(uint16_t color, uint16_t size, int16_t x, int16_t y, int16_t x_speed, int16_t y_speed) {
+    _color = color;
+    _size = size;
     _x = x;
     _y = y;
     _x_speed = x_speed;
@@ -40,11 +40,11 @@ void Box::setPositionAndSpeed(int16_t x, int16_t y, int16_t x_speed, int16_t y_s
 
 
 void Box::erase(ArduRCT_Graphics *display) {
-    display->drawRectangle(_x, _y, _size, _size, BACKGROUND, BOX_THICKNESS);
+    display->drawRectangle(_x, _y, _size, _size, display->getBackgroundColor(), BOX_THICKNESS);
 }
 
 
-void Box::draw(ArduRCT_Graphics *touchscreen) {
+void Box::draw(ArduRCT_Graphics *display) {
     display->drawRectangle(_x, _y, _size, _size, _color, BOX_THICKNESS);
 }
 

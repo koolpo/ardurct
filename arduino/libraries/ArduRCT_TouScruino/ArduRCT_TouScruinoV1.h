@@ -28,27 +28,15 @@
  */
  
 #ifndef TOUSCRUINO_V1_H
-#define TOUSCRUINO_V1_H
+#define TOUSCRUINO_V1_H 1
 
-#include "Graphics.hpp"
-#include "colors.hpp"
-
-//#include "../Printf/Printf.h"
+#include "ST7735.hpp"
 
 class ArduRCT_TouScruinoV1: public ArduRCT_ST7735 {
 
 	public:
 		ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin = 0xFF);
 		
-		void begin(uint16_t foregroundColor = WHITE, uint16_t backgroundColor = BLACK, uint8_t fontSize = FONT_SMALL, bool fontBold = false, bool fontOverlay = false);
+};
 
-		void setupBacklight(uint8_t backlightPin = CONFIGURATION_BACKLIGHT);
-		
-		void setBacklight(uint8_t value);
-		
-		uint8_t getBacklight();
-		
-	private:
-		uint8_t _backlightPin;
-		uint8_t _backlight;
-}
+#endif

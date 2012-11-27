@@ -24,6 +24,8 @@
 
 #include "ArduRCT_Graphics.hpp"
 #include "fontBitmaps.hpp"
+#include "eepromUtils.hpp"
+#include "../SPI/SPI.h"
 
 ArduRCT_Graphics::ArduRCT_Graphics(void) {
 }
@@ -50,8 +52,9 @@ void ArduRCT_Graphics::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t
 	_cs = cs;
 	_reset = reset;
 	_spiOnBus = spiOnBus;
-	_spiUsed = 0;
+	_spiUsed = false;
 	_screenSelected = 0;
+	_backlightPin = 0xFF;
 }
 
 void ArduRCT_Graphics::setupScreen(uint8_t cd, uint8_t cs, uint8_t reset) {	
@@ -66,17 +69,27 @@ void ArduRCT_Graphics::setupScreen(uint8_t cd, uint8_t cs, uint8_t reset) {
 	_cd = cd;
 	_cs = cs;
 	_reset = reset;
-	_spiShared = false;
+	_spiOnBus = false;
 	_spiUsed = true;
-	_screenSelected = 0;
+	_screenSelected = false;
+	_backlightPin = 0xFF;
 }
 
-void ArduRCT_Graphics::initScreen(uint16_t width, uint16_t height) {
+void ArduRCT_Graphics::setupBacklight(uint8_t backlightPin) {
+	_backlightPin = backlightPin;
+	if (_backlightPin == 0xFF) return;
+	pinMode(_backlightPin, OUTPUT);
+	_backlight = 128;
+	analogWrite(_backlightPin, 128);
+}
+
+void ArduRCT_Graphics::begin(uint16_t foregroundColor, uint16_t backgroundColor, uint8_t fontSize, bool fontBold, bool fontOverlay) {
 	pinMode(_cd, OUTPUT);
 	if (_rd != 0xFF) pinMode(_rd, OUTPUT);
 	if (_rd != 0xFF) pinMode(_wr, OUTPUT);
 	if (_cs != 0xFF) pinMode(_cs, OUTPUT);
 	
+	selectScreenImpl();
 	// if we have a reset pin set to 0xFF, the RD and WR have been OR'ed to create the reset
 	// they have to be on the same port for this to work
 	if (_reset == 0xFF) {
@@ -84,30 +97,50 @@ void ArduRCT_Graphics::initScreen(uint16_t width, uint16_t height) {
 		delay(20);
 		*_rdPort |= (_rdHigh | _wrHigh);
 	} else if (_reset < 100) {
+		if (_cs != 0xFF) digitalWrite(_cs, LOW);
 		pinMode(_reset, OUTPUT);
-		digitalWrite(_reset, LOW);
-		delay(20);
 		digitalWrite(_reset, HIGH);
-	}
-	
-	_widthImpl = width;
-	_heightImpl = height;
-	_width = width;
-	_height = height;
+		delay(200);
+		digitalWrite(_reset, LOW);
+		delay(200);
+		digitalWrite(_reset, HIGH);
+		delay(200);
+		if (_cs != 0xFF) digitalWrite(_cs, HIGH);
+	}	
+	initScreenImpl();
+	unselectScreenImpl();
+
 	_rotation = 0;
 	_margin = 0;
 	setFont(1, FONT_PLAIN, NO_OVERLAY);
-	selectScreenImpl();
-	initScreenImpl();
-	unselectScreenImpl();
 #if defined(CONFIGURATION_HAS_MACROS)	
 	_initializeMacros();
 #endif	
+	_width = _widthImpl;
+	_height = _heightImpl;
+	if (_backlightPin != 0xFF) setupBacklight(_backlightPin);
+	setFont(fontSize, fontBold, fontOverlay);
+	setBackgroundColor(backgroundColor);
+	setForegroundColor(foregroundColor);
+	if (_backlightPin != 0xFF) setBacklight(0);
+	if (backgroundColor != BLACK) fillRectangle(0, 0, _width, _height, backgroundColor);
+	if (_backlightPin != 0xFF) setBacklight(128);
+}
+
+void ArduRCT_Graphics::setBacklight(uint8_t value) {
+	if (_backlightPin == 0xFF) return;
+	_backlight = value;
+	analogWrite(_backlightPin, _backlight);
+}
+
+
+uint8_t ArduRCT_Graphics::getBacklight() {
+	return _backlight;
 }
 
 void ArduRCT_Graphics::setRotation(uint8_t rotation, bool selectAndUnselectScreen) {
 	_rotation = rotation;
-	if (_rotation > GRAPHICS_ROTATION_270) _rotation = GRAPHICS_ROTATION_0;
+	if (_rotation > GRAPHICS_ROTATION_270) _rotation = (_rotation % 4);
 	if ((_rotation == GRAPHICS_ROTATION_0) || (_rotation == GRAPHICS_ROTATION_180)) {
 		_width = _widthImpl;
 		_height = _heightImpl;
@@ -482,7 +515,9 @@ void ArduRCT_Graphics::fillRectangle(int16_t x, int16_t y, uint16_t width, uint1
 
 
 void ArduRCT_Graphics::fillScreen(uint16_t color, bool selectAndUnselectScreen) {
-	fillRectangle(0, 0, getWidth(), getHeight(), color, selectAndUnselectScreen);
+	if (selectAndUnselectScreen) selectScreenImpl();
+	fillAreaImpl(0, 0, _width-1, _height-1, color);
+	if (selectAndUnselectScreen) unselectScreenImpl();
 }
 
 
@@ -574,6 +609,7 @@ void ArduRCT_Graphics::drawPattern(uint8_t *pattern, uint8_t orientation, int16_
 		uint16_t color, uint16_t backColor, uint8_t scale, bool overlay, bool selectAndUnselectScreen) {
 	uint16_t buffer[CONFIGURATION_MAX_BITMAP_SPACE];
 	uint8_t unpacked[CONFIGURATION_MAX_BITMAP_SPACE];
+	uint16_t *retrieved = buffer;
 
 	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
 	if (width * height * scale * scale > CONFIGURATION_MAX_BITMAP_SPACE) return;
@@ -581,14 +617,27 @@ void ArduRCT_Graphics::drawPattern(uint8_t *pattern, uint8_t orientation, int16_
 	_unpackPattern(pattern, unpacked, width, height, 0, 0, orientation);
 	if (selectAndUnselectScreen) selectScreenImpl();
 	// if overlay, get the bitmap from the screen
-	if (overlay) retrieveBitmapImpl(buffer, x, y, width*scale, height*scale);
+	if (overlay) retrieved = retrieveBitmapImpl(buffer, x, y, width*scale, height*scale);
 	// scale and colorize it, setting a background color if no need to overlay
-	_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, backColor, width, height, scale, 0, 0, overlay != true);
+	_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, backColor, width, height, scale, 0, 0, !overlay || (overlay && !retrieved));
 	// draw it
-	pasteBitmapImpl(buffer, x, y, width*scale, height*scale);
+	if (!retrieved) _drawPatternPixelPerPixel(buffer, x, y, color, width*scale, height*scale);
+	else pasteBitmapImpl(buffer, x, y, width*scale, height*scale);
 	if (selectAndUnselectScreen) unselectScreenImpl();
 }
 
+
+/* ---------------- Protected functions ------------------------ */
+// the following functions are overwritten by the implementing class
+
+void ArduRCT_Graphics::initScreenImpl() {}
+void ArduRCT_Graphics::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {}
+uint16_t *ArduRCT_Graphics::retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {}
+void ArduRCT_Graphics::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {}
+void ArduRCT_Graphics::setRotationImpl(uint8_t rotation) {}
+void ArduRCT_Graphics::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {}
+void ArduRCT_Graphics::selectScreenImpl() {}
+void ArduRCT_Graphics::unselectScreenImpl() {}		
 
 /* ---------------- Private functions ------------------------ */
 
@@ -596,21 +645,23 @@ void ArduRCT_Graphics::_drawValidChar(uint8_t chr, uint16_t x, uint16_t y, uint1
 	uint8_t pattern[FONT_MAX_PATTERN];
 	uint8_t unpacked[FONT_MAX_SPACE];
 	uint16_t buffer[FONT_MAX_SPACE*2*2];
+	uint16_t *retrieved = buffer;
 
 	if ((fontSize % 2) == 1) memcpy_P(pattern, &font_small[chr - fontDef->firstChar], fontDef->orientation == PATTERN_ORIENTATION_HORIZONTAL ? fontDef->height : fontDef->width);
 	else if ((fontSize % 2) == 0) memcpy_P(pattern, &font_medium[chr - fontDef->firstChar], fontDef->orientation == PATTERN_ORIENTATION_HORIZONTAL ? fontDef->height : fontDef->width);
 	// unpack the pattern
 	_unpackPattern(pattern, unpacked, fontDef->width, fontDef->height, fontDef->charSpacing, fontDef->lineSpacing, fontDef->orientation);	
 	// if overlay, get the bitmap from the screen
-	if (overlay) retrieveBitmapImpl(buffer, x, y, (fontDef->width+fontDef->charSpacing)*fontScale, (fontDef->height+fontDef->lineSpacing)*fontScale);
+	if (overlay) retrieved = retrieveBitmapImpl(buffer, x, y, (fontDef->width+fontDef->charSpacing)*fontScale, (fontDef->height+fontDef->lineSpacing)*fontScale);
 	// scale and colorize it
-	_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, _backgroundColor, fontDef->width+fontDef->charSpacing, fontDef->height+fontDef->lineSpacing, fontScale, 0, 0, overlay != true);
+	_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, _backgroundColor, fontDef->width+fontDef->charSpacing, fontDef->height+fontDef->lineSpacing, fontScale, 0, 0, !overlay || (overlay && !retrieved));
 	if (isBold) {
 		_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, _backgroundColor, fontDef->width+fontDef->charSpacing, fontDef->height+fontDef->lineSpacing, fontScale, 1, 0, false);
 		_scaleShiftAndColorizeUnpackedPattern(unpacked, buffer, color, _backgroundColor, fontDef->width+fontDef->charSpacing, fontDef->height+fontDef->lineSpacing, fontScale, 0, 1, false);
 	}
 	// draw it
-	pasteBitmapImpl(buffer, x, y, (fontDef->width+fontDef->charSpacing)*fontScale, (fontDef->height+fontDef->lineSpacing)*fontScale);
+	if (!retrieved) _drawPatternPixelPerPixel(buffer, x, y, color, (fontDef->width+fontDef->charSpacing)*fontScale, (fontDef->height+fontDef->lineSpacing)*fontScale);
+	else pasteBitmapImpl(buffer, x, y, (fontDef->width+fontDef->charSpacing)*fontScale, (fontDef->height+fontDef->lineSpacing)*fontScale);
 }
 
 // Unpacks the bits contained in pattern into unpacked: each byte of unpacked is a bit of pattern
@@ -658,6 +709,13 @@ void ArduRCT_Graphics::_scaleShiftAndColorizeUnpackedPattern(uint8_t *unpacked, 
 	}
 }
 
+void ArduRCT_Graphics::_drawPatternPixelPerPixel(uint16_t *buffer, int16_t x, int16_t y, uint16_t onColor, uint8_t width, uint8_t height) {
+	for (uint8_t l=0; l<height; l++) {
+		for (uint8_t c=0; c<width; c++) {
+			if ((buffer[l*width+c] == onColor) && (x+c < _width) && (y+l < _height)) drawPixelImpl(x+c, y+l, onColor);
+		}
+	} 
+}
 
 void ArduRCT_Graphics::_fillBoundedArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
 	if (x2 < x1) swap(x1, x2);

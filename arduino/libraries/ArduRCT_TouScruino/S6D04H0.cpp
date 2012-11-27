@@ -24,6 +24,9 @@
 
 #include "S6D04H0.hpp"
 
+#define S6D04H0_WIDTH 240
+#define S6D04H0_HEIGHT 320
+
 #define S6D04H0_DELAY	120
 
 #define S6D04H0_CASET	0x2a
@@ -77,12 +80,14 @@ const unsigned char PROGMEM S6D04H0_initialization_code[] = {
 };
 
 
-S6D04H0::S6D04H0() {	
+ArduRCT_S6D04H0::ArduRCT_S6D04H0() {	
+	_widthImpl = S6D04H0_WIDTH;
+	_heightImpl = S6D04H0_HEIGHT;
 }
  
 /* ---------------- Protected functions ------------------------ */
 
-void S6D04H0::initScreenImpl(void) {
+void ArduRCT_S6D04H0::initScreenImpl(void) {
 	uint8_t buffer[32];
 	uint16_t i = 0;
 	
@@ -103,7 +108,7 @@ void S6D04H0::initScreenImpl(void) {
 
 // draw a single pixel
 // we inline the function to go as fast as possible
-void S6D04H0::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
+void ArduRCT_S6D04H0::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
 	uint8_t xh = x >> 8;
 	uint8_t xl = x;
 	uint8_t yh = y >> 8;
@@ -126,7 +131,7 @@ void S6D04H0::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
 
 // Fill the area lx,ly -> hx, hy
 // this functions assumes that lx <= hx and ly <= hy
-void S6D04H0::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {
+void ArduRCT_S6D04H0::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {
 	uint32_t nbPixels = hx - lx + 1;
 	nbPixels *= (hy - ly + 1);
 	uint8_t colH = color >> 8;
@@ -149,7 +154,7 @@ void S6D04H0::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, u
 }
 
 
-void S6D04H0::retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
+uint16_t *ArduRCT_S6D04H0::retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
 	uint32_t nbPixels = width;
 	nbPixels *= height;
 	
@@ -178,10 +183,11 @@ void S6D04H0::retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint1
 		*_rdPort |= _rdHigh; 
 	}
 	*_portMode = 0xFF;
+	return bitmap;
 }	
 
 
-void S6D04H0::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
+void ArduRCT_S6D04H0::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
 	uint32_t nbPixels = width;
 	nbPixels *= height;
 	_prepareWR();
@@ -191,25 +197,22 @@ void S6D04H0::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t
 }
 
 
-void S6D04H0::setRotationImpl(uint8_t rotation) {
+void ArduRCT_S6D04H0::setRotationImpl(uint8_t rotation) {
 	_prepareWR();
-	if (rotation == SCREEN_ROTATION_0) {
-		_writeCommand(S6D04H0_MADCTL);
+	_writeCommand(S6D04H0_MADCTL);
+	if (rotation == GRAPHICS_ROTATION_0) {
 		_writeData(S6D04H0_R0);
-	} else if (rotation == SCREEN_ROTATION_90) {
-		_writeCommand(S6D04H0_MADCTL);
+	} else if (rotation == GRAPHICS_ROTATION_90) {
 		_writeData(S6D04H0_R90);
-	} else if (rotation == SCREEN_ROTATION_180) {
-		_writeCommand(S6D04H0_MADCTL);
-		_writeData(S6D04H0_R180);		
-	} else if (rotation == SCREEN_ROTATION_270) {
-		_writeCommand(S6D04H0_MADCTL);
+	} else if (rotation == GRAPHICS_ROTATION_180) {
+		_writeData(S6D04H0_R180);	
+	} else if (rotation == GRAPHICS_ROTATION_270) {
 		_writeData(S6D04H0_R270);
 	}
 }
 
 
-void S6D04H0::selectScreenImpl() {
+void ArduRCT_S6D04H0::selectScreenImpl() {
 	if (_screenSelected) return;
 	if (_spiOnBus) {
 		// if SPI is active, disable it but remember that we disabled it
@@ -228,12 +231,11 @@ void S6D04H0::selectScreenImpl() {
 }
 
 
-void S6D04H0::unselectScreenImpl() {
+void ArduRCT_S6D04H0::unselectScreenImpl() {
 	// unselect the screen
 	if (_cs != 0xFF) digitalWrite(_cs, HIGH);
 	// release the SCK line, to switch off the led
 	digitalWrite(SCK, LOW);
-#if defined(CONFIGURATION_BUS_IS_SHARED_WITH_SPI)		
 	// restore the SPI if it was active
 	if (_spiOnBus & _spiUsed) {
 		// we have to set SS as an output to enable SPI
@@ -242,7 +244,6 @@ void S6D04H0::unselectScreenImpl() {
 		SPCR |= _BV(MSTR);
 		SPCR |= _BV(SPE);
 	}
-#endif
 	_screenSelected = false;
 }
 
@@ -250,7 +251,7 @@ void S6D04H0::unselectScreenImpl() {
 /* ---------------- Private functions -------------------------- */
 
 // define the zone we are going to write to
-void S6D04H0::_setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy) {
+void ArduRCT_S6D04H0::_setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy) {
 	_writeCommand(S6D04H0_CASET);
 	_write16bData(lx);
 	_write16bData(hx);

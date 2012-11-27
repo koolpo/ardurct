@@ -2,7 +2,7 @@
  * BmpDisplay - Display a bmp
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
- *	Some ideas from ladyada/adafruit	
+ *    Some ideas from ladyada/adafruit    
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,25 +23,52 @@
  * THE SOFTWARE.
  */
 
-#include <TouchScreen.h>
 #include <SD.h>
 
-TouchScreen touchscreen;
+// Change the version to adapt to your screen
+#define TOUSCRUINO_VERSION 1
+
+#if (TOUSCRUINO_VERSION == 1)
+
+#define TFT_CS 10
+#define TFT_CD 9
+#define TFT_RST 8
+
+#include <SPI.h>
+#include <ArduRCT_TouScruinoV1.h>
+
+ArduRCT_TouScruinoV1 tft(TFT_CD, TFT_CS, TFT_RST);
+
+#elif (TOUSCRUINO_VERSION == 2)
+
+#define TFT_PORT 2 // PortB
+#define TFT_CD     21
+#define TFT_WR     22
+#define TFT_RD     23
+#define TFT_CS     0xFF
+#define TFT_RST 0xFF
+#define TFT_BL 5
+
+#include <ArduRCT_TouScruinoV2.h>
+
+ArduRCT_TouScruinoV2 tft(TFT_PORT, TFT_CD, TFT_WR, TFT_RD, TFT_CS, TFT_RST, TFT_BL);
+
+#endif
 
 #define FILE_NAME "woof.bmp"
 #define MAX_BMP_WIDTH 320
 #define SD_CS 4
 
-#define dualPrint(a) { Serial.print(a); touchscreen.print(a); }
-#define dualPrintH(a) { Serial.print(a, HEX); touchscreen.print(a, HEX); }
-#define dualPrintln(a) { Serial.println(a); touchscreen.println(a); }
+#define dualPrint(a) { Serial.print(a); tft.print(a); }
+#define dualPrintH(a) { Serial.print(a, HEX); tft.print(a, HEX); }
+#define dualPrintln(a) { Serial.println(a); tft.println(a); }
 
 
 void setup() {
     Serial.begin(57600);
-    touchscreen.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
-    touchscreen.setMargin(5);
-    touchscreen.setBacklight(180);
+    tft.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
+    tft.setMargin(5);
+    tft.setBacklight(180);
 
     dualPrint("Initializing SD... ");
     pinMode(SS, OUTPUT);
@@ -51,12 +78,12 @@ void setup() {
         while (1);
     } else dualPrintln("OK!");
 
-    uint16_t width, height;  
     File bmpFile = SD.open(FILE_NAME);
     if (!bmpFile) {
         dualPrintln("Can not find image.");
         while (1);
     }
+    uint16_t width, height;  
     if (!bmpReadHeader(bmpFile, &width, &height)) { 
         bmpFile.close();
         while (1);
@@ -72,18 +99,33 @@ void loop() {
   delay(1000);
 }
 
-
-void bmpDraw(File f, int16_t x, int16_t y, uint16_t width, uint16_t height) {
+/**
+ *	If the image is too big, will take the center of it for display.
+ *	If too small, will center it from x and y
+ **/
+void bmpDraw(File f, int16_t x, int16_t y, uint16_t bmpWidth, uint16_t bmpHeight) {
     uint32_t time = millis();
   
     uint8_t bmpBuffer[3 * MAX_BMP_WIDTH];  // 3 * pixels to buffer
     uint16_t imgBuffer[MAX_BMP_WIDTH];
     
-    for (uint16_t i=0; i<height; i++) {
+    uint16_t width = tft.getWidth();
+    uint16_t height = tft.getHeight();
+    uint16_t drawWidth = min(width-x, bmpWidth);
+    uint16_t drawHeight = min(height-y, bmpHeight);
+    int16_t offsetX = min(0, (drawWidth-bmpWidth)/2);
+    int16_t offsetY = min(0, (drawHeight-bmpHeight)/2);
+
+    for (uint16_t i=0; i<bmpHeight; i++) {
         // read one line
-        f.read(bmpBuffer, 3*width);    
-        uint16_t ptr = 0;
-        for (uint16_t j=0; j<width; j++) {
+        f.read(bmpBuffer, 3*bmpWidth);
+        // only draw if we are in the tft boundaries
+        if (i < offsetY+y) continue;
+        // finish if we are outside the tft boundaries
+        if (i+offsetY > drawHeight) break;
+        
+        uint16_t ptr = (offsetX < 0 ? -offsetX : 0) * 3;
+        for (uint16_t j=0; j<drawWidth; j++) {
             // convert pixel from 888 to 565
             uint8_t b = bmpBuffer[ptr++];     // blue
             uint8_t g = bmpBuffer[ptr++];     // green
@@ -98,9 +140,9 @@ void bmpDraw(File f, int16_t x, int16_t y, uint16_t width, uint16_t height) {
             imgBuffer[j] = color;
         }
         // bitmaps are stored with the BOTTOM line first so we have to start from the bottom
-        touchscreen.pasteBitmap(imgBuffer, x, y + height-1 - i, width, 1);
+        tft.pasteBitmap(imgBuffer, offsetX < 0 ? x : x+offsetX, y+offsetY + drawHeight-1 - i, drawWidth, 1);
     }
-	touchscreen.setCursor(0, 0);
+    tft.setCursor(0, 0);
     dualPrint(millis() - time);
     dualPrintln("ms");
 }

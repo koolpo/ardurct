@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
  
-#include "configuration.hpp"
+#include "ArduRCT_Graphics.hpp"
 #include "Graphics_Macros.hpp"
 
 #if defined(CONFIGURATION_HAS_MACROS)
@@ -191,36 +191,36 @@ uint8_t *ArduRCT_Graphics::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16
 				} 
 				if (s[i+1] == 'N') {
 					if (s[i+2] == 'N') {
-						if (s[i+3] == 'E') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NNE;
-						else if (s[i+3] == 'W') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NNW;
+						if (s[i+3] == 'E') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NNE;
+						else if (s[i+3] == 'W') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NNW;
 						else if (s[i+3] != ' ') return  0;
 					} else if (s[i+2] == 'E') {
-						if (s[i+3] == 'E') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NEE;
-						else if (s[i+3] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NE;
+						if (s[i+3] == 'E') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NEE;
+						else if (s[i+3] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NE;
 						else return 0;
 					} else if (s[i+2] == 'W') {
-						if (s[i+3] == 'W') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NWW;
-						else if (s[i+3] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NW;
+						if (s[i+3] == 'W') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NWW;
+						else if (s[i+3] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NW;
 						else return 0;
-					} else if (s[i+2] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_N;
+					} else if (s[i+2] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_N;
 					else return 0;
 				} else if (s[i+1] == 'S') {
 					if (s[i+2] == 'S') {
-						if (s[i+3] == 'E') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SSE;
-						else if (s[i+3] == 'W') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SSW;
+						if (s[i+3] == 'E') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SSE;
+						else if (s[i+3] == 'W') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SSW;
 						else if (s[i+3] != ' ') return 0;
 					} else if (s[i+2] == 'E') {
-						if (s[i+3] == 'E') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SEE;
-						else if (s[i+3] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SE;
+						if (s[i+3] == 'E') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SEE;
+						else if (s[i+3] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SE;
 						else return 0;
 					} else if (s[i+2] == 'W') {
-						if (s[i+3] == 'W') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SWW;
-						else if (s[i+3] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SW;
+						if (s[i+3] == 'W') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SWW;
+						else if (s[i+3] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SW;
 						else return 0;
-					} else if (s[i+2] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_S;
+					} else if (s[i+2] == ' ') mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_S;
 					else return 0;
-				} else if ((s[i+1] == 'E') && (s[i+2] == ' ')) mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_E;
-				else if ((s[i+1] == 'W') && (s[i+2] == ' ')) mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_W;
+				} else if ((s[i+1] == 'E') && (s[i+2] == ' ')) mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_E;
+				else if ((s[i+1] == 'W') && (s[i+2] == ' ')) mc.param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_W;
 				else return 0;
 				while (s[i+1] != ' ') i++;
 				break;
@@ -354,7 +354,7 @@ uint8_t *ArduRCT_Graphics::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16
 		if (drawMode) executeMacroCommand(&mc, x, y, scaleMul, scaleDiv, true, selectAndUnselectScreen);
 		else if (mc.cmd == GRAPHICS_MACRO_CMD_WRITE) {
 			wBufferNb = mc.param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER];
-			if (wBufferNb > GRAPHICS_MACRO_MAX_NUMBER) return 0;
+			if (wBufferNb > CONFIGURATION_MACRO_MAX_NUMBER) return 0;
 		}
 
 		// At this stage, we have a struct containing the command to execute
@@ -366,9 +366,9 @@ uint8_t *ArduRCT_Graphics::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16
 	}
 	if (!drawMode) {
 		// write to EEPROM
-		if ((wBufferPtr > 0) && (wBufferPtr < GRAPHICS_MACRO_MAX_SIZE)) {
+		if ((wBufferPtr > 0) && (wBufferPtr < CONFIGURATION_MACRO_MAX_SIZE)) {
 			eeprom_write_uint8_t(wBufferNb, wBufferPtr);
-			for (int j=0; j<wBufferPtr; j++) eeprom_write_uint8_t(GRAPHICS_MACRO_MAX_NUMBER + wBufferNb*GRAPHICS_MACRO_MAX_SIZE+j, wBuffer[j]);
+			for (int j=0; j<wBufferPtr; j++) eeprom_write_uint8_t(CONFIGURATION_MACRO_MAX_NUMBER + wBufferNb*CONFIGURATION_MACRO_MAX_SIZE+j, wBuffer[j]);
 		}
 	}
 	wBuffer[wBufferPtr] = 0;	
@@ -379,9 +379,9 @@ uint8_t *ArduRCT_Graphics::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16
 void ArduRCT_Graphics::executeMacroCommand(graphics_macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
-	if (selectAndUnselectScreen) selectScreen();
+	if (selectAndUnselectScreen) selectScreenImpl();
 	_executeMacroCommand(mc, x, y, scaleMul, scaleDiv);
-	if (selectAndUnselectScreen) unselectScreen();
+	if (selectAndUnselectScreen) unselectScreenImpl();
 }
 
 
@@ -391,9 +391,9 @@ void ArduRCT_Graphics::executeEepromMacro(uint8_t macroNb, int16_t x, int16_t y,
 	if (!continueLastMacro) _initializeMacros();
 	mc.cmd = GRAPHICS_MACRO_CMD_EXECUTE;
 	mc.param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER] = macroNb;
-	if (selectAndUnselectScreen) selectScreen();
+	if (selectAndUnselectScreen) selectScreenImpl();
 	_executeMacroCommand(&mc, x, y, scaleMul, scaleDiv);
-	if (selectAndUnselectScreen) unselectScreen();
+	if (selectAndUnselectScreen) unselectScreenImpl();
 }
 
 
@@ -622,14 +622,14 @@ void ArduRCT_Graphics::_executeMacroCommand(graphics_macroCommand_t *mc, int16_t
 	
 	// executes
 	if (group == GRAPHICS_MACRO_CMD_GROUP_EXECUTE) {
-		if (mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER] >= GRAPHICS_MACRO_MAX_NUMBER) return;
+		if (mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER] >= CONFIGURATION_MACRO_MAX_NUMBER) return;
 		// read the length in the EEPROM allocation table
 		int length = eeprom_read_uint8_t(mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER]);
 		if (length == 0xFF) return;
 		// read the EEPROM pointers table to get the start
-		int start = GRAPHICS_MACRO_MAX_NUMBER + mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER] * GRAPHICS_MACRO_MAX_SIZE;
+		int start = CONFIGURATION_MACRO_MAX_NUMBER + mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER] * CONFIGURATION_MACRO_MAX_SIZE;
 		// get the compressed macro
-		uint8_t buffer[GRAPHICS_MACRO_MAX_SIZE];
+		uint8_t buffer[CONFIGURATION_MACRO_MAX_SIZE];
 		uint8_t i=0;
 		while (i < length) {
 			buffer[i] = eeprom_read_uint8_t(start+i);
@@ -695,82 +695,82 @@ int32_t ArduRCT_Graphics::_getArcEnd(uint32_t radius, uint8_t octant, bool isRev
 	int32_t value = radius;
 	value = (value * GRAPHICS_MACRO_COS45_LSH16) >> 16;
 	switch (octant) {
-		case SCREEN_ARC_SSE:
+		case GRAPHICS_ARC_SSE:
 			if (isReversed && isX) return value;
 			if (isReversed) return value;
 			if (isX) return 0;
 			return radius;
-		case SCREEN_ARC_SEE:
+		case GRAPHICS_ARC_SEE:
 			if (isReversed && isX) return radius;
 			if (isReversed) return 0;
 			if (isX) return value;
 			return value;
-		case SCREEN_ARC_NEE:
+		case GRAPHICS_ARC_NEE:
 			if (isReversed && isX) return value;
 			if (isReversed) return -value;
 			if (isX) return radius;
 			return 0;
-		case SCREEN_ARC_NNE:
+		case GRAPHICS_ARC_NNE:
 			if (isReversed && isX) return 0;
 			if (isReversed) return -radius;
 			if (isX) return value;
 			return -value;
-		case SCREEN_ARC_SSW:
+		case GRAPHICS_ARC_SSW:
 			if (isReversed && isX) return 0;
 			if (isReversed) return radius;
 			if (isX) return -value;
 			return value;
-		case SCREEN_ARC_SWW:
+		case GRAPHICS_ARC_SWW:
 			if (isReversed && isX) return -value;
 			if (isReversed) return value;
 			if (isX) return -radius;
 			return 0;
-		case SCREEN_ARC_NWW:
+		case GRAPHICS_ARC_NWW:
 			if (isReversed && isX) return -radius;
 			if (isReversed) return 0;
 			if (isX) return -value;
 			return -value;
-		case SCREEN_ARC_NNW:
+		case GRAPHICS_ARC_NNW:
 			if (isReversed && isX) return -value;
 			if (isReversed) return -value;
 			if (isX) return 0;
 			return -radius;
-		case SCREEN_ARC_NE:
+		case GRAPHICS_ARC_NE:
 			if (isReversed && isX) return 0;
 			if (isReversed) return -radius;
 			if (isX) return radius;
 			return 0;
-		case SCREEN_ARC_SE:
+		case GRAPHICS_ARC_SE:
 			if (isReversed && isX) return radius;
 			if (isReversed) return 0;
 			if (isX) return 0;
 			return radius;
-		case SCREEN_ARC_SW:
+		case GRAPHICS_ARC_SW:
 			if (isReversed && isX) return 0;
 			if (isReversed) return radius;
 			if (isX) return radius;
 			return 0;
-		case SCREEN_ARC_NW:
+		case GRAPHICS_ARC_NW:
 			if (isReversed && isX) return -radius;
 			if (isReversed) return 0;
 			if (isX) return 0;
 			return -radius;
-		case SCREEN_ARC_N:
+		case GRAPHICS_ARC_N:
 			if (isReversed && isX) return -radius;
 			if (isReversed) return 0;
 			if (isX) return radius;
 			return 0;
-		case SCREEN_ARC_S:
+		case GRAPHICS_ARC_S:
 			if (isReversed && isX) return radius;
 			if (isReversed) return 0;
 			if (isX) return -radius;
 			return 0;
-		case SCREEN_ARC_E:
+		case GRAPHICS_ARC_E:
 			if (isReversed && isX) return 0;
 			if (isReversed) return -radius;
 			if (isX) return 0;
 			return radius;
-		case SCREEN_ARC_W:
+		case GRAPHICS_ARC_W:
 			if (isReversed && isX) return 0;
 			if (isReversed) return radius;
 			if (isX) return 0;
@@ -822,7 +822,7 @@ int16_t ArduRCT_Graphics::_compressMacroCommand(graphics_macroCommand_t *mc, uin
 		// if only 1 point, indicate that the command is linked with previous one
 		if (mc->nbParams == 2) buffer[i-1] |= GRAPHICS_MACRO_CMD_LINKED_FLAG;
 	} else if (group == GRAPHICS_MACRO_CMD_GROUP_EXECUTE) {
-		if (mc->nbParams >= GRAPHICS_MACRO_MAX_NUMBER) return GRAPHICS_MACRO_FORMAT_ERROR;
+		if (mc->nbParams >= CONFIGURATION_MACRO_MAX_NUMBER) return GRAPHICS_MACRO_FORMAT_ERROR;
 		buffer[i++] = mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER];
 		return i;
 	}
@@ -869,7 +869,7 @@ int16_t ArduRCT_Graphics::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, g
 		} 	
 	} else if (group == GRAPHICS_MACRO_CMD_GROUP_EXECUTE) {
 		mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER] = buffer[i++];
-		if (mc->nbParams >= GRAPHICS_MACRO_MAX_NUMBER) return GRAPHICS_MACRO_FORMAT_ERROR;
+		if (mc->nbParams >= CONFIGURATION_MACRO_MAX_NUMBER) return GRAPHICS_MACRO_FORMAT_ERROR;
 		return i;
 	} else if (group == GRAPHICS_MACRO_CMD_GROUP_ARC) {
 		mc->param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = buffer[i++];

@@ -25,41 +25,15 @@
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 
-// Hardware
-//---------
-// choose one of the driver chips for your screen
-#define CONFIGURATION_S6D04H0 1
-//#define CONFIGURATION_ILI932X 1
-
-#define CONFIGURATION_WIDTH 	240
-#define CONFIGURATION_HEIGHT 	320
-
-#define CONFIGURATION_PORT 	PB
-#define CONFIGURATION_CD 	21
-#define CONFIGURATION_WR 	22
-#define CONFIGURATION_RD 	23
-#define CONFIGURATION_CS 	0xFF
-#define CONFIGURATION_RESET 	0xFF
-
-#define CONFIGURATION_BACKLIGHT 5
-
-#define CONFIGURATION_XM	A6
-#define CONFIGURATION_XP	15
-#define CONFIGURATION_YM	14
-#define CONFIGURATION_YP	A7
-
-// defined if the SPI bus is part of CONFIGURATION_PORT
-#define CONFIGURATION_BUS_IS_SHARED_WITH_SPI 1
-
-// true if CONFIGURATION_XP & CONFIGURATION_YM are taken from the bus
-#define CONFIGURATION_BUS_IS_SHARED_WITH_TOUCHPANEL 1
-
 // Software
 // --------
 // Max space that a pattern or a bitmap that needs to be overlaid can occupy
 // minimum is FONT_MAX_SPACE (from font.hpp)
 // RAM taken can be up to 5 times this, so beware! 
-#define CONFIGURATION_MAX_BITMAP_SPACE (32*32)		
+#define CONFIGURATION_MAX_BITMAP_SPACE (9*14)		
+
+// if defined, the screen will try to 
+#define CONFIGURATION_12B_COLORS_ALLOWED 1
 
 // Touch panel
 // -----------
@@ -106,9 +80,9 @@
 // the number of macros defined in eeprom
 // each compressed macro can be up to SCREEN_MACRO_MAX_SIZE character long
 // the eeprom taken will be SCREEN_MACRO_MAX_NUMBER * SCREEN_MACRO_MAX_SIZE bytes
-#define SCREEN_MACRO_MAX_NUMBER 16
+#define CONFIGURATION_MACRO_MAX_NUMBER 16
 // this number can not be bigger than 255
-#define SCREEN_MACRO_MAX_SIZE 128
+#define CONFIGURATION_MACRO_MAX_SIZE 128
 
 
 #endif

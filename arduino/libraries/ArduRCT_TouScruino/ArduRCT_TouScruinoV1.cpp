@@ -22,23 +22,12 @@
  * THE SOFTWARE.
  */
 
-#include "TouScruinoV1.h"
+#include "ArduRCT_TouScruinoV1.h"
 
 //#include "../Printf/Printf.cpp"
 
 ArduRCT_TouScruinoV1::ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
 	setupScreen(cd, cs, reset);
 	_backlightPin = backlightPin;
-}
-
-void ArduRCT_TouScruinoV1::begin(uint16_t foregroundColor, uint16_t backgroundColor, uint8_t fontSize, bool fontBold, bool fontOverlay) {
-	initScreen();
-	if (_backlightPin != 0xFF) setupBacklight(_backlightPin);
-	setFont(fontSize, fontBold, fontOverlay);
-	setBackgroundColor(backgroundColor);
-	setForegroundColor(foregroundColor);
-	if (_backlightPin != 0xFF) setBacklight(0);
-	if (backgroundColor != BLACK) fillRectangle(0, 0, getWidth(), getHeight(), backgroundColor);
-	if (_backlightPin != 0xFF) setBacklight(128);
 }
 

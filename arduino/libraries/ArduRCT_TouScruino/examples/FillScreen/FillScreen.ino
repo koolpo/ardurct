@@ -27,11 +27,8 @@
 
 #if (TOUSCRUINO_VERSION == 1)
 
-#define FONT_SIZE FONT_SMALL
-#define FONT_FACE FONT_PLAIN
-
-#define TFT_CS 10
-#define TFT_CD 9
+#define TFT_CS  10
+#define TFT_CD  9
 #define TFT_RST 8
 
 #include <SPI.h>
@@ -41,16 +38,13 @@ ArduRCT_TouScruinoV1 tft(TFT_CD, TFT_CS, TFT_RST);
 
 #elif (TOUSCRUINO_VERSION == 2)
 
-#define FONT_SIZE FONT_MEDIUM
-#define FONT_FACE FONT_BOLD
-
-#define TFT_PORT 2 // PortB
-#define TFT_CD 	21
-#define TFT_WR 	22
-#define TFT_RD 	23
-#define TFT_CS 	0xFF
-#define TFT_RST 0xFF
-#define TFT_BL 5
+#define TFT_PORT  2 // PortB
+#define TFT_CD    21
+#define TFT_WR    22
+#define TFT_RD    23
+#define TFT_CS    0xFF
+#define TFT_RST   0xFF
+#define TFT_BL    5
 
 #include <ArduRCT_TouScruinoV2.h>
 
@@ -59,11 +53,23 @@ ArduRCT_TouScruinoV2 tft(TFT_PORT, TFT_CD, TFT_WR, TFT_RD, TFT_CS, TFT_RST, TFT_
 #endif
 
 void setup() {
-    Serial.begin(57600);
-    tft.begin(WHITE, BLUE, FONT_SIZE, FONT_FACE);
-	tft.setRotation(GRAPHICS_ROTATION_90);
+    tft.begin(WHITE, BLACK, FONT_MEDIUM, FONT_BOLD);
 }
 
 void loop() {
-    if (Serial.available() > 0) tft.write(Serial.read()); 
+    uint32_t duration = millis();
+    delay(500);
+    tft.fillScreen(RED);
+    delay(500);
+    tft.fillScreen(GREEN);
+    delay(500);
+    tft.fillScreen(BLUE);
+    delay(500);
+    tft.fillScreen(WHITE);
+    delay(500);
+    tft.fillScreen(BLACK);
+    duration = (millis() - duration)/5 - 500;
+    tft.setCursor(20, 20);
+    tft.print(duration);
+    tft.print("ms");
 }

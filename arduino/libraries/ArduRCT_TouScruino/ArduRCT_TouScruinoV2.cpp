@@ -1,5 +1,5 @@
 /*
- * S6D04H0 - Implementation of the ScreenHAL abstract functions for the S6D04H0
+ * TouScruinoV1 - Screen and 5 ways switch management
  *
  * Copyright (c) 2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -22,32 +22,13 @@
  * THE SOFTWARE.
  */
 
-#ifndef S6D0H0_HPP
-#define S6D0H0_HPP
+#include "ArduRCT_TouScruinoV2.h"
 
-#include "ArduRCT_Graphics.hpp"
+//#include "../Printf/Printf.cpp"
 
-class ArduRCT_S6D04H0: public ArduRCT_Graphics {
-    
-	public:
-		ArduRCT_S6D04H0();
-		
-	protected:
-		// see ArduRCT_Graphics
-		void initScreenImpl();
-		void fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);
-		uint16_t *retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
-		void pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
-		void setRotationImpl(uint8_t rotation);
-		void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
-		void selectScreenImpl();
-		void unselectScreenImpl();		
+ArduRCT_TouScruinoV2::ArduRCT_TouScruinoV2(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
+	setupScreen(port, cd, wr, rd, cs, reset, true);
+	_backlightPin = backlightPin;
+}
 
-	private:
-		uint8_t _wrPortLowWR;
-		uint8_t _wrPortHighWR;
-		
-		void _setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy);
-};
 
-#endif

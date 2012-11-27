@@ -1,6 +1,6 @@
 /*
  * Box - Class to define a box
- *	Part of BoucingBoxes
+ *    Part of BoucingBoxes
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -26,21 +26,19 @@
 #ifndef BOX_H
 #define BOX_H
 
-#include <Graphics.hpp>
-
-#define BACKGROUND WHITE
+#include <ArduRCT_Graphics.hpp>
 
 #define BOX_THICKNESS 3
 
 class Box {
 
     public:
-        Box(uint16_t color = RED, uint16_t size = 10);
+        Box();
         
-        void setPositionAndSpeed(int16_t x, int16_t y, int16_t x_speed, int16_t y_speed);
-
+        void init(uint16_t color = RED, uint16_t size = 10, int16_t x = 0, int16_t y = 0, int16_t x_speed = 10, int16_t y_speed = 10);
+        
         void erase(ArduRCT_Graphics *display);
-        
+
         void draw(ArduRCT_Graphics *display);
         
         void move();
