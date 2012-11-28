@@ -33,6 +33,7 @@
 
 #include <SPI.h>
 #include <ArduRCT_TouScruinoV1.h>
+#include <SPI.h>
 
 ArduRCT_TouScruinoV1 tft(TFT_CD, TFT_CS, TFT_RST);
 
