@@ -25,6 +25,21 @@
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 
+// Hardware
+// --------
+#define CONFIGURATION_V1_CS 	10
+#define CONFIGURATION_V1_CD 	9
+#define CONFIGURATION_V1_RST 	8 
+#define CONFIGURATION_V1_BL 	5 
+
+#define CONFIGURATION_V2_CS 	0xFF
+#define CONFIGURATION_V2_CD		21 
+#define CONFIGURATION_V2_WR 	22
+#define CONFIGURATION_V2_RD 	23
+#define CONFIGURATION_V2_RST 	0xFF
+#define CONFIGURATION_V2_PORT 	2
+#define CONFIGURATION_V2_BL 	5 
+
 // Software
 // --------
 // Max space that a pattern or a bitmap that needs to be overlaid can occupy

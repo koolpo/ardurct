@@ -1,5 +1,5 @@
 /*
- * TouScruinoV1 - Screen and 5 ways switch management
+ * TouScruino
  *
  * Copyright (c) 2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -22,10 +22,37 @@
  * THE SOFTWARE.
  */
 
-#include "ArduRCT_TouScruinoV1.hpp"
+/* 
+ * Versions
+ *	v0.1	Initial release
+ */
+ 
+#ifndef TOUSCRUINO_H
+#define TOUSCRUINO_H 1
 
-ArduRCT_TouScruinoV1::ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
-	setupScreen(cd, cs, reset);
-	_backlightPin = backlightPin;
-}
+#if (TOUSCRUINO_VERSION == 1)
+/**
+ *	This version is based on:
+ *		- an SPI screen from Adafruit
+ *		- a 5 ways switch from Adafruit
+ **/
 
+#include <ArduRCT_TouScruinoV1.hpp>
+
+ArduRCT_TouScruinoV1 tft(CONFIGURATION_V1_CD, CONFIGURATION_V1_CS, CONFIGURATION_V1_RST);
+
+#elif (TOUSCRUINO_VERSION == 2)
+/**
+ *	This version is based on:
+ *		- a parallel screen
+ *		- a touch panel
+ **/
+#include <ArduRCT_TouScruinoV2.hpp>
+
+ArduRCT_TouScruinoV2 tft(CONFIGURATION_V2_PORT, CONFIGURATION_V2_CD, CONFIGURATION_V2_WR, CONFIGURATION_V2_RD, CONFIGURATION_V2_CS, CONFIGURATION_V2_RST, CONFIGURATION_V2_BL);
+
+#else
+#error TOUSCRUINO_VERSION needs to be defined before #include <ArduRCT_TouScruino.h>
+#endif
+
+#endif

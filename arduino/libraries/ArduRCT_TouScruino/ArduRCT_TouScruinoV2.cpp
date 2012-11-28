@@ -22,9 +22,7 @@
  * THE SOFTWARE.
  */
 
-#include "ArduRCT_TouScruinoV2.h"
-
-//#include "../Printf/Printf.cpp"
+#include "ArduRCT_TouScruinoV2.hpp"
 
 ArduRCT_TouScruinoV2::ArduRCT_TouScruinoV2(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
 	setupScreen(port, cd, wr, rd, cs, reset, true);
