@@ -25,67 +25,87 @@
  
 #include "Box.h"
 
+// we increase the precision in the software by 16
+#define toScreen(a) ((a) >> 4)
+#define toSoftware(a) ((a) << 4)
+
 Box::Box() {
 }
 
 
-void Box::init(uint16_t color, uint16_t size, int16_t x, int16_t y, int16_t x_speed, int16_t y_speed) {
+void Box::init(uint16_t color, uint16_t size, int16_t x, int16_t y, int16_t xSpeed, int16_t ySpeed) {
     _color = color;
     _size = size;
-    _x = x;
-    _y = y;
-    _x_speed = x_speed;
-    _y_speed = y_speed;
+    _x = toSoftware(x);
+    _y = toSoftware(y);
+    _xSpeed = xSpeed;
+    _ySpeed = ySpeed;
+	_xDraw = -1000;
+	_yDraw = 0;
 }
 
 
 void Box::erase(ArduRCT_Graphics *display) {
-    display->drawRectangle(_x, _y, _size, _size, display->getBackgroundColor(), BOX_THICKNESS);
+	// only erase if already drawn
+	if (_xDraw == -1000) return;
+#if (BOX_FILLED == 1)
+    display->fillRectangle(_xDraw, _yDraw, _size, _size, display->getBackgroundColor());
+#else
+    display->drawRectangle(_xDraw, _yDraw, _size, _size, display->getBackgroundColor(), BOX_THICKNESS);
+#endif	
+	_xDraw = -1000;
 }
 
 
 void Box::draw(ArduRCT_Graphics *display) {
-    display->drawRectangle(_x, _y, _size, _size, _color, BOX_THICKNESS);
+	_xDraw = toScreen(_x);
+	_yDraw = toScreen(_y);
+#if (BOX_FILLED == 1)
+    display->fillRectangle(_xDraw, _yDraw, _size, _size, _color);
+#else
+    display->drawRectangle(_xDraw, _yDraw, _size, _size, _color, BOX_THICKNESS);
+#endif	
 }
 
 
 void Box::move() {
-    _x += _x_speed; 
-    _y += _y_speed; 
+    _x += _xSpeed; 
+    _y += _ySpeed; 
 }
 
 
 void Box::checkWallCollisions(uint16_t wallX, uint16_t wallY) {
     if (_x < 0) {                       // if at or beyond left side
         _x = 0;                         // place against edge and
-        _x_speed = -_x_speed;           // reverse direction.
-    } else if (_x > wallX-_size) {      // if at or beyond right side
-        _x = wallX-_size;                // place against right edge.
-        _x_speed = -_x_speed;           // reverse direction.
+        _xSpeed = -_xSpeed;           // reverse direction.
+    } else if (_x > toSoftware(wallX-_size)) {      // if at or beyond right side
+        _x = toSoftware(wallX-_size);        // place against right edge.
+        _xSpeed = -_xSpeed;           // reverse direction.
     }
     if (_y < 0) {                       // if at or beyond top side
         _y = 0;                         // place against edge and
-        _y_speed = -_y_speed;           // reverse direction.
-    } else if (_y > wallY-_size) {      // if at or beyond bottom side
-        _y = wallY-_size;               // place against bottom edge.
-        _y_speed = -_y_speed;           // reverse direction.
+        _ySpeed = -_ySpeed;           // reverse direction.
+    } else if (_y > toSoftware(wallY-_size)) {      // if at or beyond bottom side
+        _y = toSoftware(wallY-_size);               // place against bottom edge.
+        _ySpeed = -_ySpeed;           // reverse direction.
     }
 }
 
 
 void Box::checkBoxCollisions(Box *box) {
-    if ((abs(_x-box->_x) < _size) && (abs(_y-box->_y) < _size)) {
-        if (_x_speed * box->_x_speed < 0) {
-            if (box->_x > _x) box->_x = _x + _size;
-            else box->_x = _x - _size;
-            _x_speed = -_x_speed;
-            box->_x_speed = -box->_x_speed;
+	uint16_t size = toSoftware(_size);
+    if ((abs(_x-box->_x) < size) && (abs(_y-box->_y) < size)) {
+        if (_xSpeed * box->_xSpeed < 0) {
+            if (box->_x > _x) box->_x = _x + size;
+            else box->_x = _x - size;
+            _xSpeed = -_xSpeed;
+            box->_xSpeed = -box->_xSpeed;
         } 
-        if (_y_speed * box->_y_speed < 0) {
-            if (box->_y > _y) box->_y = _y + _size;
-            else box->_y = _y - _size;
-            _y_speed = -_y_speed;
-            box->_y_speed = -box->_y_speed;
+        if (_ySpeed * box->_ySpeed < 0) {
+            if (box->_y > _y) box->_y = _y + size;
+            else box->_y = _y - size;
+            _ySpeed = -_ySpeed;
+            box->_ySpeed = -box->_ySpeed;
         } 
     }
 }

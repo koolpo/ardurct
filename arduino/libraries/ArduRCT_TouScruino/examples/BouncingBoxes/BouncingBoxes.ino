@@ -22,23 +22,17 @@
  * THE SOFTWARE.
  */
  
-// Change the version to adapt to your screen
+#include <SPI.h>
+
+// Change to your version: the following include will automatically create the proper tft object
 #define TOUSCRUINO_VERSION 1
+#include <ArduRCT_TouScruino.h>
 
 #if (TOUSCRUINO_VERSION == 1)
 
-#define BOX_SIZE 16
+#define BOX_SIZE 12
 #define BOX_SPEED_X 1
 #define BOX_SPEED_Y 2
-
-#define TFT_CS 10
-#define TFT_CD 9
-#define TFT_RST 8
-
-#include <SPI.h>
-#include <ArduRCT_TouScruinoV1.h>
-
-ArduRCT_TouScruinoV1 tft(TFT_CD, TFT_CS, TFT_RST);
 
 #elif (TOUSCRUINO_VERSION == 2)
 
@@ -46,31 +40,20 @@ ArduRCT_TouScruinoV1 tft(TFT_CD, TFT_CS, TFT_RST);
 #define BOX_SPEED_X 2
 #define BOX_SPEED_Y 3
 
-#define TFT_PORT 2 // PortB
-#define TFT_CD     21
-#define TFT_WR     22
-#define TFT_RD     23
-#define TFT_CS     0xFF
-#define TFT_RST 0xFF
-#define TFT_BL 5
-
-#include <ArduRCT_TouScruinoV2.h>
-
-ArduRCT_TouScruinoV2 tft(TFT_PORT, TFT_CD, TFT_WR, TFT_RD, TFT_CS, TFT_RST, TFT_BL);
-
 #endif
 
 #include "Box.h"
 
 #define BACKGROUND WHITE
 
-#define REFRESH 30
+#define REFRESH_SCREEN_DELAY 50
 
 #define NB_BOXES 3
 
 Box box[NB_BOXES];
 int16_t maxX;
 int16_t maxY;
+uint32_t nextDraw;
 
 void setup() {
     tft.begin(BLACK, BACKGROUND);
@@ -83,8 +66,6 @@ void setup() {
 }
 
 void loop() {
-    // erase the boxes
-    for (uint8_t i=0; i<NB_BOXES; i++) box[i].erase(&tft);
     // move the boxes
     for (uint8_t i=0; i<NB_BOXES; i++) box[i].move();
     // check inter box collisions
@@ -95,9 +76,15 @@ void loop() {
     }    
     // bounce the box off the walls if necessary.
     for (uint8_t i=0; i<NB_BOXES; i++) box[i].checkWallCollisions(maxX, maxY);
-    // draw the ball
+	// leave time for other things to happen
+	delay(3);
+
+    // check if we have to refresh the screen
+    if ((int32_t)(millis() - nextDraw) < 0) return;
+    nextDraw = millis() + REFRESH_SCREEN_DELAY;
+
+    // erase the boxes
+    for (uint8_t i=0; i<NB_BOXES; i++) box[i].erase(&tft);
+    // draw the boxes
     for (uint8_t i=0; i<NB_BOXES; i++) box[i].draw(&tft);
-    
-    // wait
-    delay(REFRESH);
 }

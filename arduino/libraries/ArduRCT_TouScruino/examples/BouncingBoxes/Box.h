@@ -29,13 +29,14 @@
 #include <ArduRCT_Graphics.hpp>
 
 #define BOX_THICKNESS 3
+#define BOX_FILLED 1
 
 class Box {
 
     public:
         Box();
         
-        void init(uint16_t color = RED, uint16_t size = 10, int16_t x = 0, int16_t y = 0, int16_t x_speed = 10, int16_t y_speed = 10);
+        void init(uint16_t color = RED, uint16_t size = 10, int16_t x = 0, int16_t y = 0, int16_t xSpeed = 10, int16_t ySpeed = 10);
         
         void erase(ArduRCT_Graphics *display);
 
@@ -50,9 +51,11 @@ class Box {
     protected:
         int16_t _x;
         int16_t _y;
-        int16_t _x_speed;
-        int16_t _y_speed;
+        int16_t _xSpeed;
+        int16_t _ySpeed;
         uint16_t _size;
+		int16_t _xDraw;
+		int16_t _yDraw;
 
     private:
         uint16_t _color;

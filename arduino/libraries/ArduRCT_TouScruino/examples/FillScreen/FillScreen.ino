@@ -1,5 +1,5 @@
 /*
- * Terminal - Most simple terminal: all received chars are shown on screen
+ * FillScreen - Simple speed test to fill the screen
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -27,9 +27,7 @@
 
 // Change to your version: the following include will automatically create the proper tft object
 #define TOUSCRUINO_VERSION 1
-#include <ArduRCT_TouScruinoV.h>
-
-ArduRCT_TouScruinoV1 tft(TFT_CD, TFT_CS, TFT_RST);
+#include <ArduRCT_TouScruino.h>
 
 void setup() {
     tft.begin(WHITE, BLACK, FONT_MEDIUM, FONT_BOLD);
