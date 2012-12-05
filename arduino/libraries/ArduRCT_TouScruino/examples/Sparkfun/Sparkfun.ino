@@ -22,36 +22,13 @@
  * THE SOFTWARE.
  */
  
-// Change the version to adapt to your screen
+
+#include <SPI.h>
+#include <SPI.h>
+
+// Change to your version: the following include will automatically create the proper tft object
 #define TOUSCRUINO_VERSION 1
-
-#if (TOUSCRUINO_VERSION == 1)
-
-#define TFT_CS 10
-#define TFT_CD 9
-#define TFT_RST 8
-
-#include <SPI.h>
-#include <ArduRCT_TouScruinoV1.h>
-#include <SPI.h>
-
-ArduRCT_TouScruinoV1 tft(TFT_CD, TFT_CS, TFT_RST);
-
-#elif (TOUSCRUINO_VERSION == 2)
-
-#define TFT_PORT 2 // PortB
-#define TFT_CD     21
-#define TFT_WR     22
-#define TFT_RD     23
-#define TFT_CS     0xFF
-#define TFT_RST 0xFF
-#define TFT_BL 5
-
-#include <ArduRCT_TouScruinoV2.h>
-
-ArduRCT_TouScruinoV2 tft(TFT_PORT, TFT_CD, TFT_WR, TFT_RD, TFT_CS, TFT_RST, TFT_BL);
-
-#endif
+#include <ArduRCT_TouScruino.h>
 
 #define LOGO_SCALE_MUL 7
 #define LOGO_SCALE_DIV 5

@@ -248,10 +248,21 @@ void ArduRCT_ST7735::setRotationImpl(uint8_t rotation) {
 
 
 void ArduRCT_ST7735::selectScreenImpl() {
+#ifdef CONFIGURATION_SPI_IS_SHARED
+	_spiCR = SPCR;
+	_spiSR = SPSR;
+	SPI.setClockDivider(SPI_CLOCK_DIV2); // Full speed
+	SPI.setBitOrder(MSBFIRST);
+	SPI.setDataMode(SPI_MODE0);
+#endif
 }
 
 
 void ArduRCT_ST7735::unselectScreenImpl() {
+#ifdef CONFIGURATION_SPI_IS_SHARED
+	SPCR = _spiCR;
+	SPSR = _spiSR;
+#endif
 }
 
 

@@ -40,6 +40,8 @@
 #define CONFIGURATION_V2_PORT 	2
 #define CONFIGURATION_V2_BL 	5 
 
+#define CONFIGURATION_SPI_IS_SHARED 1
+
 // Software
 // --------
 // Max space that a pattern or a bitmap that needs to be overlaid can occupy

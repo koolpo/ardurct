@@ -225,6 +225,8 @@ class ArduRCT_Graphics: public Print {
 		bool _spiUsed;
 		bool _spiOnBus;
 		bool _screenSelected;
+		uint8_t _spiSR;
+		uint8_t _spiCR;
 		uint16_t _widthImpl;
 		uint16_t _heightImpl;
 
