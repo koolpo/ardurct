@@ -26,6 +26,12 @@
 #include <avr/pgmspace.h>
 #include <inttypes.h>
 
+#define RTC_ALARM_MAX_SNOOZE 0xFF	/* uint8_t ... */
+#define RTC_ALARM_STOPPED (-RTC_ALARM_MAX_SNOOZE-1)
+#define RTC_ALARM_RING_START 0x01
+
+#define RTC_MILLIS_TO_SEC 50
+
 const unsigned char PROGMEM rtc_dayOfWeekString[] = "MonTueWedThuFriSatSun";
 const unsigned char PROGMEM rtc_monthString[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
 
@@ -50,14 +56,14 @@ void RealTimeClock::set(int16_t year, uint8_t month, uint8_t day, uint8_t dayOfW
     _timeDigit[RTC_MINUTE1] = _minute % 10;
     _timeDigit[RTC_SECOND10] = _second / 10;
     _timeDigit[RTC_SECOND1] = _second % 10;
-    _nextSecond = millis() + 1000;
-    _alarmRing = 0;
+    _nextSecond = millis() + RTC_MILLIS_TO_SEC;
+    _alarmStatus = RTC_ALARM_STOPPED;
 }
 
 bool RealTimeClock::update() {
     // check if we have to update the time
     if ((int32_t)(millis() - _nextSecond) < 0) return false;
-    _nextSecond = millis() + 1000;
+    _nextSecond = millis() + RTC_MILLIS_TO_SEC;
     
     _timeDigit[RTC_SECOND1] ++;
     if (_timeDigit[RTC_SECOND1] > 9) {
@@ -76,7 +82,7 @@ bool RealTimeClock::update() {
         if (_timeDigit[RTC_MINUTE10] > 5) _timeDigit[RTC_MINUTE10] = 0;
     }
     _minute ++;
-    if (_alarmRing > 1) _alarmRing --;
+    if (_alarmStatus != RTC_ALARM_STOPPED) _alarmStatus ++;
     if (_minute < 60) {
         _checkAlarms();
         return true;
@@ -129,13 +135,13 @@ bool RealTimeClock::update() {
 }
 
 void RealTimeClock::setAlarmTime(uint8_t dayOfWeek, uint8_t hour, uint8_t minute, uint8_t turnOn) {
-    if (day > 6) return;
+    if (dayOfWeek > 6) return;
     _alarm[dayOfWeek].hour = (hour % 24) + (turnOn != 0 ? RTC_ALARM_ON : 0);
     _alarm[dayOfWeek].minute = (minute % 60);
 }
         
 rtcAlarm_t *RealTimeClock::getAlarmTime(uint8_t dayOfWeek) {
-    if (dayOfWeek > 6) return;
+    if (dayOfWeek > 6) return 0;
     return &_alarm[dayOfWeek];
 }
         
@@ -144,25 +150,29 @@ void RealTimeClock::setAlarmOn(uint8_t dayOfWeek) {
     _alarm[dayOfWeek].hour |= RTC_ALARM_ON;
 }
 
+bool RealTimeClock::isAlarmOn(uint8_t dayOfWeek) {
+	return ((_alarm[dayOfWeek].hour & RTC_ALARM_ON) != 0);
+}
+
 void RealTimeClock::setAlarmOff(uint8_t dayOfWeek) {
     if (dayOfWeek > 6) return;
     _alarm[dayOfWeek].hour &= ~RTC_ALARM_ON;
 }
 
 void RealTimeClock::stopAlarm() {
-    _alarmRing = 0;
+    _alarmStatus = RTC_ALARM_STOPPED;
 }
                 
 void RealTimeClock::snoozeAlarm(uint8_t minutes) {
-    _alarmRing = minutes + 1;
+    _alarmStatus = -minutes;
 }
         
 bool RealTimeClock::isAlarmRinging() {
-    return (_alarmRing == 1);
+    return (_alarmStatus >= 0);
 }
 
 bool RealTimeClock::isAlarmSnoozing() {
-    return (_alarmRing > 1);
+    return ((_alarmStatus != RTC_ALARM_STOPPED) && (_alarmStatus < 0));
 }
 
 
@@ -179,18 +189,18 @@ char *RealTimeClock::getDayOfWeekAsString() {
 
 
 char *RealTimeClock::getDateAsString(bool withDayOfWeek) {
-    uint8_t i = 0;
+    for (int i=0; i<(withDayOfWeek ? 15 : 11); i++) _buffer[i] = ' ';
+	_buffer[withDayOfWeek ? 15 : 11] = 0;
+	uint8_t i = 0;
     if (withDayOfWeek) {
         memcpy_P(_buffer, &(rtc_dayOfWeekString[_dayOfWeek*3]), 3);
-        _buffer[4] = ' ';
         i = 4;
     }
     if (_day > 10) _buffer[i++] = (_day / 10) + '0';
     _buffer[i++] = (_day % 10) + '0';
-    _buffer[i++] = ' ';
+	i++;
     memcpy_P(&_buffer[i], &(rtc_monthString[(_month-1)*3]), 3);
-    i += 3;
-    _buffer[i++] = ' ';
+    i += 4;
     int16_t year = _year;
     if (year < 0) {
         _buffer[i++] = '-';
@@ -208,7 +218,6 @@ char *RealTimeClock::getDateAsString(bool withDayOfWeek) {
     }
     if ((year > 10) || yearStart) _buffer[i++] = (year / 10) + '0';
     _buffer[i++] = (year % 10) + '0';
-    _buffer[i] = 0;
     return (char *)_buffer;
 }
 
@@ -226,9 +235,10 @@ char *RealTimeClock::getTimeAsString(bool withSeconds) {
 
 char *RealTimeClock::getAlarmTimeAsString(uint8_t dayOfWeek) {
     if (dayOfWeek > 6) return 0;
-    if (_alarm[dayOfWeek].hour / 10 > 0) _buffer[0] = _alarm[dayOfWeek].hour/10 + '0';
+	uint8_t hour = (_alarm[dayOfWeek].hour & ~RTC_ALARM_ON);
+    if (hour / 10 > 0) _buffer[0] = hour/10 + '0';
     else _buffer[0] = ' ';
-    _buffer[1] = (_alarm[dayOfWeek].hour % 10) + '0';
+    _buffer[1] = (hour % 10) + '0';
     _buffer[2] = RTC_TIME_SEPARATOR;
     _buffer[3] = (_alarm[dayOfWeek].minute / 10) + '0';
     _buffer[4] = (_alarm[dayOfWeek].minute % 10) + '0';
@@ -265,8 +275,9 @@ uint8_t RealTimeClock::getSecond() {
 }
 
 void RealTimeClock::_checkAlarms() {
-    if (_alarm[_dayOfWeek].hour & RTC_ALARM_ON == 0) return;
+	if (_alarmStatus > RTC_ALARM_MAX_RING) _alarmStatus = RTC_ALARM_STOPPED;
+    if ((_alarm[_dayOfWeek].hour & RTC_ALARM_ON) == 0) return;
     if ((_alarm[_dayOfWeek].hour & ~RTC_ALARM_ON) != _hour) return;
     if (_alarm[_dayOfWeek].minute != _minute) return;
-    _alarmRing = 1;
+    _alarmStatus = RTC_ALARM_RING_START;
 }

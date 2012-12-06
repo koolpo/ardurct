@@ -27,12 +27,12 @@
 
 #include <Arduino.h>
 
-#define RTC_HOUR10        0
-#define RTC_HOUR1        1
-#define RTC_MINUTE10    2
-#define RTC_MINUTE1        3
-#define RTC_SECOND10    4
-#define RTC_SECOND1        5
+#define RTC_HOUR10    0
+#define RTC_HOUR1     1
+#define RTC_MINUTE10  2
+#define RTC_MINUTE1   3
+#define RTC_SECOND10  4
+#define RTC_SECOND1   5
 
 #define RTC_TIME_SEPARATOR ':'
 
@@ -59,11 +59,13 @@
 
 #define RTC_WITH_DAY_OF_WEEK true
 #define RTC_WITHOUT_DAY_OF_WEEK false
-#define RTC_WITH_SECOND true
-#define RTC_WITHOUT_SECOND false
+#define RTC_WITH_SECONDS true
+#define RTC_WITHOUT_SECONDS false
 
 #define RTC_ALARM_ON 0x80
 #define RTC_ALARM_OFF 0x00
+
+#define RTC_ALARM_MAX_RING 10
 
 typedef struct {
     uint8_t hour;
@@ -81,14 +83,16 @@ class RealTimeClock {
         // this updates the time and returns true if anything has changed
         bool update();
         
-        void setAlarmTime(uint8_t dayOfWeek, uint8_t hour, uint8_t minute, uint8_t turnOn = 0);
+        void setAlarmTime(uint8_t dayOfWeek, uint8_t hour, uint8_t minute, uint8_t turnOn = RTC_ALARM_OFF);
         
         rtcAlarm_t *getAlarmTime(uint8_t dayOfWeek);
         
         void setAlarmOn(uint8_t dayOfWeek);
 
         void setAlarmOff(uint8_t dayOfWeek);
-                
+        
+		bool isAlarmOn(uint8_t dayOfWeek);
+		
         void stopAlarm();
 
         void snoozeAlarm(uint8_t minutes);
@@ -113,7 +117,7 @@ class RealTimeClock {
         char *getAlarmTimeAsString(uint8_t dayOfWeek);
         
     private:
-        uint8_t _buffer[18];
+        uint8_t _buffer[16];
         uint8_t _timeDigit[6];
         int16_t _year;
         uint8_t _month;
@@ -124,7 +128,7 @@ class RealTimeClock {
         uint8_t _second;
         uint32_t _nextSecond;
         rtcAlarm_t _alarm[7];    // one alarm per day of week
-        int16_t _alarmRing;
+        int16_t _alarmStatus;
         
         void _checkAlarms();
 };
