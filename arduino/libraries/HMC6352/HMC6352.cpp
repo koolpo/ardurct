@@ -24,7 +24,7 @@
  
 #include "HMC6352.h"
 
-#define HMC6352_ADDRESS	0x42
+#define HMC6352_ADDRESS		0x42
 #define HMC6352_GET_HEADING	'A'
 
 HMC6352Class::HMC6352Class() {
@@ -41,7 +41,7 @@ uint16_t HMC6352Class::getHeading() {
 
 	// Send the get data command
 	Wire.beginTransmission(HMC6352_ADDRESS >> 1);
-	Wire.send(HMC6352_GET_HEADING); 
+	Wire.write(HMC6352_GET_HEADING); 
 	Wire.endTransmission();
 
 	// Time delays required by HMC6352 upon receipt of the command
@@ -53,9 +53,9 @@ uint16_t HMC6352Class::getHeading() {
 
 	// The heading output data will be the value in tenths of degrees
 	// from zero to 3599 and provided in binary format over the two bytes.
-	heading = Wire.receive();
+	heading = Wire.read();
 	heading = heading << 8;
-	heading += Wire.receive();
+	heading += Wire.read();
 	
 	return heading / 10;
 }

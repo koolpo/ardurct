@@ -31,9 +31,10 @@
 #ifndef HMC6352_H
 #define HMC6352_H
 
-#include "../Wire/Wire.h"
-#include <inttypes.h>
 #include <Arduino.h>
+#include <Wire.h>
+#include <inttypes.h>
+
 
 class HMC6352Class {
 
