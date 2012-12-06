@@ -31,8 +31,7 @@
  * THE SOFTWARE.
  */
  
-#include "ST7735.hpp"
-#include "../SPI/SPI.h"
+#include "ArduRCT_ST7735.hpp"
  
 #define ST7735_WIDTH	128
 #define ST7735_HEIGHT	160
@@ -89,7 +88,7 @@
 
 #define _spiWrite(d) { SPDR = d; while (!(SPSR & _BV(SPIF))); }
 
-const unsigned char PROGMEM ST7735_initialization_code[] = {
+const unsigned char PROGMEM ArduRCT_ST7735_initialization_code[] = {
 	0, ST7735_SWRESET,		// Software reset
 	ST7735_DELAY+15,		// Delay 150ms
 	0, ST7735_SLPOUT,		// SLeeP OUT
@@ -134,7 +133,7 @@ void ArduRCT_ST7735::initScreenImpl(void) {
 	SPI.setDataMode(SPI_MODE0);
 	// init the screen	
 	while (1) {
-		memcpy_P(buffer, &(ST7735_initialization_code[i]), 32);
+		memcpy_P(buffer, &(ArduRCT_ST7735_initialization_code[i]), 32);
 		if (buffer[0] == 0xFF) break;
 		else if (buffer[0] & ST7735_DELAY) {
 			uint16_t ms = (buffer[0] & ~ST7735_DELAY) * 10;
@@ -168,7 +167,7 @@ void ArduRCT_ST7735::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_
 	nbPixels *= (hy - ly + 1);
 
 #if defined(CONFIGURATION_12B_COLORS_ALLOWED)
-	if (nbPixels > 100) {
+	if (nbPixels > 64) {
 		// switch to 12b mode
 		_writeCommand(ST7735_COLMOD);
 		*_csPort &= ~_csBitMask;
@@ -179,11 +178,14 @@ void ArduRCT_ST7735::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_
 	_setClippingRectangle(lx, ly, hx, hy);
 	*_csPort &= ~_csBitMask;
 #if defined(CONFIGURATION_12B_COLORS_ALLOWED)
-	if (nbPixels > 100) {
-		nbPixels = (nbPixels >> 1) + 1;
+	if (nbPixels > 64) {
+		// ensure the last pixel is drawn if odd
+		nbPixels = (nbPixels >> 1) + (nbPixels & 0x01);
+		// keep 4 bits per color
 		uint8_t colR = color >> 12;
 		uint8_t colG = (color >> 6) & 0x0F;
 		uint8_t colB = (color >> 1) & 0x0F;
+		// build 2 times 12b in 3 bytes
 		uint8_t colH = (colR << 4) + colG;
 		uint8_t colM = (colB << 4) + colR;	
 		uint8_t colL = (colG << 4) + colB;	

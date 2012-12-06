@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-#include "S6D04H0.hpp"
+#include "ArduRCT_S6D04H0.hpp"
 
 #define S6D04H0_WIDTH 240
 #define S6D04H0_HEIGHT 320
@@ -54,7 +54,7 @@
 
 #define _write16bData(data16b) { *_outPort = data16b >> 8; *_wrPort = _wrPortLowWR;  *_wrPort = _wrPortHighWR; *_outPort = data16b; *_wrPort = _wrPortLowWR;  *_wrPort = _wrPortHighWR; }
 
-const unsigned char PROGMEM S6D04H0_initialization_code[] = {
+const unsigned char PROGMEM ArduRCT_S6D04H0_initialization_code[] = {
 	0xFE,				/* delay(S6D04H0_DELAY) */
 	0, 	0x11,			/* SLPOFF: SLeeP OFF */
 	0xFE,				/* delay(S6D04H0_DELAY) */
@@ -94,7 +94,7 @@ void ArduRCT_S6D04H0::initScreenImpl(void) {
 	// init the screen
 	_prepareWR();
 	while (1) {
-		memcpy_P(buffer, &(S6D04H0_initialization_code[i]), 32);
+		memcpy_P(buffer, &(ArduRCT_S6D04H0_initialization_code[i]), 32);
 		if (buffer[0] == 0xFF) break;
 		else if (buffer[0] == 0xFE) delay(S6D04H0_DELAY);
 		else {

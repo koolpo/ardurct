@@ -32,6 +32,7 @@
 #ifndef ARDURCT_ST7735_HPP
 #define ARDURCT_ST7735_HPP
 
+#include <SPI.h>
 #include "ArduRCT_Graphics.hpp"
  
 class ArduRCT_ST7735: public ArduRCT_Graphics {

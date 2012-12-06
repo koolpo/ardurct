@@ -27,8 +27,8 @@
  *	v0.1	Initial release
  */
  
-#ifndef TOUSCRUINO_H
-#define TOUSCRUINO_H 1
+#ifndef ARDURCT_TOUSCRUINO_H
+#define ARDURCT_TOUSCRUINO_H 1
 
 #if (TOUSCRUINO_VERSION == 1)
 /**

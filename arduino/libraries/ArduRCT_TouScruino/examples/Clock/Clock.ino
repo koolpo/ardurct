@@ -1,5 +1,5 @@
 /*
- * Terminal - Most simple terminal: all received chars are shown on screen
+ * Clock - Digital clock with alarm
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -23,88 +23,90 @@
  */
 
 #include <SPI.h>
+#include <RealTimeClock.h>
 
 // Change to your version: the following include will automatically create the proper tft object
 #define TOUSCRUINO_VERSION 1
 #include <ArduRCT_TouScruino.h>
 
-// Put 1 for roundish and 0 for oldish
-#define DIGIT_STYLE 0
-#define THICKNESS 7
+#include "RealTimeClock.h"
 
+#define DIGIT_THICKNESS 7
 #define DIGIT_WIDTH 30
 #define DIGIT_HEIGHT 80
+
 #define SECONDS_WIDTH 120
 #define SECONDS_HEIGHT 5
+
+#define COLUMN_X 79
+#define ALARM_STRING_X 30
+#define ALARM_X 84
+#define DATE_X 12
 
 #define TIME_Y 0
 #define DATE_Y 89
 #define ALARM_Y 114
 #define SECONDS_Y 105
-#define H1_X 0
-#define H2_X 38
-#define M1_X 88
-#define M2_X 130
-#define COLUMN_X 79
 
-#if (DIGIT_STYLE == 0)
-uint8_t DIGIT_SEGMENTS[] = { 
-    0x3F,    // b00111111    0
-    0x30,    // b00110000    1
-    0x6D,    // b01101101    2
-    0x79,    // b01111001    3
-    0x72,    // b01110010    4
-    0x5B,    // b01011011    5
-    0x5F,    // b01011111    6
-    0x31,    // b00110001    7
-    0x7F,    // b01111111    8
-    0x7B     // b01111011    9
-};  
-#endif
-
-uint8_t seconds = 0;
-uint8_t minutes = 56;
-uint8_t hours = 19;
+RealTimeClock rtc(2012, DECEMBER, 6, THURSDAY, 10, 28);
     
-uint8_t dig1 = 70, dig2 = 70, dig3 = 70, dig4 = 70;
-uint32_t nextSecond = 0;
+uint8_t timeDigit[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+uint8_t timeDigit_x[] = { 0, 38, 88, 130 };
     
 void setup() {
     tft.begin(WHITE, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
     tft.fillScreen(BLACK);
     tft.setRotation(GRAPHICS_ROTATION_90);
-    tft.drawString("Tue 22 Apr 2012", 12, DATE_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
-    tft.drawString("Alarm 22:40", 30, ALARM_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+     
+    rtc.setAlarmTime(THURSDAY, 10, 30, RTC_ALARM_ON);
+
+    drawDateAndTime();
 }
 
 void loop() {
     delay(5);
     
-    // check if we have to refresh the screen
-    if ((int32_t)(millis() - nextSecond) < 0) return;
-    nextSecond = millis() + 1000;
+    // this will adjust the time for the rtc, if required
+    // returns true if a value changed
+    // can be called as often as wanted, but at least once per second
+    if (!rtc.update()) return;
 
-    seconds ++;
-    if (seconds == 60) {
-        seconds = 0;
-        minutes ++;
-        if (minutes == 60) {
-            minutes = 0;
-            hours ++;
-            if (hours == 24) hours = 0;
+    drawDateAndTime();
+    if (rtc.isAlarmRinging()) tft.invertDisplay((rtc.getSecond() % 2) == 0);
+}
+
+void drawDateAndTime() {
+    // draw hour and minutes, digit by digit
+    for (uint8_t i=0; i<4; i++) {
+        if (timeDigit[i] != rtc.getTimeDigit(i)) {
+            // erase the digit
+            tft.drawBigDigit(timeDigit[i], timeDigit_x[i], 0, DIGIT_WIDTH, DIGIT_HEIGHT, BLACK, DIGIT_THICKNESS);
+            // draw the new one
+            if ((i != 0) || (timeDigit[i] != 0)) tft.drawBigDigit(rtc.getTimeDigit(i), timeDigit_x[i], 0, DIGIT_WIDTH, DIGIT_HEIGHT, WHITE, DIGIT_THICKNESS);
         }
     }
-    
-    // draw the time
-    refreshTime();
-    
     // blink the seconds
-    if ((seconds % 2) == 0) drawColumn(COLUMN_X, 0, DIGIT_HEIGHT, BLACK, THICKNESS);
-    else drawColumn(COLUMN_X, 0, DIGIT_HEIGHT, WHITE, THICKNESS);
+    if ((rtc.getSecond() % 2) == 0) drawColumn(COLUMN_X, 0, DIGIT_HEIGHT, BLACK, DIGIT_THICKNESS);
+    else drawColumn(COLUMN_X, 0, DIGIT_HEIGHT, WHITE, DIGIT_THICKNESS);
     
     // draw a progress bar for the seconds
-    if (seconds == 0) tft.fillRectangle((tft.getWidth() - SECONDS_WIDTH)/2, SECONDS_Y, SECONDS_WIDTH, SECONDS_HEIGHT, BLACK);
-    else tft.fillRectangle((tft.getWidth() - SECONDS_WIDTH)/2, SECONDS_Y, seconds * SECONDS_WIDTH / 60, SECONDS_HEIGHT, YELLOW);
+    if (rtc.getSecond() == 0) tft.fillRectangle((tft.getWidth() - SECONDS_WIDTH)/2, SECONDS_Y, SECONDS_WIDTH, SECONDS_HEIGHT, BLACK);
+    else tft.fillRectangle((tft.getWidth() - SECONDS_WIDTH)/2, SECONDS_Y, rtc.getSecond() * SECONDS_WIDTH / 60, SECONDS_HEIGHT, YELLOW);
+
+    // if date as changed, redraw the date and alarm 
+    if (timeDigit[4] != rtc.getDay()) {
+        tft.drawString(rtc.getDateAsString(RTC_WITH_DAY_OF_WEEK), DATE_X, DATE_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+        if (rtc.isAlarmOn(rtc.getDayOfWeek())) {
+            tft.drawString("Alarm", ALARM_X, ALARM_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+            tft.drawString(rtc.getAlarmTimeAsString(rtc.getDayOfWeek()), ALARM_STRING_X, ALARM_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+        } else {
+            tft.fillRectangle(ALARM_STRING_X, ALARM_Y, 12*tft.getFontCharWidth(FONT_MEDIUM), tft.getFontHeight(FONT_MEDIUM), BLACK);
+        }
+    }
+
+    // save the information for next redraw
+    for (uint8_t i=0; i<4; i++) timeDigit[i] = rtc.getTimeDigit(i);
+    timeDigit[4] = rtc.getDay();  
 }
 
 void drawColumn(uint16_t x, uint16_t y, uint16_t height, uint16_t color, uint16_t  thickness) {
@@ -113,101 +115,14 @@ void drawColumn(uint16_t x, uint16_t y, uint16_t height, uint16_t color, uint16_
     tft.fillRectangle(x - ht , y + 2*height/3 - ht, thickness, thickness, color); 
 }
 
-void refreshTime() {
-    if (dig1 != (hours / 10)) {
-        drawDigit(dig1, H1_X, 0, DIGIT_WIDTH, DIGIT_HEIGHT, BLACK, THICKNESS);
-        dig1 = hours / 10;
-        if (dig1 != 0) drawDigit(dig1, H1_X, 0, DIGIT_WIDTH, DIGIT_HEIGHT, WHITE, THICKNESS);
-    }
-    if (dig2 != (hours % 10)) {
-        drawDigit(dig2, H2_X, 0, DIGIT_WIDTH, DIGIT_HEIGHT, BLACK, THICKNESS);
-        dig2 = hours % 10;
-        drawDigit(dig2, H2_X, 0, DIGIT_WIDTH, DIGIT_HEIGHT, WHITE, THICKNESS);
-    }
-    if (dig3 != (minutes / 10)) {
-        drawDigit(dig3, M1_X, 0, DIGIT_WIDTH, DIGIT_HEIGHT, BLACK, THICKNESS);
-        dig3 = minutes / 10;
-        drawDigit(dig3, M1_X, 0, DIGIT_WIDTH, DIGIT_HEIGHT, WHITE, THICKNESS);
-    }
-    if (dig4 != (minutes % 10)) {
-        drawDigit(dig4, M2_X, 0, DIGIT_WIDTH, DIGIT_HEIGHT, BLACK, THICKNESS);
-        dig4 = minutes % 10;
-        drawDigit(dig4, M2_X, 0, DIGIT_WIDTH, DIGIT_HEIGHT, WHITE, THICKNESS);
-    }
-}
-
-void drawDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color, uint8_t thickness) {
-    // should have odd thickness to look nice
-    if ((thickness % 2) != 1) return;
-#if (DIGIT_STYLE == 0)
-    // draws 7 segment style digits
-    if (d > 9) return;
-    uint16_t h = (height + thickness)/2 - 1;
-    uint16_t x1 = x + width - thickness;
-    uint16_t y1 = y,
-        y2 = y + h - thickness + 2,
-        y3 = y + height - thickness;
-    if ((DIGIT_SEGMENTS[d] & 0x01) != 0) {
-        // horizontal top
-        tft.fillRectangle(x+thickness-1, y1, width-2*thickness+2, thickness, color);
-        for (uint8_t i=1; i<thickness; i++) {
-            tft.drawHorizontalLine(x+thickness-i-1, x+thickness-2, y1+i, color, 1);
-            tft.drawHorizontalLine(x+width-thickness+1, x+width-thickness+i, y1+i, color, 1);
-        }
-    }
-    if ((DIGIT_SEGMENTS[d] & 0x02) != 0) {
-        // vertical top left
-        tft.fillRectangle(x, y1+thickness-1, thickness, h-2*thickness+2, color);
-        for (uint8_t i=1; i<thickness; i++) {
-            tft.drawVerticalLine(x+i, y1+thickness-i-1, y1+thickness-2, color, 1);
-            tft.drawVerticalLine(x+i, y1+h-thickness+1, y1+h-thickness+i, color, 1);
-        }
-    }
-    if ((DIGIT_SEGMENTS[d] & 0x04) != 0) {
-        // vertical bottom left
-        tft.fillRectangle(x, y2+thickness-1, thickness, h-2*thickness+2, color);
-        for (uint8_t i=1; i<thickness; i++) {
-            tft.drawVerticalLine(x+i, y2+thickness-i-1, y2+thickness-2, color, 1);
-            tft.drawVerticalLine(x+i, y2+h-thickness+1, y2+h-thickness+i, color, 1);
-        }
-        if (DIGIT_SEGMENTS[d] == 0x3F || DIGIT_SEGMENTS[d] == 0x5F) tft.fillRectangle(x, y2-1, thickness, thickness, color);
-    }
-    if ((DIGIT_SEGMENTS[d] & 0x08) != 0) {
-        // horizontal bottom
-        tft.fillRectangle(x+thickness-1, y3, width-2*thickness+2, thickness, color);
-        for (uint8_t i=1; i<thickness; i++) {
-            tft.drawHorizontalLine(x+thickness-i-1, x+thickness-2, y3+thickness-i-1, color, 1);
-            tft.drawHorizontalLine(x+width-thickness+1, x+width-thickness+i, y3+thickness-i-1, color, 1);
-        }
-    }
-    if ((DIGIT_SEGMENTS[d] & 0x10) != 0) {
-        // vertical bottom right
-        tft.fillRectangle(x1, y2+thickness-1, thickness, h-2*thickness+2, color);
-        for (uint8_t i=1; i<thickness; i++) {
-            tft.drawVerticalLine(x1+thickness-i-1, y2+thickness-i-1, y2+thickness-2, color, 1);
-            tft.drawVerticalLine(x1+thickness-i-1, y2+h-thickness+1, y2+h-thickness+i, color, 1);
-        }
-    }
-    if ((DIGIT_SEGMENTS[d] & 0x20) != 0) {
-        // vertical top right
-        tft.fillRectangle(x1, y1+thickness-1, thickness, h-2*thickness+2, color);
-        for (uint8_t i=1; i<thickness; i++) {
-            tft.drawVerticalLine(x1+thickness-i-1, y1+thickness-i-1, y1+thickness-2, color, 1);
-            tft.drawVerticalLine(x1+thickness-i-1, y1+h-thickness+1, y1+h-thickness+i, color, 1);
-        }                        
-        if (DIGIT_SEGMENTS[d] == 0x3F || DIGIT_SEGMENTS[d] == 0x30 || DIGIT_SEGMENTS[d] == 0x72 || DIGIT_SEGMENTS[d] == 0x31 || DIGIT_SEGMENTS[d] == 0x7B) 
-            tft.fillRectangle(x1, y2-1, thickness, thickness, color);
-    }
-    if ((DIGIT_SEGMENTS[d] & 0x40) != 0) {
-        // horizontal middle
-        tft.fillRectangle(x+thickness, y2-1, width-2*thickness, thickness, color);
-        if (DIGIT_SEGMENTS[d] == 0x79) {
-            for (uint8_t i=1; i<=thickness/2; i++) tft.drawVerticalLine(x+thickness-i, y2+i-1, y2+thickness-i-1, color, 1);
-        }
-   }
-#else
-// assume that height > 2*width
-// thickness should be odd
+/**
+ * Uncomment the following flock and replace tft.drawBigDigit by drawBigDigit in the code above
+ **/
+/*
+void drawBigDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color, uint8_t thickness) {
+    // we draw rounded digits
+    // assume that height > 2*width
+    // thickness should be odd
     uint16_t hw = (width - 2 * thickness)/2;
     uint16_t hh = (height - 2 * thickness)/2;
     uint16_t ht = thickness/2;
@@ -299,5 +214,5 @@ void drawDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t heigh
             tft.drawLine(l1x, c1y, l1x, c2y, color, thickness);
             break;
     }
-#endif
 }
+*/

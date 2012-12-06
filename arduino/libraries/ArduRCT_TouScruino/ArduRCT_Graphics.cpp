@@ -23,8 +23,8 @@
  */
 
 #include "ArduRCT_Graphics.hpp"
-#include "fontBitmaps.hpp"
-#include "eepromUtils.hpp"
+#include "ArduRCT_FontBitmaps.hpp"
+#include "ArduRCT_EepromUtils.hpp"
 #include "../SPI/SPI.h"
 
 ArduRCT_Graphics::ArduRCT_Graphics(void) {
@@ -363,6 +363,91 @@ void ArduRCT_Graphics::write(uint8_t chr) {
 #if ARDUINO >= 100
 	return 1;
 #endif
+}
+
+
+const uint8_t DIGIT_SEGMENTS[] = { 
+	0x3F,	// b00111111	0
+	0x30,	// b00110000	1
+	0x6D,	// b01101101	2
+	0x79,	// b01111001	3
+	0x72,	// b01110010	4
+	0x5B,	// b01011011	5
+	0x5F,	// b01011111	6
+	0x31,	// b00110001	7
+	0x7F,	// b01111111	8
+	0x7B	// b01111011	9
+};  
+
+void ArduRCT_Graphics::drawBigDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color, uint8_t thickness, bool selectAndUnselectScreen) {
+	// draws 7 segment style digits
+	if (d > 9) return;
+	uint16_t h = (height + thickness)/2 - 1;
+	uint16_t x1 = x + width - thickness;
+	uint16_t y1 = y,
+		y2 = y + h - thickness + 2,
+		y3 = y + height - thickness;
+		
+	if (selectAndUnselectScreen) selectScreenImpl();
+	if ((DIGIT_SEGMENTS[d] & 0x01) != 0) {
+		// horizontal top
+		fillRectangle(x+thickness-1, y1, width-2*thickness+2, thickness, color, false);
+		for (uint8_t i=1; i<thickness; i++) {
+			drawHorizontalLine(x+thickness-i-1, x+thickness-2, y1+i, color, 1, false);
+			drawHorizontalLine(x+width-thickness+1, x+width-thickness+i, y1+i, color, 1, false);
+		}
+	}
+	if ((DIGIT_SEGMENTS[d] & 0x02) != 0) {
+		// vertical top left
+		fillRectangle(x, y1+thickness-1, thickness, h-2*thickness+2, color, false);
+		for (uint8_t i=1; i<thickness; i++) {
+			drawVerticalLine(x+i, y1+thickness-i-1, y1+thickness-2, color, 1, false);
+			drawVerticalLine(x+i, y1+h-thickness+1, y1+h-thickness+i, color, 1, false);
+		}
+	}
+	if ((DIGIT_SEGMENTS[d] & 0x04) != 0) {
+		// vertical bottom left
+		fillRectangle(x, y2+thickness-1, thickness, h-2*thickness+2, color, false);
+		for (uint8_t i=1; i<thickness; i++) {
+			drawVerticalLine(x+i, y2+thickness-i-1, y2+thickness-2, color, 1, false);
+			drawVerticalLine(x+i, y2+h-thickness+1, y2+h-thickness+i, color, 1, false);
+		}
+		if (DIGIT_SEGMENTS[d] == 0x3F || DIGIT_SEGMENTS[d] == 0x5F) fillRectangle(x, y2-1, thickness, thickness, color, false);
+	}
+	if ((DIGIT_SEGMENTS[d] & 0x08) != 0) {
+		// horizontal bottom
+		fillRectangle(x+thickness-1, y3, width-2*thickness+2, thickness, color, false);
+		for (uint8_t i=1; i<thickness; i++) {
+			drawHorizontalLine(x+thickness-i-1, x+thickness-2, y3+thickness-i-1, color, 1, false);
+			drawHorizontalLine(x+width-thickness+1, x+width-thickness+i, y3+thickness-i-1, color, 1, false);
+		}
+	}
+	if ((DIGIT_SEGMENTS[d] & 0x10) != 0) {
+		// vertical bottom right
+		fillRectangle(x1, y2+thickness-1, thickness, h-2*thickness+2, color, false);
+		for (uint8_t i=1; i<thickness; i++) {
+			drawVerticalLine(x1+thickness-i-1, y2+thickness-i-1, y2+thickness-2, color, 1, false);
+			drawVerticalLine(x1+thickness-i-1, y2+h-thickness+1, y2+h-thickness+i, color, 1, false);
+		}
+	}
+	if ((DIGIT_SEGMENTS[d] & 0x20) != 0) {
+		// vertical top right
+		fillRectangle(x1, y1+thickness-1, thickness, h-2*thickness+2, color, false);
+		for (uint8_t i=1; i<thickness; i++) {
+			drawVerticalLine(x1+thickness-i-1, y1+thickness-i-1, y1+thickness-2, color, 1, false);
+			drawVerticalLine(x1+thickness-i-1, y1+h-thickness+1, y1+h-thickness+i, color, 1, false);
+		}						
+		if (DIGIT_SEGMENTS[d] == 0x3F || DIGIT_SEGMENTS[d] == 0x30 || DIGIT_SEGMENTS[d] == 0x72 || DIGIT_SEGMENTS[d] == 0x31 || DIGIT_SEGMENTS[d] == 0x7B) 
+			fillRectangle(x1, y2-1, thickness, thickness, color, false);
+	}
+	if ((DIGIT_SEGMENTS[d] & 0x40) != 0) {
+		// horizontal middle
+		fillRectangle(x+thickness, y2-1, width-2*thickness, thickness, color, false);
+		if (DIGIT_SEGMENTS[d] == 0x79) {
+			for (uint8_t i=1; i<=thickness/2; i++) drawVerticalLine(x+thickness-i, y2+i-1, y2+thickness-i-1, color, 1, false);
+		}
+	}
+	if (selectAndUnselectScreen) unselectScreenImpl();
 }
 
 
@@ -738,8 +823,8 @@ void ArduRCT_Graphics::_drawBoundedPixel(int16_t x, int16_t y, uint16_t color) {
 
 /*
  * From Wikipedia: Andres arc drawing algorithm, extended to 
- * 	- draw thick lines and 
- * 	- fill with optimal use of horizontal lines
+ *	 - draw thick lines and 
+ *	 - fill with optimal use of horizontal lines
  */	
 void ArduRCT_Graphics::_drawOrFillOctant(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, int8_t thickness, bool fill) {
 	int16_t x = 0;

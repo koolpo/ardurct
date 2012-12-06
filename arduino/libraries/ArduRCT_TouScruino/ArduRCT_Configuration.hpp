@@ -40,7 +40,7 @@
 #define CONFIGURATION_V2_PORT 	2
 #define CONFIGURATION_V2_BL 	5 
 
-#define CONFIGURATION_SPI_IS_SHARED 1
+//#define CONFIGURATION_SPI_IS_SHARED 1
 
 // Software
 // --------

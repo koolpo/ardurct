@@ -35,12 +35,12 @@
 #include <inttypes.h>
 #include <avr/pgmspace.h>
 
-#include "configuration.hpp"
-#include "fonts.hpp"
-#include "colors.hpp"
+#include "ArduRCT_Configuration.hpp"
+#include "ArduRCT_Fonts.hpp"
+#include "ArduRCT_Colors.hpp"
 
 #if defined(CONFIGURATION_HAS_MACROS)
-#include "Graphics_Macros.hpp"
+#include "ArduRCT_GraphicsMacros.hpp"
 #endif
 
 #define GRAPHICS_ARC_SSE (1 << 0)
@@ -147,6 +147,8 @@ class ArduRCT_Graphics: public Print {
 		void drawChar(uint8_t chr, int16_t x, int16_t y, uint16_t color, uint8_t fontSize = 1, bool isBold = false, bool overlay = false, bool selectAndUnselectScreen = true);
 
 		void drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_t fontSize = 1, bool isBold = false, bool overlay = false, bool selectAndUnselectScreen = true);
+		
+		void drawBigDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color, uint8_t thickness, bool selectAndUnselectScreen = true);
 
 		void drawPixel(int16_t x, int16_t y, uint16_t color, bool selectAndUnselectScreen = true);
 
@@ -188,7 +190,7 @@ class ArduRCT_Graphics: public Print {
 		uint8_t *executeMacro(uint8_t *macro, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1, 
 			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
 
-		void executeMacroCommand(graphics_macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
+		void executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
 			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
 		
 		void executeEepromMacro(uint8_t macroNb, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
@@ -267,23 +269,23 @@ class ArduRCT_Graphics: public Print {
 
 		void _initializeMacros();
 		
-		int16_t _parseMacroCommandParameters(uint8_t *s, graphics_macroCommand_t *mc);
+		int16_t _parseMacroCommandParameters(uint8_t *s, ardurct_graphicsMacroCommand_t *mc);
 
-		int8_t _parseMacroCommandHexColor(uint8_t *s, int16_t n, graphics_macroCommand_t *mc);
+		int8_t _parseMacroCommandHexColor(uint8_t *s, int16_t n, ardurct_graphicsMacroCommand_t *mc);
 
-		int8_t _parseMacroCommandParameter(uint8_t *s, int16_t n, graphics_macroCommand_t *mc, uint8_t paramId);
+		int8_t _parseMacroCommandParameter(uint8_t *s, int16_t n, ardurct_graphicsMacroCommand_t *mc, uint8_t paramId);
 		
-		void _executeMacroCommand(graphics_macroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1);
+		void _executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1);
 		
 		int32_t _getArcEnd(uint32_t radius, uint8_t octant, bool isReversed, bool isX);
 		
-		int16_t _compressMacroCommand(graphics_macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr);
+		int16_t _compressMacroCommand(ardurct_graphicsMacroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr);
 		
-		int16_t _uncompressMacroCommand(uint8_t *buffer, uint16_t n, graphics_macroCommand_t *mc);
+		int16_t _uncompressMacroCommand(uint8_t *buffer, uint16_t n, ardurct_graphicsMacroCommand_t *mc);
 		
 		int8_t _compressNumber(int16_t in, uint8_t *out, uint16_t n);
 		
-		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  graphics_macroCommand_t *mc, uint8_t paramId);
+		int8_t _uncompressNumber(uint8_t *in, uint16_t n,  ardurct_graphicsMacroCommand_t *mc, uint8_t paramId);
 #endif
 		
 		void _drawValidChar(uint8_t chr, uint16_t x, uint16_t y, uint16_t color, uint8_t fontSize, fontDefinition_t *fontDef, uint8_t fontScale, bool fontBold, bool overlay);

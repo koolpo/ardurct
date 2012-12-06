@@ -23,8 +23,13 @@
  * THE SOFTWARE.
  */
  
+/**
+ *	The functions in this file are in fact part of the ArduRCT_Graphics class
+ *	They are kept separate as they are only included if CONFIGURATION_HAS_MACROS is defined
+ **/
+ 
 #include "ArduRCT_Graphics.hpp"
-#include "Graphics_Macros.hpp"
+#include "ArduRCT_GraphicsMacros.hpp"
 
 #if defined(CONFIGURATION_HAS_MACROS)
 
@@ -155,7 +160,7 @@ extern uint8_t eeprom_read_uint8_t(uint16_t address);
 extern void eeprom_write_uint8_t(uint16_t address, uint8_t value);
 
 uint8_t *ArduRCT_Graphics::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
-	graphics_macroCommand_t mc;
+	ardurct_graphicsMacroCommand_t mc;
 	bool drawMode = true;
 	uint8_t wBuffer[256];
 	uint16_t wBufferPtr = 0;
@@ -376,7 +381,7 @@ uint8_t *ArduRCT_Graphics::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16
 }
 
 
-void ArduRCT_Graphics::executeMacroCommand(graphics_macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
+void ArduRCT_Graphics::executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
 	if (selectAndUnselectScreen) selectScreenImpl();
@@ -386,7 +391,7 @@ void ArduRCT_Graphics::executeMacroCommand(graphics_macroCommand_t *mc, int16_t 
 
 
 void ArduRCT_Graphics::executeEepromMacro(uint8_t macroNb, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv, bool continueLastMacro, bool selectAndUnselectScreen) {
-	graphics_macroCommand_t mc;
+	ardurct_graphicsMacroCommand_t mc;
 	// initialize relative origin
 	if (!continueLastMacro) _initializeMacros();
 	mc.cmd = GRAPHICS_MACRO_CMD_EXECUTE;
@@ -443,7 +448,7 @@ void ArduRCT_Graphics::_formatMacroSentence(uint8_t *s) {
 }
 
 
-void ArduRCT_Graphics::_executeMacroCommand(graphics_macroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv) {
+void ArduRCT_Graphics::_executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv) {
 	uint8_t group = mc->cmd & GRAPHICS_MACRO_CMD_GROUP_MASK;
 	
 	// presets
@@ -636,7 +641,7 @@ void ArduRCT_Graphics::_executeMacroCommand(graphics_macroCommand_t *mc, int16_t
 			i++;
 		}
 		buffer[i] = 0;
-		graphics_macroCommand_t emc;
+		ardurct_graphicsMacroCommand_t emc;
 		// uncompress the macro commands and execute them
 		if (mc->cmd == GRAPHICS_MACRO_CMD_EXECUTE_WITH_RESET) _initializeMacros();
 		i = 0;
@@ -651,7 +656,7 @@ void ArduRCT_Graphics::_executeMacroCommand(graphics_macroCommand_t *mc, int16_t
 
 
 
-int8_t ArduRCT_Graphics::_parseMacroCommandHexColor(uint8_t *s, int16_t n, graphics_macroCommand_t *mc) {
+int8_t ArduRCT_Graphics::_parseMacroCommandHexColor(uint8_t *s, int16_t n, ardurct_graphicsMacroCommand_t *mc) {
 	int16_t i = n;
 	mc->color = 0;
 	// remove front spaces
@@ -667,7 +672,7 @@ int8_t ArduRCT_Graphics::_parseMacroCommandHexColor(uint8_t *s, int16_t n, graph
 	return i-n;
 }
 
-int8_t ArduRCT_Graphics::_parseMacroCommandParameter(uint8_t *s, int16_t n, graphics_macroCommand_t *mc, uint8_t paramId) {
+int8_t ArduRCT_Graphics::_parseMacroCommandParameter(uint8_t *s, int16_t n, ardurct_graphicsMacroCommand_t *mc, uint8_t paramId) {
 	int16_t i = n;
 	boolean negative = false;
 	// remove front spaces
@@ -789,7 +794,7 @@ int32_t ArduRCT_Graphics::_getArcEnd(uint32_t radius, uint8_t octant, bool isRev
  *	Ratio:			11 / 30
  *
  */
-int16_t ArduRCT_Graphics::_compressMacroCommand(graphics_macroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr) {
+int16_t ArduRCT_Graphics::_compressMacroCommand(ardurct_graphicsMacroCommand_t *mc, uint8_t *buffer, uint16_t bufferPtr) {
 	
 	uint16_t i = bufferPtr;
 	buffer[i++] = mc->cmd;
@@ -840,7 +845,7 @@ int16_t ArduRCT_Graphics::_compressMacroCommand(graphics_macroCommand_t *mc, uin
 	return i;
 }
 
-int16_t ArduRCT_Graphics::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, graphics_macroCommand_t *mc) {
+int16_t ArduRCT_Graphics::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, ardurct_graphicsMacroCommand_t *mc) {
 	uint16_t i = n;
 	mc->cmd = buffer[i++];
 	
@@ -933,7 +938,7 @@ int8_t ArduRCT_Graphics::_compressNumber(int16_t in, uint8_t *out, uint16_t n) {
 }
 
 
-int8_t ArduRCT_Graphics::_uncompressNumber(uint8_t *in, uint16_t n,  graphics_macroCommand_t *mc, uint8_t paramId) {
+int8_t ArduRCT_Graphics::_uncompressNumber(uint8_t *in, uint16_t n,  ardurct_graphicsMacroCommand_t *mc, uint8_t paramId) {
 	boolean negative = false;
 	if ((in[n] & (0x01 << 6)) != 0) negative = true;
 	mc->param[paramId] = in[n] & 0x3F;

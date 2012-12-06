@@ -6,7 +6,7 @@
 # Datatypes	(KEYWORD1)
 #######################################
 
-TouchScreen	KEYWORD1
+ArduRCT_TouScruino	KEYWORD1
 COLOR_565	KEYWORD1
 
 #######################################
@@ -68,6 +68,9 @@ getUIElementValue	KEYWORD2
 setUIElementEditable	KEYWORD2
 setBacklight	KEYWORD2
 calibrateTouchpanel	KEYWORD2
+getFontCharWidth	KEYWORD2
+getFontHeight	KEYWORD2
+getStringWidth	KEYWORD2
 
 #######################################
 #	Instances	(KEYWORD2)
@@ -77,6 +80,7 @@ calibrateTouchpanel	KEYWORD2
 #	Constants	(LITERAL1)
 #######################################
 
+TOUSCRUINO_VERSION	LITERAL1
 FONT_SMALL	LITERAL1
 FONT_MEDIUM	LITERAL1
 FONT_BIG	LITERAL1

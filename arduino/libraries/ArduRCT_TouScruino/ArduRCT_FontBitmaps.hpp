@@ -22,10 +22,17 @@
  * THE SOFTWARE.
  */
 
+/**
+ *	This font patterns have been generated with the java ImageToC application
+ *	located in the fonts folder.
+ *	ImageToC takes a png image with all the letters drawn and renders the
+ *	C area stored here.
+ **/
+ 
 #ifndef FONT_BITMAPS_HPP
 #define FONT_BITMAPS_HPP
 
-#include "fonts.hpp"
+#include "ArduRCT_Fonts.hpp"
 
 // Basic character set
 //  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}

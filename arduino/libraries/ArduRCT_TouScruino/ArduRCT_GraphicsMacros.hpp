@@ -61,6 +61,6 @@ typedef struct {
 	uint16_t color;
 	uint8_t *text;
 	uint8_t textLen;
-} graphics_macroCommand_t;
+} ardurct_graphicsMacroCommand_t;
 
 #endif
