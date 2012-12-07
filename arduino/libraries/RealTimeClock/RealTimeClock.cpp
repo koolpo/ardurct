@@ -132,6 +132,7 @@ bool RealTimeClock::update() {
     
     _month = 1;
     _year ++;
+	return true;
 }
 
 void RealTimeClock::setAlarmTime(uint8_t dayOfWeek, uint8_t hour, uint8_t minute, uint8_t turnOn) {
@@ -164,15 +165,16 @@ void RealTimeClock::stopAlarm() {
 }
                 
 void RealTimeClock::snoozeAlarm(uint8_t minutes) {
-    _alarmStatus = -minutes;
+ 	if ((_alarmStatus == RTC_ALARM_STOPPED) || (_alarmStatus < RTC_ALARM_RING_START)) return;
+   _alarmStatus = -minutes;
 }
         
 bool RealTimeClock::isAlarmRinging() {
-    return (_alarmStatus >= 0);
+    return (_alarmStatus >= RTC_ALARM_RING_START);
 }
 
 bool RealTimeClock::isAlarmSnoozing() {
-    return ((_alarmStatus != RTC_ALARM_STOPPED) && (_alarmStatus < 0));
+    return ((_alarmStatus != RTC_ALARM_STOPPED) && (_alarmStatus < RTC_ALARM_RING_START));
 }
 
 
