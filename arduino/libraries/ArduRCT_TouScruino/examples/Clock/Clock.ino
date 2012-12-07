@@ -72,8 +72,12 @@ void loop() {
     // can be called as often as wanted, but at least once per second
     if (!rtc.update()) return;
 
+	// redraw some elements of the screen
     drawDateAndTime();
-    if (rtc.isAlarmRinging()) touscruino.invertDisplay((rtc.getSecond() % 2) == 0);
+	// draw the alarm signal
+	if (rtc.isAlarmRinging()) drawAlarmSignal((rtc.getSecond() % 2) == 0 ? BLACK : RED);
+	else if (rtc.isAlarmSnoozing()) drawAlarmSignal((rtc.getSecond() % 2) == 0 ? BLACK : ORANGE);
+	else drawAlarmSignal(BLACK);
 }
 
 void drawDateAndTime() {
@@ -98,8 +102,8 @@ void drawDateAndTime() {
     if (timeDigit[4] != rtc.getDay()) {
         touscruino.drawString(rtc.getDateAsString(RTC_WITH_DAY_OF_WEEK), DATE_X, DATE_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
         if (rtc.isAlarmOn(rtc.getDayOfWeek())) {
-            touscruino.drawString("Alarm", ALARM_X, ALARM_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
-            touscruino.drawString(rtc.getAlarmTimeAsString(rtc.getDayOfWeek()), ALARM_STRING_X, ALARM_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+            touscruino.drawString("Alarm", ALARM_STRING_X, ALARM_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+            touscruino.drawString(rtc.getAlarmTimeAsString(rtc.getDayOfWeek()), ALARM_X, ALARM_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
         } else {
             touscruino.fillRectangle(ALARM_STRING_X, ALARM_Y, 12*touscruino.getFontCharWidth(FONT_MEDIUM), touscruino.getFontHeight(FONT_MEDIUM), BLACK);
         }
@@ -114,6 +118,10 @@ void drawColumn(uint16_t x, uint16_t y, uint16_t height, uint16_t color, uint16_
     uint16_t ht = thickness/2;
     touscruino.fillRectangle(x - ht , y + height/3 - ht, thickness, thickness, color); 
     touscruino.fillRectangle(x - ht , y + 2*height/3 - ht, thickness, thickness, color); 
+}
+
+void drawAlarmSignal(int color) {
+	touscruino.fillRectangle(touscruino.getWidth()-touscruino.getHeight()+ALARM_Y, ALARM_Y, touscruino.getHeight()-ALARM_Y-2, touscruino.getHeight()-ALARM_Y-2, color);
 }
 
 /**
