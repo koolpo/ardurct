@@ -26,15 +26,15 @@
 #define TOUSCRUINO_VERSION 1
 #include <SPI.h>
 
-// Change to your version: the following include will automatically create the proper tft object
+// Change to your version: the following include will automatically create the proper 'touscruino' object
 #define TOUSCRUINO_VERSION 1
 #include <ArduRCT_TouScruino.h>
 
 uint8_t rotation = GRAPHICS_ROTATION_0;
 
 void setup() {
-    tft.begin(WHITE, BLACK, FONT_MEDIUM, FONT_BOLD, OVERLAY);
-    tft.setBacklight(180);
+    touscruino.begin(WHITE, BLACK, FONT_MEDIUM, FONT_BOLD, OVERLAY);
+    touscruino.setBacklight(180);
 }
 
 void loop() {
@@ -42,22 +42,22 @@ void loop() {
     delay(5000);
     rotation ++;
     if (rotation > GRAPHICS_ROTATION_270) rotation = GRAPHICS_ROTATION_0;
-    tft.setRotation(rotation);
+    touscruino.setRotation(rotation);
 }
 
 
 void drawScreen() {
     uint32_t duration = millis();
-    uint16_t height = tft.getHeight()/3;
-    uint16_t width = tft.getWidth();
+    uint16_t height = touscruino.getHeight()/3;
+    uint16_t width = touscruino.getWidth();
     uint16_t *buffer;
     for (uint8_t band=0; band<3; band++) buffer = drawBand(band, width, height);
     // paste the last buffer to complete the screen
-    for (uint16_t y=3*height; y<tft.getHeight(); y++) tft.pasteBitmap(buffer, 0, y, width, 1);
+    for (uint16_t y=3*height; y<touscruino.getHeight(); y++) touscruino.pasteBitmap(buffer, 0, y, width, 1);
     duration = millis()-duration;
-    tft.setCursor((width-tft.getStringWidth("000ms", FONT_MEDIUM))/2, 3*height/2);
-    tft.print(duration);
-    tft.print("ms");
+    touscruino.setCursor((width-touscruino.getStringWidth("000ms", FONT_MEDIUM))/2, 3*height/2);
+    touscruino.print(duration);
+    touscruino.print("ms");
 }
 
 uint16_t *drawBand(uint8_t band, uint16_t width, uint16_t height) {
@@ -90,7 +90,7 @@ uint16_t *drawBand(uint8_t band, uint16_t width, uint16_t height) {
             else if (band == 1) buffer[x] = COLOR_565(c3, c1, c2);
             else buffer[x] = COLOR_565(c2, c3, c1);
         }
-        tft.pasteBitmap(buffer, 0, y+height*band, width, 1);
+        touscruino.pasteBitmap(buffer, 0, y+height*band, width, 1);
     }
     return buffer;
 }

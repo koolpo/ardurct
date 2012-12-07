@@ -25,28 +25,29 @@
 
 #include <SPI.h>
 
-// Change to your version: the following include will automatically create the proper tft object
+// Change to your version: the following include will automatically create the proper 'touscruino' object
 #define TOUSCRUINO_VERSION 1
 #include <ArduRCT_TouScruino.h>
 
 void setup() {
-    tft.begin(WHITE, BLACK, FONT_MEDIUM, FONT_BOLD);
+    touscruino.begin(WHITE, BLACK, FONT_MEDIUM, FONT_BOLD);
 }
 
 void loop() {
     uint32_t duration = millis();
     delay(500);
-    tft.fillScreen(RED);
+    touscruino.fillScreen(RED);
     delay(500);
-    tft.fillScreen(GREEN);
+    touscruino.fillScreen(GREEN);
     delay(500);
-    tft.fillScreen(BLUE);
+    touscruino.fillScreen(BLUE);
     delay(500);
-    tft.fillScreen(WHITE);
+    touscruino.fillScreen(WHITE);
     delay(500);
-    tft.fillScreen(BLACK);
+    touscruino.fillScreen(BLACK);
+	
     duration = (millis() - duration)/5 - 500;
-    tft.setCursor(20, 20);
-    tft.print(duration);
-    tft.print("ms");
+    touscruino.setCursor(20, 20);
+    touscruino.print(duration);
+    touscruino.print("ms");
 }

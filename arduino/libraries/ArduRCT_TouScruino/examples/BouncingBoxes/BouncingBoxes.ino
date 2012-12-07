@@ -24,7 +24,7 @@
  
 #include <SPI.h>
 
-// Change to your version: the following include will automatically create the proper tft object
+// Change to your version: the following include will automatically create the proper 'touscruino' object
 #define TOUSCRUINO_VERSION 1
 #include <ArduRCT_TouScruino.h>
 
@@ -56,13 +56,13 @@ int16_t maxY;
 uint32_t nextDraw;
 
 void setup() {
-    tft.begin(BLACK, BACKGROUND);
-    tft.setBacklight(180);
-    maxX = tft.getWidth();
-    maxY = tft.getHeight();
+    touscruino.begin(BLACK, BACKGROUND);
+    touscruino.setBacklight(180);
+    maxX = touscruino.getWidth();
+    maxY = touscruino.getHeight();
     box[0].init(RED, BOX_SIZE, 0, 0, BOX_SPEED_X, BOX_SPEED_Y);
-    box[1].init(BLUE, BOX_SIZE, tft.getWidth(), 0, BOX_SPEED_Y, BOX_SPEED_X);
-    box[2].init(GREEN, BOX_SIZE, 0, tft.getHeight(), BOX_SPEED_Y, BOX_SPEED_X);
+    box[1].init(BLUE, BOX_SIZE, touscruino.getWidth(), 0, BOX_SPEED_Y, BOX_SPEED_X);
+    box[2].init(GREEN, BOX_SIZE, 0, touscruino.getHeight(), BOX_SPEED_Y, BOX_SPEED_X);
 }
 
 void loop() {

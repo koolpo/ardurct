@@ -26,7 +26,7 @@
 #include <SPI.h>
 #include <SPI.h>
 
-// Change to your version: the following include will automatically create the proper tft object
+// Change to your version: the following include will automatically create the proper 'touscruino' object
 #define TOUSCRUINO_VERSION 1
 #include <ArduRCT_TouScruino.h>
 
@@ -73,26 +73,26 @@ uint8_t sparkfun[] = "w 0 "\
     "\0";
     
 void setup() {    
-    tft.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
-    tft.setBacklight(180);
+    touscruino.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    touscruino.setBacklight(180);
     
     // center the drawing on the screen
-    int16_t x = (tft.getWidth()-LOGO_WIDTH*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
-    int16_t y = (tft.getHeight()-LOGO_HEIGHT*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
+    int16_t x = (touscruino.getWidth()-LOGO_WIDTH*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
+    int16_t y = (touscruino.getHeight()-LOGO_HEIGHT*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
     
     // execute the macro without the initial write in slot 0
-    tft.executeMacro(&sparkfun[3], x, y, LOGO_SCALE_MUL, LOGO_SCALE_DIV, true);
+    touscruino.executeMacro(&sparkfun[3], x, y, LOGO_SCALE_MUL, LOGO_SCALE_DIV, true);
 
     // write the macro to eeprom slot 0
-    //tft.executeMacro(sparkfun);
+    //touscruino.executeMacro(sparkfun);
 
     //delay(3000);
     
     // erase the drawing
-    //tft.fillRectangle(x-2, y-2, LOGO_WIDTH*LOGO_SCALE+4, LOGO_HEIGHT*LOGO_SCALE+4, WHITE);
+    //touscruino.fillRectangle(x-2, y-2, LOGO_WIDTH*LOGO_SCALE+4, LOGO_HEIGHT*LOGO_SCALE+4, WHITE);
 
     // execute the macro stored in slot 0. Any time we need the logo, in whatever scale, we can reuse "e 0"
-    //tft.executeMacro((uint8_t *)"e 0", x, y, LOGO_SCALE, 1);
+    //touscruino.executeMacro((uint8_t *)"e 0", x, y, LOGO_SCALE, 1);
 }
 
 void loop() {

@@ -25,7 +25,7 @@
 #include <SPI.h>
 #include <RealTimeClock.h>
 
-// Change to your version: the following include will automatically create the proper tft object
+// Change to your version: the following include will automatically create the proper 'touscruino' object
 #define TOUSCRUINO_VERSION 1
 #include <ArduRCT_TouScruino.h>
 
@@ -34,6 +34,7 @@
 #define DIGIT_THICKNESS 7
 #define DIGIT_WIDTH 30
 #define DIGIT_HEIGHT 80
+#define DIGIT_STYLE GRAPHICS_STYLE_ADVANCED
 
 #define SECONDS_WIDTH 120
 #define SECONDS_HEIGHT 5
@@ -54,9 +55,9 @@ uint8_t timeDigit[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 uint8_t timeDigit_x[] = { 0, 38, 88, 130 };
     
 void setup() {
-    tft.begin(WHITE, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
-    tft.fillScreen(BLACK);
-    tft.setRotation(GRAPHICS_ROTATION_90);
+    touscruino.begin(WHITE, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.fillScreen(BLACK);
+    touscruino.setRotation(GRAPHICS_ROTATION_90);
      
     rtc.setAlarmTime(THURSDAY, 10, 30, RTC_ALARM_ON);
 
@@ -72,7 +73,7 @@ void loop() {
     if (!rtc.update()) return;
 
     drawDateAndTime();
-    if (rtc.isAlarmRinging()) tft.invertDisplay((rtc.getSecond() % 2) == 0);
+    if (rtc.isAlarmRinging()) touscruino.invertDisplay((rtc.getSecond() % 2) == 0);
 }
 
 void drawDateAndTime() {
@@ -80,9 +81,9 @@ void drawDateAndTime() {
     for (uint8_t i=0; i<4; i++) {
         if (timeDigit[i] != rtc.getTimeDigit(i)) {
             // erase the digit
-            tft.drawBigDigit(timeDigit[i], timeDigit_x[i], 0, DIGIT_WIDTH, DIGIT_HEIGHT, BLACK, DIGIT_THICKNESS);
+            touscruino.drawBigDigit(timeDigit[i], timeDigit_x[i], 0, DIGIT_WIDTH, DIGIT_HEIGHT, BLACK, DIGIT_THICKNESS, DIGIT_STYLE);
             // draw the new one
-            if ((i != 0) || (timeDigit[i] != 0)) tft.drawBigDigit(rtc.getTimeDigit(i), timeDigit_x[i], 0, DIGIT_WIDTH, DIGIT_HEIGHT, WHITE, DIGIT_THICKNESS);
+            if ((i != 0) || (timeDigit[i] != 0)) touscruino.drawBigDigit(rtc.getTimeDigit(i), timeDigit_x[i], 0, DIGIT_WIDTH, DIGIT_HEIGHT, WHITE, DIGIT_THICKNESS, DIGIT_STYLE);
         }
     }
     // blink the seconds
@@ -90,17 +91,17 @@ void drawDateAndTime() {
     else drawColumn(COLUMN_X, 0, DIGIT_HEIGHT, WHITE, DIGIT_THICKNESS);
     
     // draw a progress bar for the seconds
-    if (rtc.getSecond() == 0) tft.fillRectangle((tft.getWidth() - SECONDS_WIDTH)/2, SECONDS_Y, SECONDS_WIDTH, SECONDS_HEIGHT, BLACK);
-    else tft.fillRectangle((tft.getWidth() - SECONDS_WIDTH)/2, SECONDS_Y, rtc.getSecond() * SECONDS_WIDTH / 60, SECONDS_HEIGHT, YELLOW);
+    if (rtc.getSecond() == 0) touscruino.fillRectangle((touscruino.getWidth() - SECONDS_WIDTH)/2, SECONDS_Y, SECONDS_WIDTH, SECONDS_HEIGHT, BLACK);
+    else touscruino.fillRectangle((touscruino.getWidth() - SECONDS_WIDTH)/2, SECONDS_Y, rtc.getSecond() * SECONDS_WIDTH / 60, SECONDS_HEIGHT, YELLOW);
 
     // if date as changed, redraw the date and alarm 
     if (timeDigit[4] != rtc.getDay()) {
-        tft.drawString(rtc.getDateAsString(RTC_WITH_DAY_OF_WEEK), DATE_X, DATE_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+        touscruino.drawString(rtc.getDateAsString(RTC_WITH_DAY_OF_WEEK), DATE_X, DATE_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
         if (rtc.isAlarmOn(rtc.getDayOfWeek())) {
-            tft.drawString("Alarm", ALARM_X, ALARM_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
-            tft.drawString(rtc.getAlarmTimeAsString(rtc.getDayOfWeek()), ALARM_STRING_X, ALARM_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+            touscruino.drawString("Alarm", ALARM_X, ALARM_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+            touscruino.drawString(rtc.getAlarmTimeAsString(rtc.getDayOfWeek()), ALARM_STRING_X, ALARM_Y, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
         } else {
-            tft.fillRectangle(ALARM_STRING_X, ALARM_Y, 12*tft.getFontCharWidth(FONT_MEDIUM), tft.getFontHeight(FONT_MEDIUM), BLACK);
+            touscruino.fillRectangle(ALARM_STRING_X, ALARM_Y, 12*touscruino.getFontCharWidth(FONT_MEDIUM), touscruino.getFontHeight(FONT_MEDIUM), BLACK);
         }
     }
 
@@ -111,15 +112,15 @@ void drawDateAndTime() {
 
 void drawColumn(uint16_t x, uint16_t y, uint16_t height, uint16_t color, uint16_t  thickness) {
     uint16_t ht = thickness/2;
-    tft.fillRectangle(x - ht , y + height/3 - ht, thickness, thickness, color); 
-    tft.fillRectangle(x - ht , y + 2*height/3 - ht, thickness, thickness, color); 
+    touscruino.fillRectangle(x - ht , y + height/3 - ht, thickness, thickness, color); 
+    touscruino.fillRectangle(x - ht , y + 2*height/3 - ht, thickness, thickness, color); 
 }
 
 /**
- * Uncomment the following flock and replace tft.drawBigDigit by drawBigDigit in the code above
+ * Uncomment the following flock and replace touscruino.drawBigDigit by drawBigDigit in the code above
  **/
 /*
-void drawBigDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color, uint8_t thickness) {
+void drawBigDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color, uint8_t thickness, uint8_t style) {
     // we draw rounded digits
     // assume that height > 2*width
     // thickness should be odd
@@ -142,76 +143,76 @@ void drawBigDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t he
 
     switch (d) {
         case 0:
-            tft.drawArc(cx, c1y, r, GRAPHICS_ARC_N, color, thickness);
-            tft.drawArc(cx, c5y, r, GRAPHICS_ARC_S, color, thickness);
-            tft.drawLine(l1x, c1y, l1x, c5y, color, thickness);
-            tft.drawLine(l2x, c1y, l2x, c5y, color, thickness);
+            touscruino.drawArc(cx, c1y, r, GRAPHICS_ARC_N, color, thickness);
+            touscruino.drawArc(cx, c5y, r, GRAPHICS_ARC_S, color, thickness);
+            touscruino.drawLine(l1x, c1y, l1x, c5y, color, thickness);
+            touscruino.drawLine(l2x, c1y, l2x, c5y, color, thickness);
             break;
         case 1:
-            tft.drawArc(l1x, l1y, r, GRAPHICS_ARC_SE, color, thickness);
-            tft.drawLine(cx, l1y, cx, l2y, color, thickness);
-            tft.drawLine(l1x, l2y, l2x, l2y, color, thickness);
+            touscruino.drawArc(l1x, l1y, r, GRAPHICS_ARC_SE, color, thickness);
+            touscruino.drawLine(cx, l1y, cx, l2y, color, thickness);
+            touscruino.drawLine(l1x, l2y, l2x, l2y, color, thickness);
             break;
         case 2:
-            tft.drawArc(cx, c1y, r, GRAPHICS_ARC_N, color, thickness);
-            tft.drawArc(cx, c2y, r, GRAPHICS_ARC_SE, color, thickness);
-            tft.drawArc(cx, c4y, r, GRAPHICS_ARC_NW, color, thickness);
-            tft.drawLine(l2x, c1y, l2x, c2y, color, thickness);
-            tft.drawLine(l1x, c4y, l1x, l2y, color, thickness);
-            tft.drawLine(l1x, l2y, l2x, l2y, color, thickness);
+            touscruino.drawArc(cx, c1y, r, GRAPHICS_ARC_N, color, thickness);
+            touscruino.drawArc(cx, c2y, r, GRAPHICS_ARC_SE, color, thickness);
+            touscruino.drawArc(cx, c4y, r, GRAPHICS_ARC_NW, color, thickness);
+            touscruino.drawLine(l2x, c1y, l2x, c2y, color, thickness);
+            touscruino.drawLine(l1x, c4y, l1x, l2y, color, thickness);
+            touscruino.drawLine(l1x, l2y, l2x, l2y, color, thickness);
             break;
         case 3:
-            tft.drawArc(cx, c1y, r, GRAPHICS_ARC_N, color, thickness);
-            tft.drawArc(cx, c2y, r, GRAPHICS_ARC_SE, color, thickness);
-            tft.drawArc(cx, c4y, r, GRAPHICS_ARC_NE, color, thickness);
-            tft.drawArc(cx, c5y, r, GRAPHICS_ARC_S, color, thickness);
-            tft.drawLine(l2x, c1y, l2x, c2y, color, thickness);
-            tft.drawLine(l2x, c4y, l2x, c5y, color, thickness);
+            touscruino.drawArc(cx, c1y, r, GRAPHICS_ARC_N, color, thickness);
+            touscruino.drawArc(cx, c2y, r, GRAPHICS_ARC_SE, color, thickness);
+            touscruino.drawArc(cx, c4y, r, GRAPHICS_ARC_NE, color, thickness);
+            touscruino.drawArc(cx, c5y, r, GRAPHICS_ARC_S, color, thickness);
+            touscruino.drawLine(l2x, c1y, l2x, c2y, color, thickness);
+            touscruino.drawLine(l2x, c4y, l2x, c5y, color, thickness);
             break;
         case 4:
-            tft.drawLine(cx, l1y, l1x, c4y, color, thickness);
-            tft.drawLine(l1x, c4y, l2x, c4y, color, thickness);
-            tft.drawLine(cx, c3y, cx, l2y, color, thickness);
+            touscruino.drawLine(cx, l1y, l1x, c4y, color, thickness);
+            touscruino.drawLine(l1x, c4y, l2x, c4y, color, thickness);
+            touscruino.drawLine(cx, c3y, cx, l2y, color, thickness);
             break;
         case 5:
-            tft.drawArc(cx, c4y, r, GRAPHICS_ARC_NE, color, thickness);
-            tft.drawArc(cx, c5y, r, GRAPHICS_ARC_S, color, thickness);
-            tft.drawLine(l2x, c4y, l2x, c5y, color, thickness);
-            tft.drawLine(l1x, l1y, l2x, l1y, color, thickness);
-            tft.drawLine(l1x, l1y, l1x, c3y, color, thickness);
-            tft.drawLine(l1x, c3y, cx, c3y, color, thickness);
+            touscruino.drawArc(cx, c4y, r, GRAPHICS_ARC_NE, color, thickness);
+            touscruino.drawArc(cx, c5y, r, GRAPHICS_ARC_S, color, thickness);
+            touscruino.drawLine(l2x, c4y, l2x, c5y, color, thickness);
+            touscruino.drawLine(l1x, l1y, l2x, l1y, color, thickness);
+            touscruino.drawLine(l1x, l1y, l1x, c3y, color, thickness);
+            touscruino.drawLine(l1x, c3y, cx, c3y, color, thickness);
             break;
         case 6:
-            tft.drawArc(cx, c4y, r, GRAPHICS_ARC_NE, color, thickness);
-            tft.drawArc(cx, c5y, r, GRAPHICS_ARC_S, color, thickness);
-            tft.drawArc(l2x-ht, c6y, r*2, GRAPHICS_ARC_NW, color, thickness);
-            tft.drawLine(l2x, c4y, l2x, c5y, color, thickness);
-            tft.drawLine(l1x, c3y, cx, c3y, color, thickness);
-            tft.drawLine(l1x, c2y, l1x, c5y, color, thickness);
+            touscruino.drawArc(cx, c4y, r, GRAPHICS_ARC_NE, color, thickness);
+            touscruino.drawArc(cx, c5y, r, GRAPHICS_ARC_S, color, thickness);
+            touscruino.drawArc(l2x-ht, c6y, r*2, GRAPHICS_ARC_NW, color, thickness);
+            touscruino.drawLine(l2x, c4y, l2x, c5y, color, thickness);
+            touscruino.drawLine(l1x, c3y, cx, c3y, color, thickness);
+            touscruino.drawLine(l1x, c2y, l1x, c5y, color, thickness);
             break;
         case 7:
-            tft.drawArc(l2x, c3y, r, GRAPHICS_ARC_NW, color, thickness);
-            tft.drawLine(l2x, l1y, l2x, c3y-r, color, thickness);
-            tft.drawLine(l1x, l1y, l2x, l1y, color, thickness);
-            tft.drawLine(cx, c3y, cx, l2y, color, thickness);
+            touscruino.drawArc(l2x, c3y, r, GRAPHICS_ARC_NW, color, thickness);
+            touscruino.drawLine(l2x, l1y, l2x, c3y-r, color, thickness);
+            touscruino.drawLine(l1x, l1y, l2x, l1y, color, thickness);
+            touscruino.drawLine(cx, c3y, cx, l2y, color, thickness);
             break;
         case 8:
-            tft.drawArc(cx, c1y, r, GRAPHICS_ARC_N, color, thickness);
-            tft.drawArc(cx, c2y, r, GRAPHICS_ARC_S, color, thickness);
-            tft.drawArc(cx, c4y, r, GRAPHICS_ARC_N, color, thickness);
-            tft.drawArc(cx, c5y, r, GRAPHICS_ARC_S, color, thickness);
-            tft.drawLine(l1x, c1y, l1x, c2y, color, thickness);
-            tft.drawLine(l1x, c4y, l1x, c5y, color, thickness);
-            tft.drawLine(l2x, c1y, l2x, c2y, color, thickness);
-            tft.drawLine(l2x, c4y, l2x, c5y, color, thickness);
+            touscruino.drawArc(cx, c1y, r, GRAPHICS_ARC_N, color, thickness);
+            touscruino.drawArc(cx, c2y, r, GRAPHICS_ARC_S, color, thickness);
+            touscruino.drawArc(cx, c4y, r, GRAPHICS_ARC_N, color, thickness);
+            touscruino.drawArc(cx, c5y, r, GRAPHICS_ARC_S, color, thickness);
+            touscruino.drawLine(l1x, c1y, l1x, c2y, color, thickness);
+            touscruino.drawLine(l1x, c4y, l1x, c5y, color, thickness);
+            touscruino.drawLine(l2x, c1y, l2x, c2y, color, thickness);
+            touscruino.drawLine(l2x, c4y, l2x, c5y, color, thickness);
             break;
         case 9:
-            tft.drawArc(cx, c2y, r, GRAPHICS_ARC_SW, color, thickness);
-            tft.drawArc(cx, c1y, r, GRAPHICS_ARC_N, color, thickness);
-            tft.drawArc(l1x+ht, c9y, r*2, GRAPHICS_ARC_SE, color, thickness);
-            tft.drawLine(cx, c3y, l2x, c3y, color, thickness);
-            tft.drawLine(l2x, c1y, l2x, c9y, color, thickness);
-            tft.drawLine(l1x, c1y, l1x, c2y, color, thickness);
+            touscruino.drawArc(cx, c2y, r, GRAPHICS_ARC_SW, color, thickness);
+            touscruino.drawArc(cx, c1y, r, GRAPHICS_ARC_N, color, thickness);
+            touscruino.drawArc(l1x+ht, c9y, r*2, GRAPHICS_ARC_SE, color, thickness);
+            touscruino.drawLine(cx, c3y, l2x, c3y, color, thickness);
+            touscruino.drawLine(l2x, c1y, l2x, c9y, color, thickness);
+            touscruino.drawLine(l1x, c1y, l1x, c2y, color, thickness);
             break;
     }
 }

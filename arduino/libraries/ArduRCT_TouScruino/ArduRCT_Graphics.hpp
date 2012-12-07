@@ -64,6 +64,15 @@
 
 #define GRAPHICS_ARC_ALL (GRAPHICS_ARC_N+GRAPHICS_ARC_S)
 
+#define GRAPHICS_CORNER_NW 0
+#define GRAPHICS_CORNER_NE 1
+#define GRAPHICS_CORNER_SE 2
+#define GRAPHICS_CORNER_SW 3
+
+#define GRAPHICS_STYLE_SIMPLE 0
+#define GRAPHICS_STYLE_NORMAL 1
+#define GRAPHICS_STYLE_ADVANCED 2
+
 #define GRAPHICS_ROTATION_0		0
 #define GRAPHICS_ROTATION_90	1
 #define GRAPHICS_ROTATION_180	2
@@ -148,7 +157,7 @@ class ArduRCT_Graphics: public Print {
 
 		void drawString(char *s, int16_t x, int16_t y, uint16_t color, uint8_t fontSize = 1, bool isBold = false, bool overlay = false, bool selectAndUnselectScreen = true);
 		
-		void drawBigDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color, uint8_t thickness, bool selectAndUnselectScreen = true);
+		void drawBigDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color, uint8_t thickness, uint8_t style = GRAPHICS_STYLE_NORMAL, bool selectAndUnselectScreen = true);
 
 		void drawPixel(int16_t x, int16_t y, uint16_t color, bool selectAndUnselectScreen = true);
 
@@ -157,6 +166,8 @@ class ArduRCT_Graphics: public Print {
 		void drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 
 		void drawVerticalLine(int16_t x, int16_t y1, int16_t y2, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
+		
+		void fillCorner(int16_t x, int16_t y, uint16_t size, uint8_t type, uint16_t color, bool selectAndUnselectScreen = true);
 
 		void drawRectangle(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 		

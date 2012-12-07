@@ -24,24 +24,24 @@
 
 #include <SPI.h>
 
-// Change to your version: the following include will automatically create the proper tft object
+// Change to your version: the following include will automatically create the proper 'touscruino' object
 #define TOUSCRUINO_VERSION 1
 #include <ArduRCT_TouScruino.h>
 
+#define FONT_FACE FONT_PLAIN
+
 #if (TOUSCRUINO_VERSION == 1)
 #define FONT_SIZE FONT_SMALL
-#define FONT_FACE FONT_PLAIN
 #elif (TOUSCRUINO_VERSION == 2)
 #define FONT_SIZE FONT_MEDIUM
-#define FONT_FACE FONT_BOLD
 #endif
 
 void setup() {
     Serial.begin(57600);
-    tft.begin(WHITE, BLUE, FONT_SIZE, FONT_FACE);
-	tft.setRotation(GRAPHICS_ROTATION_90);
+    touscruino.begin(WHITE, BLUE, FONT_SIZE, FONT_FACE);
+	touscruino.setRotation(GRAPHICS_ROTATION_90);
 }
 
 void loop() {
-    if (Serial.available() > 0) tft.write(Serial.read()); 
+    if (Serial.available() > 0) touscruino.write(Serial.read()); 
 }

@@ -1,6 +1,6 @@
 /*
  * Graphics - Demonstrate the capacities of the screen in terms of graphics
- *	Part of BoucingBoxes
+ *    Part of BoucingBoxes
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -23,53 +23,125 @@
  * THE SOFTWARE.
  */
 
-#include <TouchScreen.h>
+#include <SPI.h>
 
-TouchScreen touchscreen;
+// Change to your version: the following include will automatically create the proper 'touscruino' object
+#define TOUSCRUINO_VERSION 1
+#include <ArduRCT_TouScruino.h>
+
+uint16_t wait = 3000;
 
 void setup() {
-    touchscreen.begin(BLACK, WHITE);
-    touchscreen.setBacklight(180);
-
-    // Fonts
-    touchscreen.drawString("SMALL", 5, 5, BLACK, FONT_SMALL);
-    touchscreen.drawString("BOLD", 100, 5, BLACK, FONT_SMALL, FONT_BOLD);
-    touchscreen.drawString("MEDIUM", 5, 20, BLACK, FONT_MEDIUM);
-    touchscreen.drawString("BOLD", 100, 20, BLACK, FONT_MEDIUM, FONT_BOLD);
-    touchscreen.drawString("BIG", 5, 40, BLACK, FONT_BIG);
-    touchscreen.drawString("BOLD", 100, 40, BLACK, FONT_BIG, FONT_BOLD);
-    touchscreen.drawString("HUGE", 5, 65, BLACK, FONT_HUGE);
-    touchscreen.drawString("BOLD", 100, 65, BLACK, FONT_HUGE, FONT_BOLD);
-    // Lines
-    touchscreen.drawLine(10, 95, 60, 95, RED, 2);
-    touchscreen.drawLine(80, 95, 80, 105, RED, 3);
-    touchscreen.drawLine(100, 95, 130, 105, RED, 1);
-    // Triangles
-    touchscreen.drawTriangle(20, 140, 40, 120, 50, 135, BLUE, 2);
-    touchscreen.fillTriangle(120, 130, 140, 120, 150, 135, BLUE);
-    // Rectangle
-    touchscreen.drawRectangle(30, 150, 40, 20, MAGENTA, 3);
-    touchscreen.fillRectangle(130, 150, 40, 20, MAGENTA);
-    // Rounded rectangle
-    touchscreen.drawRoundedRectangle(30, 180, 40, 20, 6, GREEN, 2);
-    touchscreen.fillRoundedRectangle(130, 180, 40, 20, 6, GREEN);
-    // Arcs
-    touchscreen.drawArc(40, 210, 30, SCREEN_ARC_SE, RED, 2);
-    touchscreen.drawArc(80, 240, 30, SCREEN_ARC_NEE, RED, 2);
-    touchscreen.fillArc(140, 210, 20, SCREEN_ARC_SW, RED);
-    // Circles
-    touchscreen.drawCircle(50, 270, 20, BLUE);
-    touchscreen.drawCircle(100, 270, 20, BLUE, 3);
-    touchscreen.fillCircle(150, 270, 20, BLUE, 3);
-    // Rotations
-    touchscreen.setRotation(SCREEN_ROTATION_90);
-    touchscreen.drawString("Rotation 90deg", 5, 5, BLACK, FONT_MEDIUM);
-    touchscreen.setRotation(SCREEN_ROTATION_180);
-    touchscreen.drawString("Rotation 180deg", 5, 5, BLACK, FONT_MEDIUM);
-    touchscreen.setRotation(SCREEN_ROTATION_270);
-    touchscreen.drawString("Rotation 270deg", 5, 5, BLACK, FONT_MEDIUM);
+    touscruino.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
+    touscruino.setBacklight(180);
 }
 
 void loop() {
-    delay(100);
+    // Fonts
+    touscruino.drawString("SMALL", 5, 4, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.drawString("BOLD", 5, 14, BLACK, FONT_SMALL, FONT_BOLD, NO_OVERLAY);
+    touscruino.drawString("MEDIUM", 5, 30, RED, FONT_MEDIUM, FONT_PLAIN, NO_OVERLAY);
+    touscruino.drawString("BOLD", 5, 44, RED, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    touscruino.drawString("BIG", 5, 64, BROWN, FONT_BIG, FONT_PLAIN, NO_OVERLAY);
+    touscruino.drawString("BOLD", 5, 84, BROWN, FONT_BIG, FONT_BOLD, NO_OVERLAY);
+    touscruino.drawString("HUGE", 5, 110, BLUE, FONT_HUGE, FONT_PLAIN, NO_OVERLAY);
+    touscruino.drawString("BOLD", 5, 134, BLUE, FONT_HUGE, FONT_BOLD, NO_OVERLAY);
+    delay(wait);
+    
+    // Lines
+    touscruino.fillScreen(WHITE);
+    touscruino.drawString("Lines", 3, 3, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    touscruino.drawLine(10, 30, 104, 69, RED, 2);
+    touscruino.drawLine(12, 92, 81, 81, BLUE, 1);
+    touscruino.drawLine(15, 145, 120, 105, GREEN, 5);
+    delay(wait);
+    
+    // Triangles
+    touscruino.fillScreen(WHITE);
+    touscruino.drawString("Triangles", 3, 3, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    touscruino.drawTriangle(7, 31, 71, 30, 20, 63, BLUE, 1);
+    touscruino.drawString("Thickness 3", 50, 65, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.drawTriangle(17, 92, 87, 80, 109, 106, DARK_GREEN, 3);
+    touscruino.drawString("Filled", 12, 145, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.fillTriangle(18, 112, 13, 136, 94, 128, ORANGE);
+    delay(wait);
+    
+    // Corners
+    touscruino.fillScreen(WHITE);
+    touscruino.drawString("Corners", 3, 3, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    touscruino.fillCorner(74, 90, 40, GRAPHICS_CORNER_SE, RED);
+    touscruino.drawString("SE", 100, 120, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.fillCorner(54, 90, 35, GRAPHICS_CORNER_SW, ORANGE);
+    touscruino.drawString("SW", 10, 115, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.fillCorner(74, 70, 45, GRAPHICS_CORNER_NE, BLUE);
+    touscruino.drawString("NE", 110, 40, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.fillCorner(54, 70, 30, GRAPHICS_CORNER_NW, GREY);
+    touscruino.drawString("NW", 20, 40, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    delay(wait);
+    
+    // Rectangle
+    touscruino.fillScreen(WHITE);
+    touscruino.drawString("Rectangles", 3, 3, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    touscruino.drawRectangle(12, 28, 40, 50, GREY, 3);
+    touscruino.fillRectangle(65, 30, 50, 25, ORANGE);
+    touscruino.drawString("Filled", 70, 60, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.drawRoundedRectangle(10, 97, 55, 32, 6, RED, 2);
+    touscruino.drawString("Rounded", 15, 136, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.fillRoundedRectangle(80, 80, 33, 48, 8, BLUE);
+    touscruino.drawString("Rounded", 78, 136, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.drawString("filled", 78, 146, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    delay(wait);
+    
+    // Arcs
+    touscruino.fillScreen(WHITE);
+    touscruino.drawString("Arcs", 3, 3, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    touscruino.drawArc(55, 60, 20, GRAPHICS_ARC_NWW, RED, 3);
+    touscruino.drawString("NWW", 15, 45, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.drawArc(62, 53, 20, GRAPHICS_ARC_NNW, ORANGE, 3);
+    touscruino.drawString("NNW", 30, 27, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.drawArc(70, 55, 20, GRAPHICS_ARC_NE, BLUE, 3);
+    touscruino.drawString("NE", 90, 33, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.drawArc(64, 65, 20, GRAPHICS_ARC_S, GREY, 3);
+    touscruino.drawString("S", 90, 70, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.fillArc(55, 130, 20, GRAPHICS_ARC_NWW, GREEN);
+    touscruino.drawString("NWW", 15, 115, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.fillArc(62, 123, 20, GRAPHICS_ARC_NNW, LIGHT_GREY);
+    touscruino.drawString("NNW", 30, 97, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.fillArc(70, 125, 20, GRAPHICS_ARC_NE, ORANGE);
+    touscruino.drawString("NE", 90, 103, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.fillArc(64, 115, 30, GRAPHICS_ARC_SSW+GRAPHICS_ARC_SSE, BLUE);
+    touscruino.drawString("SSW+SSE", 80, 147, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    touscruino.drawString("Filled", 10, 150, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    delay(wait);
+    
+    // Circles
+    touscruino.fillScreen(WHITE);
+    touscruino.drawString("Circles", 3, 3, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    touscruino.drawCircle(64, 55, 25, BLUE, 3);
+    touscruino.fillCircle(64, 115, 25, BROWN);
+    touscruino.drawString("Filled", 50, 145, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    delay(wait);
+    
+    // Big digits
+    touscruino.fillScreen(WHITE);
+    touscruino.drawString("Big digits", 3, 3, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    touscruino.drawBigDigit(6, 10, 25, 40, 60, BLUE, 6, GRAPHICS_STYLE_NORMAL);
+    touscruino.drawBigDigit(4, 70, 35, 45, 55, RED, 10, GRAPHICS_STYLE_ADVANCED);
+    touscruino.drawBigDigit(8, 30, 100, 60, 50, BROWN, 12, GRAPHICS_STYLE_ADVANCED);
+    delay(wait);
+    
+    // Rotations
+    touscruino.fillScreen(WHITE);
+    touscruino.drawString("Rotations", 3, 3, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    touscruino.setRotation(GRAPHICS_ROTATION_90);
+    touscruino.drawString("Rotation 90d", 15, 15, BLACK, FONT_MEDIUM, FONT_PLAIN, NO_OVERLAY);
+    touscruino.setRotation(GRAPHICS_ROTATION_180);
+    touscruino.drawString("Rotation 180d", 5, 15, BLACK, FONT_MEDIUM, FONT_PLAIN, NO_OVERLAY);
+    touscruino.setRotation(GRAPHICS_ROTATION_270);
+    touscruino.drawString("Rotation 270d", 15, 15, BLACK, FONT_MEDIUM, FONT_PLAIN, NO_OVERLAY);
+    touscruino.setRotation(GRAPHICS_ROTATION_0);
+    delay(wait);
+
+    touscruino.fillScreen(WHITE);
+    wait = 1500;
 }
