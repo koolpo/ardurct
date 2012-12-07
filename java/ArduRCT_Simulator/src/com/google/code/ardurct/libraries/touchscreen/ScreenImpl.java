@@ -86,7 +86,7 @@ implements MouseListener, MouseMotionListener {
 		for (int i=0; i<width*height; i++) buffer[i] = getARGBColor(bitmap[i]);
 		for (int l=0; l<height; l++) {
 			for (int c=0; c<width; c++) {
-				img.setRGB(x+c, y+l, buffer[l*width+c]);
+				if (x+c >= 0 && x+c < getWidthImpl() && y+l >= 0 && y+l < getHeightImpl()) img.setRGB(x+c, y+l, buffer[l*width+c]);
 			}
 		}
 	}
@@ -106,12 +106,12 @@ implements MouseListener, MouseMotionListener {
 
 	// returns the width of the non rotated screen
 	int getWidthImpl() {
-		return 240;
+		return 160;
 	}
 
 	// returns the height of the non rotated screen
 	int getHeightImpl() {
-		return 320;
+		return 128;
 	}
 
 	protected void paintComponent(Graphics g) {

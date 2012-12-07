@@ -27,7 +27,7 @@ public class Monitor extends ArduinoFirmware {
 	    nbServos = 0;
 	    firstServo = 0;
 	    for (int i=0; i<MAX_SERVOS; i++) {
-	    	servo[i] = new Servo("Remotuino");	// line not required in Arduino
+	    	servo[i] = new Servo();	// line not required in Arduino
 	    	servo[i].attach(FIRST_SERVO + i);
 	    }
 	}

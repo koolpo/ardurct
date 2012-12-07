@@ -229,36 +229,36 @@ public class TouchScreen_Macros extends TouchScreen_UserInterface {
 					} 
 					if (s[i+1] == 'N') {
 						if (s[i+2] == 'N') {
-							if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NNE;
-							else if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NNW;
+							if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NNE;
+							else if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NNW;
 							else if (s[i+3] != ' ') return null;
 						} else if (s[i+2] == 'E') {
-							if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NEE;
-							else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NE;
+							if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NEE;
+							else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NE;
 							else return null;
 						} else if (s[i+2] == 'W') {
-							if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NWW;
-							else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_NW;
+							if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NWW;
+							else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_NW;
 							else return null;
-						} else if (s[i+2] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_N;
+						} else if (s[i+2] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_N;
 						else return null;
 					} else if (s[i+1] == 'S') {
 						if (s[i+2] == 'S') {
-							if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SSE;
-							else if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SSW;
+							if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SSE;
+							else if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SSW;
 							else if (s[i+3] != ' ') return null;
 						} else if (s[i+2] == 'E') {
-							if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SEE;
-							else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SE;
+							if (s[i+3] == 'E') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SEE;
+							else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SE;
 							else return null;
 						} else if (s[i+2] == 'W') {
-							if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SWW;
-							else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_SW;
+							if (s[i+3] == 'W') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SWW;
+							else if (s[i+3] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_SW;
 							else return null;
-						} else if (s[i+2] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_S;
+						} else if (s[i+2] == ' ') mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_S;
 						else return null;
-					} else if ((s[i+1] == 'E') && (s[i+2] == ' ')) mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_E;
-					else if ((s[i+1] == 'W') && (s[i+2] == ' ')) mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = SCREEN_ARC_W;
+					} else if ((s[i+1] == 'E') && (s[i+2] == ' ')) mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_E;
+					else if ((s[i+1] == 'W') && (s[i+2] == ' ')) mc.param[SCREEN_MACRO_PARAM_ARC_OCTANT] = GRAPHICS_ARC_W;
 					else return null;
 					while (s[i+1] != ' ') i++;
 					break;
@@ -691,82 +691,82 @@ public class TouchScreen_Macros extends TouchScreen_UserInterface {
 	int _getArcEnd(int radius, int octant, boolean isReversed, boolean isX) {
 		int value = (radius * SCREEN_MACRO_COS45_LSH16) >> 16;
 		switch (octant) {
-			case SCREEN_ARC_SSE:
+			case GRAPHICS_ARC_SSE:
 				if (isReversed && isX) return value;
 				if (isReversed) return value;
 				if (isX) return 0;
 				return radius;
-			case SCREEN_ARC_SEE:
+			case GRAPHICS_ARC_SEE:
 				if (isReversed && isX) return radius;
 				if (isReversed) return 0;
 				if (isX) return value;
 				return value;
-			case SCREEN_ARC_NEE:
+			case GRAPHICS_ARC_NEE:
 				if (isReversed && isX) return value;
 				if (isReversed) return -value;
 				if (isX) return radius;
 				return 0;
-			case SCREEN_ARC_NNE:
+			case GRAPHICS_ARC_NNE:
 				if (isReversed && isX) return 0;
 				if (isReversed) return -radius;
 				if (isX) return value;
 				return -value;
-			case SCREEN_ARC_SSW:
+			case GRAPHICS_ARC_SSW:
 				if (isReversed && isX) return 0;
 				if (isReversed) return radius;
 				if (isX) return -value;
 				return value;
-			case SCREEN_ARC_SWW:
+			case GRAPHICS_ARC_SWW:
 				if (isReversed && isX) return -value;
 				if (isReversed) return value;
 				if (isX) return -radius;
 				return 0;
-			case SCREEN_ARC_NWW:
+			case GRAPHICS_ARC_NWW:
 				if (isReversed && isX) return -radius;
 				if (isReversed) return 0;
 				if (isX) return -value;
 				return -value;
-			case SCREEN_ARC_NNW:
+			case GRAPHICS_ARC_NNW:
 				if (isReversed && isX) return -value;
 				if (isReversed) return -value;
 				if (isX) return 0;
 				return -radius;
-			case SCREEN_ARC_NE:
+			case GRAPHICS_ARC_NE:
 				if (isReversed && isX) return 0;
 				if (isReversed) return -radius;
 				if (isX) return radius;
 				return 0;
-			case SCREEN_ARC_SE:
+			case GRAPHICS_ARC_SE:
 				if (isReversed && isX) return radius;
 				if (isReversed) return 0;
 				if (isX) return 0;
 				return radius;
-			case SCREEN_ARC_SW:
+			case GRAPHICS_ARC_SW:
 				if (isReversed && isX) return 0;
 				if (isReversed) return radius;
 				if (isX) return -radius;
 				return 0;
-			case SCREEN_ARC_NW:
+			case GRAPHICS_ARC_NW:
 				if (isReversed && isX) return -radius;
 				if (isReversed) return 0;
 				if (isX) return 0;
 				return -radius;
-			case SCREEN_ARC_N:
+			case GRAPHICS_ARC_N:
 				if (isReversed && isX) return -radius;
 				if (isReversed) return 0;
 				if (isX) return radius;
 				return 0;
-			case SCREEN_ARC_S:
+			case GRAPHICS_ARC_S:
 				if (isReversed && isX) return radius;
 				if (isReversed) return 0;
 				if (isX) return -radius;
 				return 0;
-			case SCREEN_ARC_E:
+			case GRAPHICS_ARC_E:
 				if (isReversed && isX) return 0;
 				if (isReversed) return -radius;
 				if (isX) return 0;
 				return radius;
-			case SCREEN_ARC_W:
+			case GRAPHICS_ARC_W:
 				if (isReversed && isX) return 0;
 				if (isReversed) return radius;
 				if (isX) return 0;

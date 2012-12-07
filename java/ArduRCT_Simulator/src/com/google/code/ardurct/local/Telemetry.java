@@ -50,9 +50,9 @@ public class Telemetry extends ArduinoFirmware {
 		if (value != UI_REFRESH) {
 			drawAndFillRotatedRectangle(x+3, y+2, 6, 3, value == UI_SELECTED ? LIGHT_GREY : WHITE);
 			drawAndFillRotatedRectangle(x+17, y+16, 6, 3,  value == UI_SELECTED ? LIGHT_GREY : WHITE);
-			touchscreen.drawArc(x+10, y+14, 5, SCREEN_ARC_SW, BLACK, 1);
-			touchscreen.drawArc(x+10, y+14, 8, SCREEN_ARC_SW, BLACK, 1);
-			touchscreen.drawArc(x+10, y+14, 11, SCREEN_ARC_SW, BLACK, 1);
+			touchscreen.drawArc(x+10, y+14, 5, GRAPHICS_ARC_SW, BLACK, 1);
+			touchscreen.drawArc(x+10, y+14, 8, GRAPHICS_ARC_SW, BLACK, 1);
+			touchscreen.drawArc(x+10, y+14, 11, GRAPHICS_ARC_SW, BLACK, 1);
 		}
 		drawAndFillRotatedRectangle(x+7, y+11, 7, 9, telemetryGPSHasLock ? UI_OK_COLOR : UI_ALERT_COLOR);
 	}

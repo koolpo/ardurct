@@ -17,6 +17,10 @@ public class ServoBank extends JPanel {
 
 	private static HashMap<String, ServoBank> ServoBankInstances = new HashMap<String, ServoBank>();
 
+	public static ServoBank getInstance() {
+		return ServoBankInstances.get(ServoBankInstances.keySet().iterator().next());
+	}
+
 	public static ServoBank getInstance(String name) {
 		return ServoBankInstances.get(name);
 	}

@@ -66,8 +66,8 @@ implements IFontBitmaps {
 	}
 	
 	public void setRotation(int rotation) {
-		if (rotation > SCREEN_ROTATION_270) rotation = SCREEN_ROTATION_0;
-		if ((rotation == SCREEN_ROTATION_0) || (rotation == SCREEN_ROTATION_180)) {
+		if (rotation > GRAPHICS_ROTATION_270) rotation = GRAPHICS_ROTATION_0;
+		if ((rotation == GRAPHICS_ROTATION_0) || (rotation == GRAPHICS_ROTATION_180)) {
 			_width = getWidthImpl();
 			_height = getHeightImpl();
 		} else {
@@ -85,18 +85,18 @@ implements IFontBitmaps {
 
 
 	void getRotatedXY(int x[], int y[], int rotation) {
-		if (rotation == SCREEN_ROTATION_0) return;
+		if (rotation == GRAPHICS_ROTATION_0) return;
 
 		int X = x[0];
 		int Y = y[0];
 		
-		if (rotation == SCREEN_ROTATION_180) {
+		if (rotation == GRAPHICS_ROTATION_180) {
 			x[0] = getWidthImpl() - X;
 			y[0] = getHeightImpl() - Y;
-		} else if (rotation == SCREEN_ROTATION_90) {
+		} else if (rotation == GRAPHICS_ROTATION_90) {
 			x[0] = getHeightImpl() - Y;
 			y[0] = X;
-		} else if (rotation == SCREEN_ROTATION_270) {
+		} else if (rotation == GRAPHICS_ROTATION_270) {
 			x[0] = Y;
 			y[0] = getWidthImpl() - X;
 		} 
@@ -104,7 +104,7 @@ implements IFontBitmaps {
 
 
 	boolean isVertical() {
-		return ((_rotation == SCREEN_ROTATION_0) || (_rotation == SCREEN_ROTATION_180));
+		return ((_rotation == GRAPHICS_ROTATION_0) || (_rotation == GRAPHICS_ROTATION_180));
 	}
 
 	public int getForegroundColor() {
@@ -194,6 +194,16 @@ implements IFontBitmaps {
 		return nbChr * (fontDef.width + fontDef.charSpacing) * fontScale;
 	}
 
+	public int getFontCharWidth(int fontSize) {
+		int validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
+		int fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
+		fontDefinition_t fontDef = fontDefinition_small;
+		if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = fontDefinition_medium;
+		else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = fontDefinition_big;
+		return (fontDef.width + fontDef.charSpacing) * fontScale;
+	}
+
+	
 	public int getFontHeight(int fontSize) {
 		int validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
 		int fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
@@ -264,6 +274,106 @@ implements IFontBitmaps {
 		if (grabAndReleaseBus) _releaseBus();
 	}
 	
+	final static int DIGIT_SEGMENTS[] = { 
+		0x3F,	// b00111111	0
+		0x30,	// b00110000	1
+		0x6D,	// b01101101	2
+		0x79,	// b01111001	3
+		0x72,	// b01110010	4
+		0x5B,	// b01011011	5
+		0x5F,	// b01011111	6
+		0x31,	// b00110001	7
+		0x7F,	// b01111111	8
+		0x7B,	// b01111011	9
+	};
+
+	public void drawBigDigit(int d, int x, int y, int width, int height, int color, int thickness, int style) {
+		if (d > 9) return;
+		int h = (height - 3*thickness)/2;
+		int t2 = thickness/5;
+		if (t2 == 0) t2 = 1;
+		int x1 = x + width - thickness;
+		int y1 = y,
+			y2 = y + h + thickness,
+			y3 = y + 2 * (h + thickness);
+		if ((DIGIT_SEGMENTS[d] & 0x01) != 0) {
+			// horizontal top
+			fillRectangle(x+thickness, y1, width-2*thickness, thickness, color);
+			if (style >= GRAPHICS_STYLE_NORMAL) {
+				fillCorner(x+thickness-1, y1+thickness-1, thickness, GRAPHICS_CORNER_NW, color);
+				fillCorner(x+width-thickness, y1+thickness-1, thickness, GRAPHICS_CORNER_NE, color);
+			}
+		}
+		if ((DIGIT_SEGMENTS[d] & 0x02) != 0) {
+			// vertical top left
+			fillRectangle(x, y1+thickness, thickness, h, color);
+			if (style >= GRAPHICS_STYLE_NORMAL) {
+				fillCorner(x+thickness-1, y1+thickness-1, thickness, GRAPHICS_CORNER_NW, color);
+				fillCorner(x+thickness-1, y1+h+thickness, thickness, GRAPHICS_CORNER_SW, color);
+			}
+			if (style >= GRAPHICS_STYLE_ADVANCED) {
+				if ((DIGIT_SEGMENTS[d] & 0x01) != 0) fillCorner(x+thickness, y1+thickness, t2, GRAPHICS_CORNER_SE, color);
+				if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+thickness, y1+h+thickness-1, t2, GRAPHICS_CORNER_NE, color);
+			}
+		}
+		if ((DIGIT_SEGMENTS[d] & 0x04) != 0) {
+			// vertical bottom left
+			fillRectangle(x, y2+thickness, thickness, h, color);
+			if (style >= GRAPHICS_STYLE_NORMAL) {			
+				fillCorner(x+thickness-1, y2+thickness-1, thickness, GRAPHICS_CORNER_NW, color);
+				fillCorner(x+thickness-1, y2+h+thickness, thickness, GRAPHICS_CORNER_SW, color);
+				if (DIGIT_SEGMENTS[d] == 0x3F || DIGIT_SEGMENTS[d] == 0x5F) fillRectangle(x, y2, thickness, thickness, color);
+			}
+			if (style >= GRAPHICS_STYLE_ADVANCED) {
+				if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+thickness, y2+thickness, t2, GRAPHICS_CORNER_SE, color);
+				if ((DIGIT_SEGMENTS[d] & 0x08) != 0) fillCorner(x+thickness, y2+h+thickness-1, t2, GRAPHICS_CORNER_NE, color);
+			}
+		}
+		if ((DIGIT_SEGMENTS[d] & 0x08) != 0) {
+			// horizontal bottom
+			fillRectangle(x+thickness, y3, width-2*thickness, thickness, color);
+			if (style >= GRAPHICS_STYLE_NORMAL) {	
+				fillCorner(x+thickness-1, y3, thickness, GRAPHICS_CORNER_SW, color);
+				fillCorner(x+width-thickness, y3, thickness, GRAPHICS_CORNER_SE, color);
+			}
+		}
+		if ((DIGIT_SEGMENTS[d] & 0x10) != 0) {
+			// vertical bottom right
+			fillRectangle(x1, y2+thickness, thickness, h, color);
+			if (style >= GRAPHICS_STYLE_NORMAL) {
+				fillCorner(x+width-thickness, y2+thickness-1, thickness, GRAPHICS_CORNER_NE, color);
+				fillCorner(x+width-thickness, y2+h+thickness, thickness, GRAPHICS_CORNER_SE, color);
+			}
+			if (style >= GRAPHICS_STYLE_ADVANCED) {
+				if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+width-thickness-1, y2+thickness, t2, GRAPHICS_CORNER_SW, color);
+				if ((DIGIT_SEGMENTS[d] & 0x08) != 0) fillCorner(x+width-thickness-1, y2+h+thickness-1, t2, GRAPHICS_CORNER_NW, color);
+			}
+		}
+		if ((DIGIT_SEGMENTS[d] & 0x20) != 0) {
+			// vertical top right
+			fillRectangle(x1, y1+thickness, thickness, h, color);
+			if (style >= GRAPHICS_STYLE_NORMAL) {
+				fillCorner(x+width-thickness, y1+thickness-1, thickness, GRAPHICS_CORNER_NE, color);
+				fillCorner(x+width-thickness, y1+h+thickness, thickness, GRAPHICS_CORNER_SE, color);
+				if (DIGIT_SEGMENTS[d] == 0x3F || DIGIT_SEGMENTS[d] == 0x30 || DIGIT_SEGMENTS[d] == 0x72 || DIGIT_SEGMENTS[d] == 0x31 || DIGIT_SEGMENTS[d] == 0x7B) 
+					fillRectangle(x1, y2, thickness, thickness, color);
+			}
+			if (style >= GRAPHICS_STYLE_ADVANCED) {
+				if ((DIGIT_SEGMENTS[d] & 0x01) != 0) fillCorner(x+width-thickness-1, y1+thickness, t2, GRAPHICS_CORNER_SW, color);
+				if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+width-thickness-1, y1+h+thickness-1, t2, GRAPHICS_CORNER_NW, color);
+			}
+		}
+		if ((DIGIT_SEGMENTS[d] & 0x40) != 0) {
+			// horizontal middle
+			fillRectangle(x+thickness, y2, width-2*thickness, thickness, color);
+			if (style >= GRAPHICS_STYLE_NORMAL) {
+				if (DIGIT_SEGMENTS[d] == 0x79) {
+					for (int i=1; i<=thickness/2; i++) drawVerticalLine(x+thickness-i, y2+i-1, y2+thickness-i-1, color, 1);
+				}
+			}
+		}
+	}
+
 	public void getStringBoundingBox(int[] s, int fontSize, boolean isBold, int marginX, int[] width, int[] height) {
 		int validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
 		int fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
@@ -459,6 +569,27 @@ implements IFontBitmaps {
 		if (grabAndReleaseBus) _releaseBus();
 	}
 
+	public void fillCorner(int x, int y, int size, int type, int color) {
+		if (size == 0) return;
+		if (size == 1) {
+			drawPixel(x, y, color);
+			return;
+		}
+		switch (type) {
+			case GRAPHICS_CORNER_NW:
+				for (int i=0; i<size; i++) drawHorizontalLine(x-size+i+1, x, y-i, color, 1);
+				break;
+			case GRAPHICS_CORNER_NE:
+				for (int i=0; i<size; i++) drawHorizontalLine(x, x+size-i-1, y-i, color, 1);
+				break;
+			case GRAPHICS_CORNER_SE:
+				for (int i=0; i<size; i++) drawHorizontalLine(x, x+size-i-1, y+i, color, 1);
+				break;
+			case GRAPHICS_CORNER_SW:
+				for (int i=0; i<size; i++) drawHorizontalLine(x-size+i+1, x, y+i, color, 1);
+				break;
+		}
+	}
 
 	void drawRectangle(int x, int y, int width, int height, int color, int thickness, boolean grabAndReleaseBus) {
 		if ((width == 0) || (height == 0)) return;
@@ -514,13 +645,13 @@ implements IFontBitmaps {
 
 	void drawRoundedRectangle(int x, int y, int width, int height, int r, int color, int thickness, boolean grabAndReleaseBus) {
 		if (grabAndReleaseBus) _grabBus();	
-		_drawOrFillOctant(x+r, y+r, r, SCREEN_ARC_NW, color, thickness, false);
+		_drawOrFillOctant(x+r, y+r, r, GRAPHICS_ARC_NW, color, thickness, false);
 		drawHorizontalLine(x+r, x+width-1-r, y, color, thickness, false);
-		_drawOrFillOctant(x+width-1-r, y+r, r, SCREEN_ARC_NE, color, thickness, false);
+		_drawOrFillOctant(x+width-1-r, y+r, r, GRAPHICS_ARC_NE, color, thickness, false);
 		drawVerticalLine(x+width-1, y+r, y+height-1-r, color, thickness, false);
-		_drawOrFillOctant(x+r, y+height-1-r, r, SCREEN_ARC_SW, color, thickness, false);
+		_drawOrFillOctant(x+r, y+height-1-r, r, GRAPHICS_ARC_SW, color, thickness, false);
 		drawHorizontalLine(x+r, x+width-1-r, y+height-1, color, thickness, false);
-		_drawOrFillOctant(x+width-1-r, y+height-1-r, r, SCREEN_ARC_SE, color, thickness, false);
+		_drawOrFillOctant(x+width-1-r, y+height-1-r, r, GRAPHICS_ARC_SE, color, thickness, false);
 		drawVerticalLine(x, y+r, y+height-1-r, color, thickness, false);
 		if (grabAndReleaseBus) _releaseBus();
 	}
@@ -528,10 +659,10 @@ implements IFontBitmaps {
 
 	void fillRoundedRectangle(int x, int y, int width, int height, int r, int color, boolean grabAndReleaseBus) {
 		if (grabAndReleaseBus) _grabBus();	
-		_drawOrFillOctant(x+r, y+r, r, SCREEN_ARC_NW, color, 0, true);
-		_drawOrFillOctant(x+width-1-r, y+r, r, SCREEN_ARC_NE, color, 0, true);
-		_drawOrFillOctant(x+r, y+height-1-r, r, SCREEN_ARC_SW, color, 0, true);
-		_drawOrFillOctant(x+width-1-r, y+height-1-r, r, SCREEN_ARC_SE, color, 0, true);
+		_drawOrFillOctant(x+r, y+r, r, GRAPHICS_ARC_NW, color, 0, true);
+		_drawOrFillOctant(x+width-1-r, y+r, r, GRAPHICS_ARC_NE, color, 0, true);
+		_drawOrFillOctant(x+r, y+height-1-r, r, GRAPHICS_ARC_SW, color, 0, true);
+		_drawOrFillOctant(x+width-1-r, y+height-1-r, r, GRAPHICS_ARC_SE, color, 0, true);
 		_fillBoundedArea(x, y+r, x+width-1, y+height-1-r, color);
 		_fillBoundedArea(x+r, y, x+width-1-r, y+r, color);
 		_fillBoundedArea(x+r, y+height-1-r, x+width-1-r, y+height-1, color);
@@ -626,12 +757,12 @@ implements IFontBitmaps {
 	}
 
 
-	void drawHorizontalLine(int x1, int x2, int y, int color, int thickness) {
+	public void drawHorizontalLine(int x1, int x2, int y, int color, int thickness) {
 		drawHorizontalLine(x1, x2, y, color, thickness, true);
 	}
 
 
-	void drawVerticalLine(int x, int y1, int y2, int color, int thickness) {
+	public void drawVerticalLine(int x, int y1, int y2, int color, int thickness) {
 		drawVerticalLine(x, y1, y2, color, thickness, true);
 	}
 
@@ -841,32 +972,32 @@ implements IFontBitmaps {
 		
 		while (y >= x) {
 			if (fill) {
-				if ((octant & SCREEN_ARC_SSW) != 0) _fillBoundedArea(x0, y0+y, x0-x, y0+y, color);
-				if ((octant & SCREEN_ARC_SSE) != 0) _fillBoundedArea(x0, y0+y, x0+x, y0+y, color);
-				if ((octant & SCREEN_ARC_SWW) != 0) _fillBoundedArea(x0, y0+x, x0-y, y0+x, color);
-				if ((octant & SCREEN_ARC_SEE) != 0) _fillBoundedArea(x0, y0+x, x0+y, y0+x, color);
-				if ((octant & SCREEN_ARC_NNW) != 0) _fillBoundedArea(x0, y0-y, x0-x, y0-y, color);
-				if ((octant & SCREEN_ARC_NNE) != 0) _fillBoundedArea(x0, y0-y, x0+x, y0-y, color);
-				if ((octant & SCREEN_ARC_NWW) != 0) _fillBoundedArea(x0, y0-x, x0-y, y0-x, color);		
-				if ((octant & SCREEN_ARC_NEE) != 0) _fillBoundedArea(x0, y0-x, x0+y, y0-x, color);
+				if ((octant & GRAPHICS_ARC_SSW) != 0) _fillBoundedArea(x0, y0+y, x0-x, y0+y, color);
+				if ((octant & GRAPHICS_ARC_SSE) != 0) _fillBoundedArea(x0, y0+y, x0+x, y0+y, color);
+				if ((octant & GRAPHICS_ARC_SWW) != 0) _fillBoundedArea(x0, y0+x, x0-y, y0+x, color);
+				if ((octant & GRAPHICS_ARC_SEE) != 0) _fillBoundedArea(x0, y0+x, x0+y, y0+x, color);
+				if ((octant & GRAPHICS_ARC_NNW) != 0) _fillBoundedArea(x0, y0-y, x0-x, y0-y, color);
+				if ((octant & GRAPHICS_ARC_NNE) != 0) _fillBoundedArea(x0, y0-y, x0+x, y0-y, color);
+				if ((octant & GRAPHICS_ARC_NWW) != 0) _fillBoundedArea(x0, y0-x, x0-y, y0-x, color);		
+				if ((octant & GRAPHICS_ARC_NEE) != 0) _fillBoundedArea(x0, y0-x, x0+y, y0-x, color);
 			} else if (thickness != 1) {
-				if ((octant & SCREEN_ARC_SSE) != 0) _fillBoundedArea(x0+x-t1, y0+y-t1, x0+x+t2, y0+y+t2, color);
-				if ((octant & SCREEN_ARC_SEE) != 0) _fillBoundedArea(x0+y-t1, y0+x-t1, x0+y+t2, y0+x+t2, color);
-				if ((octant & SCREEN_ARC_SSW) != 0) _fillBoundedArea(x0-x-t1, y0+y-t1, x0-x+t2, y0+y+t2, color);
-				if ((octant & SCREEN_ARC_SWW) != 0) _fillBoundedArea(x0-y-t1, y0+x-t1, x0-y+t2, y0+x+t2, color);
-				if ((octant & SCREEN_ARC_NNE) != 0) _fillBoundedArea(x0+x-t1, y0-y-t1, x0+x+t2, y0-y+t2, color);
-				if ((octant & SCREEN_ARC_NEE) != 0) _fillBoundedArea(x0+y-t1, y0-x-t1, x0+y+t2, y0-x+t2, color);
-				if ((octant & SCREEN_ARC_NNW) != 0) _fillBoundedArea(x0-x-t1, y0-y-t1, x0-x+t2, y0-y+t2, color);
-				if ((octant & SCREEN_ARC_NWW) != 0) _fillBoundedArea(x0-y-t1, y0-x-t1, x0-y+t2, y0-x+t2, color);		
+				if ((octant & GRAPHICS_ARC_SSE) != 0) _fillBoundedArea(x0+x-t1, y0+y-t1, x0+x+t2, y0+y+t2, color);
+				if ((octant & GRAPHICS_ARC_SEE) != 0) _fillBoundedArea(x0+y-t1, y0+x-t1, x0+y+t2, y0+x+t2, color);
+				if ((octant & GRAPHICS_ARC_SSW) != 0) _fillBoundedArea(x0-x-t1, y0+y-t1, x0-x+t2, y0+y+t2, color);
+				if ((octant & GRAPHICS_ARC_SWW) != 0) _fillBoundedArea(x0-y-t1, y0+x-t1, x0-y+t2, y0+x+t2, color);
+				if ((octant & GRAPHICS_ARC_NNE) != 0) _fillBoundedArea(x0+x-t1, y0-y-t1, x0+x+t2, y0-y+t2, color);
+				if ((octant & GRAPHICS_ARC_NEE) != 0) _fillBoundedArea(x0+y-t1, y0-x-t1, x0+y+t2, y0-x+t2, color);
+				if ((octant & GRAPHICS_ARC_NNW) != 0) _fillBoundedArea(x0-x-t1, y0-y-t1, x0-x+t2, y0-y+t2, color);
+				if ((octant & GRAPHICS_ARC_NWW) != 0) _fillBoundedArea(x0-y-t1, y0-x-t1, x0-y+t2, y0-x+t2, color);		
 			} else {
-				if ((octant & SCREEN_ARC_SSE) != 0) _drawBoundedPixel(x0+x, y0+y, color);
-				if ((octant & SCREEN_ARC_SEE) != 0) _drawBoundedPixel(x0+y, y0+x, color);
-				if ((octant & SCREEN_ARC_SSW) != 0) _drawBoundedPixel(x0-x, y0+y, color);
-				if ((octant & SCREEN_ARC_SWW) != 0) _drawBoundedPixel(x0-y, y0+x, color);
-				if ((octant & SCREEN_ARC_NNE) != 0) _drawBoundedPixel(x0+x, y0-y, color);
-				if ((octant & SCREEN_ARC_NEE) != 0) _drawBoundedPixel(x0+y, y0-x, color);
-				if ((octant & SCREEN_ARC_NNW) != 0) _drawBoundedPixel(x0-x, y0-y, color);
-				if ((octant & SCREEN_ARC_NWW) != 0) _drawBoundedPixel(x0-y, y0-x, color);
+				if ((octant & GRAPHICS_ARC_SSE) != 0) _drawBoundedPixel(x0+x, y0+y, color);
+				if ((octant & GRAPHICS_ARC_SEE) != 0) _drawBoundedPixel(x0+y, y0+x, color);
+				if ((octant & GRAPHICS_ARC_SSW) != 0) _drawBoundedPixel(x0-x, y0+y, color);
+				if ((octant & GRAPHICS_ARC_SWW) != 0) _drawBoundedPixel(x0-y, y0+x, color);
+				if ((octant & GRAPHICS_ARC_NNE) != 0) _drawBoundedPixel(x0+x, y0-y, color);
+				if ((octant & GRAPHICS_ARC_NEE) != 0) _drawBoundedPixel(x0+y, y0-x, color);
+				if ((octant & GRAPHICS_ARC_NNW) != 0) _drawBoundedPixel(x0-x, y0-y, color);
+				if ((octant & GRAPHICS_ARC_NWW) != 0) _drawBoundedPixel(x0-y, y0-x, color);
 			}
 			if (d >= 2*x) {
 				d = d - 2*x - 1;

@@ -25,32 +25,41 @@ public interface IDefines {
 	public static final int F_LIGHT_GREY =	0xDEDE; /* DEDAF6 */
 	public static final int F_GREY =	0x9494; 	/* 9491A4 */
 	
-	public static final int SCREEN_ROTATION_0	= 0;
-	public static final int SCREEN_ROTATION_90	= 1;
-	public static final int SCREEN_ROTATION_180	= 2;
-	public static final int SCREEN_ROTATION_270	= 3;
+	public static final int GRAPHICS_ROTATION_0	= 0;
+	public static final int GRAPHICS_ROTATION_90	= 1;
+	public static final int GRAPHICS_ROTATION_180	= 2;
+	public static final int GRAPHICS_ROTATION_270	= 3;
 
-	public static final int SCREEN_ARC_SSE = (1 << 0);
-	public static final int SCREEN_ARC_SEE = (1 << 1);
-	public static final int SCREEN_ARC_NEE = (1 << 2);
-	public static final int SCREEN_ARC_NNE = (1 << 3);
-	public static final int SCREEN_ARC_SSW = (1 << 4);
-	public static final int SCREEN_ARC_SWW = (1 << 5);
-	public static final int SCREEN_ARC_NWW = (1 << 6);
-	public static final int SCREEN_ARC_NNW = (1 << 7);
+	public static final int GRAPHICS_ARC_SSE = (1 << 0);
+	public static final int GRAPHICS_ARC_SEE = (1 << 1);
+	public static final int GRAPHICS_ARC_NEE = (1 << 2);
+	public static final int GRAPHICS_ARC_NNE = (1 << 3);
+	public static final int GRAPHICS_ARC_SSW = (1 << 4);
+	public static final int GRAPHICS_ARC_SWW = (1 << 5);
+	public static final int GRAPHICS_ARC_NWW = (1 << 6);
+	public static final int GRAPHICS_ARC_NNW = (1 << 7);
 
-	public static final int SCREEN_ARC_NE = (SCREEN_ARC_NNE+SCREEN_ARC_NEE);
-	public static final int SCREEN_ARC_SE = (SCREEN_ARC_SSE+SCREEN_ARC_SEE);
-	public static final int SCREEN_ARC_SW = (SCREEN_ARC_SSW+SCREEN_ARC_SWW);
-	public static final int SCREEN_ARC_NW = (SCREEN_ARC_NNW+SCREEN_ARC_NWW);
+	public static final int GRAPHICS_ARC_NE = (GRAPHICS_ARC_NNE+GRAPHICS_ARC_NEE);
+	public static final int GRAPHICS_ARC_SE = (GRAPHICS_ARC_SSE+GRAPHICS_ARC_SEE);
+	public static final int GRAPHICS_ARC_SW = (GRAPHICS_ARC_SSW+GRAPHICS_ARC_SWW);
+	public static final int GRAPHICS_ARC_NW = (GRAPHICS_ARC_NNW+GRAPHICS_ARC_NWW);
 
-	public static final int SCREEN_ARC_N = (SCREEN_ARC_NE+SCREEN_ARC_NW);
-	public static final int SCREEN_ARC_S = (SCREEN_ARC_SE+SCREEN_ARC_SW);
-	public static final int SCREEN_ARC_E = (SCREEN_ARC_SE+SCREEN_ARC_NE);
-	public static final int SCREEN_ARC_W = (SCREEN_ARC_NW+SCREEN_ARC_SW);
+	public static final int GRAPHICS_ARC_N = (GRAPHICS_ARC_NE+GRAPHICS_ARC_NW);
+	public static final int GRAPHICS_ARC_S = (GRAPHICS_ARC_SE+GRAPHICS_ARC_SW);
+	public static final int GRAPHICS_ARC_E = (GRAPHICS_ARC_SE+GRAPHICS_ARC_NE);
+	public static final int GRAPHICS_ARC_W = (GRAPHICS_ARC_NW+GRAPHICS_ARC_SW);
 
-	public static final int SCREEN_ARC_ALL =(SCREEN_ARC_N+SCREEN_ARC_S);
+	public static final int SCREEN_ARC_ALL =(GRAPHICS_ARC_N+GRAPHICS_ARC_S);
 
+	public static final int GRAPHICS_CORNER_NW = 0;
+	public static final int GRAPHICS_CORNER_NE = 1;
+	public static final int GRAPHICS_CORNER_SE = 2;
+	public static final int GRAPHICS_CORNER_SW = 3;
+	
+	public static final int GRAPHICS_STYLE_SIMPLE = 0;
+	public static final int GRAPHICS_STYLE_NORMAL = 1;
+	public static final int GRAPHICS_STYLE_ADVANCED = 2;
+	
 	public static final boolean OVERLAY = true;
 	public static final boolean NO_OVERLAY = false;
 	

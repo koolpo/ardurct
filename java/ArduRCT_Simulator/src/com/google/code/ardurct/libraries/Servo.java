@@ -8,10 +8,10 @@ public class Servo {
 	ServoBank bank;
 	int value;
 	
-	public Servo(String servoBankName) {
+	public Servo() {
 		index = -1;
 		value = 90;
-		bank = ServoBank.getInstance(servoBankName);
+		bank = ServoBank.getInstance();
 	}
 		
 	public void attach(int pin) {
