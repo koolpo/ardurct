@@ -22,9 +22,8 @@
  * THE SOFTWARE.
  */
  
-// Change the version to adapt to your screen
-#define TOUSCRUINO_VERSION 1
 #include <SPI.h>
+#include <ArduRCT_Graphics.h>
 
 // Change to your version: the following include will automatically create the proper 'touscruino' object
 #define TOUSCRUINO_VERSION 1

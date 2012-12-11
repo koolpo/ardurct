@@ -1,5 +1,5 @@
 /*
- * MacroTests - Tests the macros (see TouchScreen_Macros.cpp for manual)
+ * Configuration - Configures the default options for software and hardware
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -22,42 +22,25 @@
  * THE SOFTWARE.
  */
  
-#include <SPI.h>
-#include <ArduRCT_Graphics.h>
+#ifndef ARDURCT_CONFIGURATION_HPP
+#define ARDURCT_CONFIGURATION_HPP
 
-// Change to your version: the following include will automatically create the proper 'touscruino' object
-#define TOUSCRUINO_VERSION 1
-#include <ArduRCT_TouScruino.h>
+// Hardware
+// --------
 
-void setup() {
-    Serial.begin(57600);
-    
-    touscruino.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
-    touscruino.setBacklight(180);
+// V1
+#define CONFIGURATION_V1_CS 	10
+#define CONFIGURATION_V1_CD 	9
+#define CONFIGURATION_V1_RST 	8 
+#define CONFIGURATION_V1_BL 	5 
 
-    touscruino.executeMacro(seven, 20, 20);
-    touscruino.executeMacro(seven, 10, 100, 3);
-    
-    delay(3000);
-    
-    touscruino.setBacklight(0);
-    touscruino.fillScreen(WHITE);
-    touscruino.setBacklight(180);
-}
+// V2
+#define CONFIGURATION_V2_CS 	0xFF
+#define CONFIGURATION_V2_CD		21 
+#define CONFIGURATION_V2_WR 	22
+#define CONFIGURATION_V2_RD 	23
+#define CONFIGURATION_V2_RST 	0xFF
+#define CONFIGURATION_V2_PORT 	2
+#define CONFIGURATION_V2_BL 	5 
 
-void loop() {
-    while (Serial.available()) buffer[bufferPtr++] = Serial.read();
-    if (bufferPtr == 0) return;
-    
-    // wait for end of sentence
-    if (buffer[bufferPtr-1] == '.') {
-        // mark end of macro
-        buffer[bufferPtr-1] = 0;
-        bufferPtr = 0;
-        // execute the macro
-        touscruino.executeMacro(buffer, 10, 10);
-    }
-    delay(10);
-}
-
-
+#endif

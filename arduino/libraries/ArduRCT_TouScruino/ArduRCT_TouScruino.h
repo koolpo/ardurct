@@ -30,6 +30,9 @@
 #ifndef ARDURCT_TOUSCRUINO_H
 #define ARDURCT_TOUSCRUINO_H 1
 
+#include "ArduRCT_Configuration.hpp"
+#include <ArduRCT_Graphics.h>
+
 #if (TOUSCRUINO_VERSION == 1)
 /**
  *	This version is based on:
@@ -38,7 +41,7 @@
  **/
 
 #include <ArduRCT_TouScruinoV1.hpp>
-#include <ArduRCT_ST7735>
+#include <ArduRCT_ST7735.h>
 
 ArduRCT_TouScruinoV1 touscruino(CONFIGURATION_V1_CD, CONFIGURATION_V1_CS, CONFIGURATION_V1_RST, CONFIGURATION_V1_BL);
 
@@ -49,7 +52,7 @@ ArduRCT_TouScruinoV1 touscruino(CONFIGURATION_V1_CD, CONFIGURATION_V1_CS, CONFIG
  *		- a touch panel
  **/
 #include <ArduRCT_TouScruinoV2.hpp>
-#include <ArduRCT_S6D04H0>
+#include <ArduRCT_S6D04H0.h>
 
 ArduRCT_TouScruinoV2 touscruino(CONFIGURATION_V2_PORT, CONFIGURATION_V2_CD, CONFIGURATION_V2_WR, CONFIGURATION_V2_RD, CONFIGURATION_V2_CS, CONFIGURATION_V2_RST, CONFIGURATION_V2_BL);
 

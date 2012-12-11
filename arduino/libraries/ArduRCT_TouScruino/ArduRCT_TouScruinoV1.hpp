@@ -30,7 +30,7 @@
 #ifndef TOUSCRUINO_V1_H
 #define TOUSCRUINO_V1_H 1
 
-#include "../ArduRCT_Graphics/ArduRCT_ST7735.hpp"
+#include "../ArduRCT_Graphics/ArduRCT_ST7735.h"
 
 class ArduRCT_TouScruinoV1: public ArduRCT_ST7735 {
 

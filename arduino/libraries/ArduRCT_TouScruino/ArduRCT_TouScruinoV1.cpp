@@ -23,6 +23,7 @@
  */
 
 #include "ArduRCT_TouScruinoV1.hpp"
+#include <ArduRCT_Graphics.h>
 
 ArduRCT_TouScruinoV1::ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
 	setupScreen(cd, cs, reset);
