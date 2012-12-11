@@ -35,14 +35,34 @@
 #include <inttypes.h>
 #include <avr/pgmspace.h>
 
-#include "ArduRCT_Configuration.hpp"
 #include "ArduRCT_Fonts.hpp"
 #include "ArduRCT_Colors.hpp"
 
-#if defined(CONFIGURATION_HAS_MACROS)
+
+//#define GRAPHICS_SPI_IS_SHARED 1
+
+// Max space that a pattern or a bitmap that needs to be overlaid can occupy
+// minimum is FONT_MAX_SPACE (from font.hpp)
+// RAM taken can be up to 5 times this, so beware! 
+#define GRAPHICS_MAX_BITMAP_SPACE (9*14)		
+
+// if defined, the screen will try to use 12bits colors
+#define GRAPHICS_12B_COLORS_ALLOWED 1
+
+// Comment this if you don't want to use macros
+#define GRAPHICS_HAS_MACROS 1
+// the number of macros defined in eeprom
+// each compressed macro can be up to SCREEN_MACRO_MAX_SIZE character long
+// the eeprom taken will be SCREEN_MACRO_MAX_NUMBER * SCREEN_MACRO_MAX_SIZE bytes
+#define GRAPHICS_MACRO_MAX_NUMBER 16
+// this number can not be bigger than 255
+#define GRAPHICS_MACRO_MAX_SIZE 128
+
+#if defined(GRAPHICS_HAS_MACROS)
 #include "ArduRCT_GraphicsMacros.hpp"
 #endif
 
+// Meaningful aliases
 #define GRAPHICS_ARC_SSE (1 << 0)
 #define GRAPHICS_ARC_SEE (1 << 1)
 #define GRAPHICS_ARC_NEE (1 << 2)
