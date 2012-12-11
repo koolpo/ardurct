@@ -40,9 +40,8 @@
 void setup() {
     Serial.begin(57600);
     touscruino.begin(WHITE, BLUE, FONT_SIZE, FONT_FACE);
-	touscruino.setRotation(GRAPHICS_ROTATION_90);
 }
 
 void loop() {
-    if (Serial.available() > 0) touscruino.write(Serial.read()); 
+    if (Serial.available() > 0) touscruino.print(Serial.read()); 
 }
