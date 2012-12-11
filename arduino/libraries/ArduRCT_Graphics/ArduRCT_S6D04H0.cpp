@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-#include "ArduRCT_S6D04H0.hpp"
+#include "ArduRCT_S6D04H0.h"
 
 #define S6D04H0_WIDTH 240
 #define S6D04H0_HEIGHT 320

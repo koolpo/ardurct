@@ -25,7 +25,7 @@
 #ifndef S6D0H0_HPP
 #define S6D0H0_HPP
 
-#include "ArduRCT_Graphics.hpp"
+#include "ArduRCT_Graphics.h"
 
 class ArduRCT_S6D04H0: public ArduRCT_Graphics {
     

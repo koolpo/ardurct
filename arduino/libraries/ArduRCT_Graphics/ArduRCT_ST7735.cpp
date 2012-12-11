@@ -30,8 +30,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
- 
-#include "ArduRCT_ST7735.hpp"
+
+#include <SPI.h> 
+#include "ArduRCT_ST7735.h"
  
 #define ST7735_WIDTH	128
 #define ST7735_HEIGHT	160

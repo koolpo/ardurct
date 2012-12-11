@@ -217,7 +217,7 @@ class ArduRCT_Graphics: public Print {
 
 		void fillScreen(uint16_t color, bool selectAndUnselectScreen = true);
 
-#if defined(CONFIGURATION_HAS_MACROS)
+#if defined(GRAPHICS_HAS_MACROS)
 		uint8_t *executeMacro(uint8_t *macro, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1, 
 			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
 
@@ -283,7 +283,7 @@ class ArduRCT_Graphics: public Print {
 		fontDefinition_t *_fontDef;
 		uint8_t _fontScale;
 
-#if defined(CONFIGURATION_HAS_MACROS)
+#if defined(GRAPHICS_HAS_MACROS)
 		int16_t _mThickness;
 		int16_t _mX;
 		int16_t _mY;

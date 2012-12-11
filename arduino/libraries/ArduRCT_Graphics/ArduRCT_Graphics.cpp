@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-#include "ArduRCT_Graphics.hpp"
+#include "ArduRCT_Graphics.h"
 #include "ArduRCT_FontBitmaps.hpp"
 #include "ArduRCT_EepromUtils.hpp"
 #include "../SPI/SPI.h"
@@ -702,7 +702,7 @@ void ArduRCT_Graphics::fillRoundedRectangle(int16_t x, int16_t y, uint16_t width
 
 
 uint16_t *ArduRCT_Graphics::retrieveBitmap(uint16_t *buffer, int16_t x, int16_t y, uint16_t width, uint16_t height, bool selectAndUnselectScreen) {
-	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height) || (width*height > CONFIGURATION_MAX_BITMAP_SPACE)) return 0;
+	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height) || (width*height > GRAPHICS_MAX_BITMAP_SPACE)) return 0;
 	if (selectAndUnselectScreen) selectScreenImpl();
 	retrieveBitmapImpl(buffer, x, y, width, height);
 	if (selectAndUnselectScreen) unselectScreenImpl();
@@ -711,11 +711,11 @@ uint16_t *ArduRCT_Graphics::retrieveBitmap(uint16_t *buffer, int16_t x, int16_t 
 
 
 void ArduRCT_Graphics::pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint16_t width, uint16_t height, bool hasTransparency, uint16_t transparentColor, bool selectAndUnselectScreen) {
-	uint16_t buffer[CONFIGURATION_MAX_BITMAP_SPACE];
+	uint16_t buffer[GRAPHICS_MAX_BITMAP_SPACE];
 
 	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
 	// check for overflow
-	if (hasTransparency && (width * height > CONFIGURATION_MAX_BITMAP_SPACE)) return;
+	if (hasTransparency && (width * height > GRAPHICS_MAX_BITMAP_SPACE)) return;
 	if (selectAndUnselectScreen) selectScreenImpl();
 	if (hasTransparency) {
 		// get the background image
@@ -732,12 +732,12 @@ void ArduRCT_Graphics::pasteBitmap(uint16_t *bitmap, int16_t x, int16_t y, uint1
 
 void ArduRCT_Graphics::drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, int16_t y, uint8_t width, uint8_t height, 
 		uint16_t color, uint16_t backColor, uint8_t scale, bool overlay, bool selectAndUnselectScreen) {
-	uint16_t buffer[CONFIGURATION_MAX_BITMAP_SPACE];
-	uint8_t unpacked[CONFIGURATION_MAX_BITMAP_SPACE];
+	uint16_t buffer[GRAPHICS_MAX_BITMAP_SPACE];
+	uint8_t unpacked[GRAPHICS_MAX_BITMAP_SPACE];
 	uint16_t *retrieved = buffer;
 
 	if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
-	if (width * height * scale * scale > CONFIGURATION_MAX_BITMAP_SPACE) return;
+	if (width * height * scale * scale > GRAPHICS_MAX_BITMAP_SPACE) return;
 	// unpack the pattern
 	_unpackPattern(pattern, unpacked, width, height, 0, 0, orientation);
 	if (selectAndUnselectScreen) selectScreenImpl();

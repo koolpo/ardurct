@@ -25,13 +25,13 @@
  
 /**
  *	The functions in this file are in fact part of the ArduRCT_Graphics class
- *	They are kept separate as they are only included if CONFIGURATION_HAS_MACROS is defined
+ *	They are kept separate as they are only included if GRAPHICS_HAS_MACROS is defined
  **/
  
-#include "ArduRCT_Graphics.hpp"
+#include "ArduRCT_Graphics.h"
 #include "ArduRCT_GraphicsMacros.hpp"
 
-#if defined(CONFIGURATION_HAS_MACROS)
+#if defined(GRAPHICS_HAS_MACROS)
 
 /* 
  *	A macro is a serie of drawing commands which can be chained together.
@@ -359,7 +359,7 @@ uint8_t *ArduRCT_Graphics::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16
 		if (drawMode) executeMacroCommand(&mc, x, y, scaleMul, scaleDiv, true, selectAndUnselectScreen);
 		else if (mc.cmd == GRAPHICS_MACRO_CMD_WRITE) {
 			wBufferNb = mc.param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER];
-			if (wBufferNb > CONFIGURATION_MACRO_MAX_NUMBER) return 0;
+			if (wBufferNb > GRAPHICS_MACRO_MAX_NUMBER) return 0;
 		}
 
 		// At this stage, we have a struct containing the command to execute
@@ -371,9 +371,9 @@ uint8_t *ArduRCT_Graphics::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16
 	}
 	if (!drawMode) {
 		// write to EEPROM
-		if ((wBufferPtr > 0) && (wBufferPtr < CONFIGURATION_MACRO_MAX_SIZE)) {
+		if ((wBufferPtr > 0) && (wBufferPtr < GRAPHICS_MACRO_MAX_SIZE)) {
 			eeprom_write_uint8_t(wBufferNb, wBufferPtr);
-			for (int j=0; j<wBufferPtr; j++) eeprom_write_uint8_t(CONFIGURATION_MACRO_MAX_NUMBER + wBufferNb*CONFIGURATION_MACRO_MAX_SIZE+j, wBuffer[j]);
+			for (int j=0; j<wBufferPtr; j++) eeprom_write_uint8_t(GRAPHICS_MACRO_MAX_NUMBER + wBufferNb*GRAPHICS_MACRO_MAX_SIZE+j, wBuffer[j]);
 		}
 	}
 	wBuffer[wBufferPtr] = 0;	
@@ -627,14 +627,14 @@ void ArduRCT_Graphics::_executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, 
 	
 	// executes
 	if (group == GRAPHICS_MACRO_CMD_GROUP_EXECUTE) {
-		if (mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER] >= CONFIGURATION_MACRO_MAX_NUMBER) return;
+		if (mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER] >= GRAPHICS_MACRO_MAX_NUMBER) return;
 		// read the length in the EEPROM allocation table
 		int length = eeprom_read_uint8_t(mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER]);
 		if (length == 0xFF) return;
 		// read the EEPROM pointers table to get the start
-		int start = CONFIGURATION_MACRO_MAX_NUMBER + mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER] * CONFIGURATION_MACRO_MAX_SIZE;
+		int start = GRAPHICS_MACRO_MAX_NUMBER + mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER] * GRAPHICS_MACRO_MAX_SIZE;
 		// get the compressed macro
-		uint8_t buffer[CONFIGURATION_MACRO_MAX_SIZE];
+		uint8_t buffer[GRAPHICS_MACRO_MAX_SIZE];
 		uint8_t i=0;
 		while (i < length) {
 			buffer[i] = eeprom_read_uint8_t(start+i);
@@ -827,7 +827,7 @@ int16_t ArduRCT_Graphics::_compressMacroCommand(ardurct_graphicsMacroCommand_t *
 		// if only 1 point, indicate that the command is linked with previous one
 		if (mc->nbParams == 2) buffer[i-1] |= GRAPHICS_MACRO_CMD_LINKED_FLAG;
 	} else if (group == GRAPHICS_MACRO_CMD_GROUP_EXECUTE) {
-		if (mc->nbParams >= CONFIGURATION_MACRO_MAX_NUMBER) return GRAPHICS_MACRO_FORMAT_ERROR;
+		if (mc->nbParams >= GRAPHICS_MACRO_MAX_NUMBER) return GRAPHICS_MACRO_FORMAT_ERROR;
 		buffer[i++] = mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER];
 		return i;
 	}
@@ -874,7 +874,7 @@ int16_t ArduRCT_Graphics::_uncompressMacroCommand(uint8_t *buffer, uint16_t n, a
 		} 	
 	} else if (group == GRAPHICS_MACRO_CMD_GROUP_EXECUTE) {
 		mc->param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER] = buffer[i++];
-		if (mc->nbParams >= CONFIGURATION_MACRO_MAX_NUMBER) return GRAPHICS_MACRO_FORMAT_ERROR;
+		if (mc->nbParams >= GRAPHICS_MACRO_MAX_NUMBER) return GRAPHICS_MACRO_FORMAT_ERROR;
 		return i;
 	} else if (group == GRAPHICS_MACRO_CMD_GROUP_ARC) {
 		mc->param[GRAPHICS_MACRO_PARAM_ARC_OCTANT] = buffer[i++];
