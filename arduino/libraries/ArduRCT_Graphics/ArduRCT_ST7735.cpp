@@ -112,8 +112,8 @@ const unsigned char PROGMEM ArduRCT_ST7735_initialization_code[] = {
     ST7735_DELAY+50,                // Delay 500 ms
     3, ST7735_FRMCTR1, 0x01, 0x2C, 0x2D,  // Frame rate ctrl - normal mode
     3, ST7735_FRMCTR2, 0x01, 0x2C, 0x2D,  // Frame rate control - idle mode
-    6, ST7735_FRMCTR3, 0x01, 0x2C, 0x2D, 0x01, 0x2C, 0x2D,  //  5: Frame rate ctrl - partial mode, Dot inversion mode, Line inversion mode
-    1, ST7735_INVCTR, 0x07,         //  Display inversion ctrl, No inversion
+    6, ST7735_FRMCTR3, 0x01, 0x2C, 0x2D, 0x01, 0x2C, 0x2D,  // Frame rate ctrl - partial mode, Dot inversion mode, Line inversion mode
+    1, ST7735_INVCTR, 0x07,         // Display inversion ctrl, No inversion
     3, ST7735_PWCTR1, 0xA2, 0x02, 0x84,  // Power control, -4.6V, AUTO:
     1, ST7735_PWCTR2, 0xC5,         // Power control: VGH25 = 2.4C VGSEL = -10 VGH = 3 * AVDD
     2, ST7735_PWCTR3, 0x0A, 0x00,   // Power control, 2 args, no delay: Opamp current small, Boost frequency
@@ -144,13 +144,13 @@ void ArduRCT_ST7735::initScreenImpl(void) {
     SPI.setClockDivider(SPI_CLOCK_DIV2); // Full speed
     SPI.setBitOrder(MSBFIRST);
     SPI.setDataMode(SPI_MODE0);
-    // init the screen    
-    while (1) {
+    // init the screen
+    while (true) {
         memcpy_P(buffer, &(ArduRCT_ST7735_initialization_code[i]), 20);
         if (buffer[0] == 0xFF) break;
         else if (buffer[0] & ST7735_DELAY) {
-            uint16_t ms = (buffer[0] & ~ST7735_DELAY) * 10;
-            delay(ms);
+            uint16_t hundredth = (buffer[0] & ~ST7735_DELAY);
+            delay(hundredth * 10);
         } else {
             _writeCommand(buffer[1]);
             *_csPort &= ~_csBitMask;
