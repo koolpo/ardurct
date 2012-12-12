@@ -25,16 +25,16 @@
 #include <SPI.h>
 
 //#include <ArduRCT_S6D04H0.h>
-//ArduRCT_S6D04H0 tft(2, 21, 22, 23, 0xFF, 0xFF);
+//ArduRCT_S6D04H0 graphics(2, 21, 22, 23, 0xFF, 0xFF);		// graphics(PORT, CD, WR, RD, CS, RESET)
 
 #include <ArduRCT_ST7735.h>
-ArduRCT_ST7735 tft(10, 9, 8);
+ArduRCT_ST7735 graphics(10, 9 , 8);							// graphics(CD, CS, RESET)
 
 uint8_t rotation = GRAPHICS_ROTATION_0;
 
 void setup() {
-    touscruino.begin(WHITE, BLACK, FONT_MEDIUM, FONT_BOLD, OVERLAY);
-    touscruino.setBacklight(180);
+    graphics.begin(WHITE, BLACK, FONT_MEDIUM, FONT_BOLD, OVERLAY);
+    graphics.setBacklight(180);
 }
 
 void loop() {
@@ -42,22 +42,22 @@ void loop() {
     delay(5000);
     rotation ++;
     if (rotation > GRAPHICS_ROTATION_270) rotation = GRAPHICS_ROTATION_0;
-    touscruino.setRotation(rotation);
+    graphics.setRotation(rotation);
 }
 
 
 void drawScreen() {
     uint32_t duration = millis();
-    uint16_t height = touscruino.getHeight()/3;
-    uint16_t width = touscruino.getWidth();
+    uint16_t height = graphics.getHeight()/3;
+    uint16_t width = graphics.getWidth();
     uint16_t *buffer;
     for (uint8_t band=0; band<3; band++) buffer = drawBand(band, width, height);
     // paste the last buffer to complete the screen
-    for (uint16_t y=3*height; y<touscruino.getHeight(); y++) touscruino.pasteBitmap(buffer, 0, y, width, 1);
+    for (uint16_t y=3*height; y<graphics.getHeight(); y++) graphics.pasteBitmap(buffer, 0, y, width, 1);
     duration = millis()-duration;
-    touscruino.setCursor((width-touscruino.getStringWidth("000ms", FONT_MEDIUM))/2, 3*height/2);
-    touscruino.print(duration);
-    touscruino.print("ms");
+    graphics.setCursor((width-graphics.getStringWidth("000ms", FONT_MEDIUM))/2, 3*height/2);
+    graphics.print(duration);
+    graphics.print("ms");
 }
 
 uint16_t *drawBand(uint8_t band, uint16_t width, uint16_t height) {
@@ -90,7 +90,7 @@ uint16_t *drawBand(uint8_t band, uint16_t width, uint16_t height) {
             else if (band == 1) buffer[x] = COLOR_565(c3, c1, c2);
             else buffer[x] = COLOR_565(c2, c3, c1);
         }
-        touscruino.pasteBitmap(buffer, 0, y+height*band, width, 1);
+        graphics.pasteBitmap(buffer, 0, y+height*band, width, 1);
     }
     return buffer;
 }

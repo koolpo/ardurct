@@ -25,30 +25,30 @@
 #include <SPI.h>
 
 //#include <ArduRCT_S6D04H0.h>
-//ArduRCT_S6D04H0 tft(2, 21, 22, 23, 0xFF, 0xFF);
+//ArduRCT_S6D04H0 graphics(2, 21, 22, 23, 0xFF, 0xFF);		// graphics(PORT, CD, WR, RD, CS, RESET)
 
 #include <ArduRCT_ST7735.h>
-ArduRCT_ST7735 tft(10, 9, 8);
+ArduRCT_ST7735 graphics(10, 9 , 8);							// graphics(CD, CS, RESET)
 
 void setup() {
-    touscruino.begin(WHITE, BLACK, FONT_MEDIUM, FONT_BOLD);
+    graphics.begin(WHITE, BLACK, FONT_MEDIUM, FONT_BOLD);
 }
 
 void loop() {
     uint32_t duration = millis();
     delay(500);
-    tft.fillScreen(RED);
+    graphics.fillScreen(RED);
     delay(500);
-    tft.fillScreen(GREEN);
+    graphics.fillScreen(GREEN);
     delay(500);
-    tft.fillScreen(BLUE);
+    graphics.fillScreen(BLUE);
     delay(500);
-    tft.fillScreen(WHITE);
+    graphics.fillScreen(WHITE);
     delay(500);
-    tft.fillScreen(BLACK);
+    graphics.fillScreen(BLACK);
 	
     duration = (millis() - duration)/5 - 500;
-    tft.setCursor(20, 20);
-    tft.print(duration);
-    tft.print("ms");
+    graphics.setCursor(20, 20);
+    graphics.print(duration);
+    graphics.print("ms");
 }

@@ -26,10 +26,11 @@
 #include <SPI.h>
 
 //#include <ArduRCT_S6D04H0.h>
-//ArduRCT_S6D04H0 tft(2, 21, 22, 23, 0xFF, 0xFF);
+//ArduRCT_S6D04H0 graphics(2, 21, 22, 23, 0xFF, 0xFF);		// graphics(PORT, CD, WR, RD, CS, RESET)
 
 #include <ArduRCT_ST7735.h>
-ArduRCT_ST7735 tft(10, 9, 8);
+ArduRCT_ST7735 graphics(10, 9 , 8);							// graphics(CD, CS, RESET)
+
 
 #define LOGO_SCALE_MUL 7
 #define LOGO_SCALE_DIV 5
@@ -74,26 +75,26 @@ uint8_t sparkfun[] = "w 0 "\
     "\0";
     
 void setup() {    
-    touscruino.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
-    touscruino.setBacklight(180);
+    graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
+    graphics.setBacklight(180);
     
     // center the drawing on the screen
-    int16_t x = (touscruino.getWidth()-LOGO_WIDTH*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
-    int16_t y = (touscruino.getHeight()-LOGO_HEIGHT*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
+    int16_t x = (graphics.getWidth()-LOGO_WIDTH*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
+    int16_t y = (graphics.getHeight()-LOGO_HEIGHT*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
     
     // execute the macro without the initial write in slot 0
-    touscruino.executeMacro(&sparkfun[3], x, y, LOGO_SCALE_MUL, LOGO_SCALE_DIV, true);
+    graphics.executeMacro(&sparkfun[3], x, y, LOGO_SCALE_MUL, LOGO_SCALE_DIV, true);
 
     // write the macro to eeprom slot 0
-    //touscruino.executeMacro(sparkfun);
+    //graphics.executeMacro(sparkfun);
 
     //delay(3000);
     
     // erase the drawing
-    //touscruino.fillRectangle(x-2, y-2, LOGO_WIDTH*LOGO_SCALE+4, LOGO_HEIGHT*LOGO_SCALE+4, WHITE);
+    //graphics.fillRectangle(x-2, y-2, LOGO_WIDTH*LOGO_SCALE+4, LOGO_HEIGHT*LOGO_SCALE+4, WHITE);
 
     // execute the macro stored in slot 0. Any time we need the logo, in whatever scale, we can reuse "e 0"
-    //touscruino.executeMacro((uint8_t *)"e 0", x, y, LOGO_SCALE, 1);
+    //graphics.executeMacro((uint8_t *)"e 0", x, y, LOGO_SCALE, 1);
 }
 
 void loop() {

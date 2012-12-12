@@ -25,25 +25,15 @@
 #include <SPI.h>
 
 //#include <ArduRCT_S6D04H0.h>
-//ArduRCT_S6D04H0 tft(2, 21, 22, 23, 0xFF, 0xFF);
+//ArduRCT_S6D04H0 graphics(2, 21, 22, 23, 0xFF, 0xFF);		// graphics(PORT, CD, WR, RD, CS, RESET)
 
 #include <ArduRCT_ST7735.h>
-ArduRCT_ST7735 tft(10, 9, 8);
+ArduRCT_ST7735 graphics(10, 9 , 8);							// graphics(CD, CS, RESET)
 
 void setup() {
-    Serial.begin(57600);
-    
-    touscruino.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
-    touscruino.setBacklight(180);
-
-    touscruino.executeMacro(seven, 20, 20);
-    touscruino.executeMacro(seven, 10, 100, 3);
-    
-    delay(3000);
-    
-    touscruino.setBacklight(0);
-    touscruino.fillScreen(WHITE);
-    touscruino.setBacklight(180);
+    Serial.begin(57600);  
+    graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
+    graphics.setBacklight(180);
 }
 
 void loop() {
@@ -51,12 +41,12 @@ void loop() {
     if (bufferPtr == 0) return;
     
     // wait for end of sentence
-    if (buffer[bufferPtr-1] == '.') {
+    if ((buffer[bufferPtr-1] == '.') || (buffer[bufferPtr-1] == '\n')) {
         // mark end of macro
         buffer[bufferPtr-1] = 0;
         bufferPtr = 0;
         // execute the macro
-        touscruino.executeMacro(buffer, 10, 10);
+        graphics.executeMacro(buffer, 10, 10);
     }
     delay(10);
 }
