@@ -5,25 +5,17 @@ Content
 =======
 Classes
 -------
-Graphics*						Graphics functions (includes Graphics_Macros.* if CONFIGURATION_HAS_MACROS is true and Graphics_UI.* if CONFIGURATION_HAS_UI is true)
-	TouchScreen*				Touch panel management functions 
-		S6D0H40					LCD driver chip functions
-			TouScruinoV2*		Graphics functions implementations specific to TouScruino-v2
-		ILI9325					LCD driver chip functions
-			TouScruinoV3*		Graphics functions implementations specific to TouScruino-v3
-	ButtonScreen*				Button management function
-		PCD8544					LCD driver chip functions
-			TouScruinoV0*		All glued together for TouScruino-v0 
-		ST7735					LCD driver chip functions
-			TouScruinoV1*		All glued together for TouScruino-v1 
+ArduRCT_Graphics*			High level drawing functions (includes GraphicsMacros.* if GRAPHICS_HAS_MACROS is true and GraphicsUI.* if GRAPHICS_HAS_UI is true)
+	ArduRCT_S6D04H0.*		Low level drawing functions for S6D04H0
+	ArduRCT_ST7735.*		Low level drawing functions for ST7735
 
 Headers
 -------
-configuration.hpp	Defines the hardware connections and the software options
-colors.hpp			Defines some constant colors
-fonts.hpp			Describes some constants and structs for the fonts
-fontBitmaps.hpp		Defines the patterns for the fonts
-eepromUtils.hpp		Utilities to write several bytes at once to EEPROM
+CArduRCT_olors.hpp			Defines some constant colors
+ArduRCT_Fonts.hpp			Describes some constants and structs for the fonts
+ArduRCT_FontBitmaps.hpp		Defines the patterns for the fonts
+ArduRCT_EepromUtils.hpp		Utilities to write several bytes at once to EEPROM
+
 
 fonts
 =====
