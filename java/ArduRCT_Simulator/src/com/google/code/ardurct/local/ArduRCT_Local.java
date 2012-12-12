@@ -1,9 +1,9 @@
 package com.google.code.ardurct.local;
 
 import com.google.code.ardurct.libraries.HMC6352;
-import com.google.code.ardurct.libraries.touchscreen.IUIActionCallback;
-import com.google.code.ardurct.libraries.touchscreen.IUIDrawCallback;
-import com.google.code.ardurct.libraries.touchscreen.TouchScreen_UserInterface.uiRectangle_t;
+import com.google.code.ardurct.libraries.touscruino.IUIActionCallback;
+import com.google.code.ardurct.libraries.touscruino.IUIDrawCallback;
+import com.google.code.ardurct.libraries.touscruino.TouchScreen_UserInterface.uiRectangle_t;
 
 public class ArduRCT_Local extends Radio {
 	
@@ -57,10 +57,10 @@ public class ArduRCT_Local extends Radio {
 		loopCounter = 0;
 		
 	    touchscreen.setupUI(0, 0, touchscreen.getWidth(), touchscreen.getHeight());
-	    telemetryTab = touchscreen.addUITab(stringToArray("    "), doTelemetryAction, telemetryDraw);
-	    radioTab = touchscreen.addUITab(stringToArray("    "), doRadioAction, drawRadio);
-	    optionsTab = touchscreen.addUITab(stringToArray("    "), doOptionsAction, drawOptions);
-	    enginesTab = touchscreen.addUITab(stringToArray("    "), doEnginesAction, drawEngines);   
+	    telemetryTab = touchscreen.addUITab(stringToArray("  "), doTelemetryAction, telemetryDraw);
+	    radioTab = touchscreen.addUITab(stringToArray("  "), doRadioAction, drawRadio);
+	    optionsTab = touchscreen.addUITab(stringToArray("  "), doOptionsAction, drawOptions);
+	    enginesTab = touchscreen.addUITab(stringToArray("  "), doEnginesAction, drawEngines);   
 	    setupRadioTab();
 	    setupTelemetryTab();
 	    setupEnginesTab();

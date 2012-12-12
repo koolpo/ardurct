@@ -1,8 +1,8 @@
 package com.google.code.ardurct.local;
 
 import com.google.code.ardurct.libraries.HMC6352;
-import com.google.code.ardurct.libraries.touchscreen.ArduinoFirmware;
-import com.google.code.ardurct.libraries.touchscreen.TouchScreen_UserInterface.uiRectangle_t;
+import com.google.code.ardurct.libraries.touscruino.ArduinoFirmware;
+import com.google.code.ardurct.libraries.touscruino.TouchScreen_UserInterface.uiRectangle_t;
 
 public class Telemetry extends ArduinoFirmware {
 

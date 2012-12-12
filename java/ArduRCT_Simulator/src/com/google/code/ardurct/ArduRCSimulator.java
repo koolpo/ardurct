@@ -19,8 +19,8 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.UIManager;
 
 import com.google.code.ardurct.libraries.HardwareSerial;
-import com.google.code.ardurct.libraries.touchscreen.IDefines;
-import com.google.code.ardurct.libraries.touchscreen.TouchScreen;
+import com.google.code.ardurct.libraries.touscruino.IDefines;
+import com.google.code.ardurct.libraries.touscruino.TouchScreen;
 import com.google.code.ardurct.local.ArduRCT_Local;
 
 public class ArduRCSimulator extends JFrame

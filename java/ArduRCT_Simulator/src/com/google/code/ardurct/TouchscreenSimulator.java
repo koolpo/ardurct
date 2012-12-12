@@ -22,9 +22,9 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 
 import com.google.code.ardurct.libraries.HardwareSerial;
-import com.google.code.ardurct.libraries.touchscreen.IArduinoFirmware;
-import com.google.code.ardurct.libraries.touchscreen.TouchScreen;
-import com.google.code.ardurct.libraries.touchscreen.examples.BasicExample;
+import com.google.code.ardurct.libraries.touscruino.IArduinoFirmware;
+import com.google.code.ardurct.libraries.touscruino.TouchScreen;
+import com.google.code.ardurct.libraries.touscruino.examples.BasicExample;
 
 public class TouchscreenSimulator extends JFrame
 implements ActionListener {

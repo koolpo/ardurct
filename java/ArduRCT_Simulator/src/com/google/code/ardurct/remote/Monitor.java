@@ -2,7 +2,7 @@ package com.google.code.ardurct.remote;
 
 import com.google.code.ardurct.libraries.Servo;
 import com.google.code.ardurct.libraries.XBee;
-import com.google.code.ardurct.libraries.touchscreen.ArduinoFirmware;
+import com.google.code.ardurct.libraries.touscruino.ArduinoFirmware;
 
 
 public class Monitor extends ArduinoFirmware {
