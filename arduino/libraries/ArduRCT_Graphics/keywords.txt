@@ -7,6 +7,8 @@
 #######################################
 
 ArduRCT_Graphics	KEYWORD1
+ArduRCT_ST7735	KEYWORD1
+ArduRCT_S6D04H0	KEYWORD1
 COLOR_565	KEYWORD1
 
 #######################################
@@ -76,6 +78,7 @@ drawBigDigit	KEYWORD2
 #######################################
 #	Instances	(KEYWORD2)
 #######################################
+
 
 #######################################
 #	Constants	(LITERAL1)

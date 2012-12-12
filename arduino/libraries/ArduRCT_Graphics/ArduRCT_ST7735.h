@@ -39,6 +39,8 @@ class ArduRCT_ST7735: public ArduRCT_Graphics {
 	public:
 		ArduRCT_ST7735();
 		
+		ArduRCT_ST7735(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin = 0xFF);
+		
 		void invertDisplay(boolean invert);	
 		
 	protected:

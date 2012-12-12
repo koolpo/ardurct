@@ -1,7 +1,7 @@
 /*
- * S6D04H0 - Implementation of the ScreenHAL abstract functions for the S6D04H0
+ * MacroTests - Tests the macros (see TouchScreen_Macros.cpp for manual)
  *
- * Copyright (c) 2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,35 +21,44 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+ 
+#include <SPI.h>
 
-#ifndef S6D0H0_HPP
-#define S6D0H0_HPP
+//#include <ArduRCT_S6D04H0.h>
+//ArduRCT_S6D04H0 tft(2, 21, 22, 23, 0xFF, 0xFF);
 
-#include "ArduRCT_Graphics.h"
+#include <ArduRCT_ST7735.h>
+ArduRCT_ST7735 tft(10, 9, 8);
 
-class ArduRCT_S6D04H0: public ArduRCT_Graphics {
+void setup() {
+    Serial.begin(57600);
     
-	public:
-		ArduRCT_S6D04H0();
-		
-		ArduRCT_S6D04H0(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, uint8_t backlightPin = 0xFF);
-		
-	protected:
-		// see ArduRCT_Graphics
-		void initScreenImpl();
-		void fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);
-		uint16_t *retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
-		void pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
-		void setRotationImpl(uint8_t rotation);
-		void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
-		void selectScreenImpl();
-		void unselectScreenImpl();		
+    touscruino.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
+    touscruino.setBacklight(180);
 
-	private:
-		uint8_t _wrPortLowWR;
-		uint8_t _wrPortHighWR;
-		
-		void _setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy);
-};
+    touscruino.executeMacro(seven, 20, 20);
+    touscruino.executeMacro(seven, 10, 100, 3);
+    
+    delay(3000);
+    
+    touscruino.setBacklight(0);
+    touscruino.fillScreen(WHITE);
+    touscruino.setBacklight(180);
+}
 
-#endif
+void loop() {
+    while (Serial.available()) buffer[bufferPtr++] = Serial.read();
+    if (bufferPtr == 0) return;
+    
+    // wait for end of sentence
+    if (buffer[bufferPtr-1] == '.') {
+        // mark end of macro
+        buffer[bufferPtr-1] = 0;
+        bufferPtr = 0;
+        // execute the macro
+        touscruino.executeMacro(buffer, 10, 10);
+    }
+    delay(10);
+}
+
+

@@ -84,6 +84,14 @@ ArduRCT_S6D04H0::ArduRCT_S6D04H0() {
 	_widthImpl = S6D04H0_WIDTH;
 	_heightImpl = S6D04H0_HEIGHT;
 }
+
+
+ArduRCT_S6D04H0::ArduRCT_S6D04H0(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
+	_widthImpl = S6D04H0_WIDTH;
+	_heightImpl = S6D04H0_HEIGHT;
+	setupScreen(port, cd, wr, rd, cs, reset, true);
+	_backlightPin = backlightPin;
+}
  
 /* ---------------- Protected functions ------------------------ */
 

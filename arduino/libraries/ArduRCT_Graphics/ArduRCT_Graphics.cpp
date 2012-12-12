@@ -25,7 +25,6 @@
 #include "ArduRCT_Graphics.h"
 #include "ArduRCT_FontBitmaps.hpp"
 #include "ArduRCT_EepromUtils.hpp"
-#include "../SPI/SPI.h"
 
 ArduRCT_Graphics::ArduRCT_Graphics(void) {
 }
@@ -53,7 +52,7 @@ void ArduRCT_Graphics::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t
 	_reset = reset;
 	_spiOnBus = spiOnBus;
 	_spiUsed = false;
-	_screenSelected = 0;
+	_screenSelected = false;
 	_backlightPin = 0xFF;
 }
 

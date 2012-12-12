@@ -89,6 +89,18 @@
 
 #define _spiWrite(d) { SPDR = d; while (!(SPSR & _BV(SPIF))); }
 
+ArduRCT_ST7735::ArduRCT_ST7735(void) {
+	_widthImpl = ST7735_WIDTH;
+	_heightImpl = ST7735_HEIGHT;
+}
+
+ArduRCT_ST7735::ArduRCT_ST7735(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
+	_widthImpl = ST7735_WIDTH;
+	_heightImpl = ST7735_HEIGHT;
+	setupScreen(cd, cs, reset);
+	_backlightPin = backlightPin;
+}
+
 const unsigned char PROGMEM ArduRCT_ST7735_initialization_code[] = {
 	0, ST7735_SWRESET,		// Software reset
 	ST7735_DELAY+15,		// Delay 150ms
@@ -118,13 +130,9 @@ const unsigned char PROGMEM ArduRCT_ST7735_initialization_code[] = {
 	0xFF
 };
 
-ArduRCT_ST7735::ArduRCT_ST7735(void) {
-	_widthImpl = ST7735_WIDTH;
-	_heightImpl = ST7735_HEIGHT;
-}
 
 void ArduRCT_ST7735::initScreenImpl(void) {
-	uint8_t buffer[32];
+	uint8_t buffer[20];
 	uint16_t i = 0;
 	
 	// init SPI
@@ -134,7 +142,7 @@ void ArduRCT_ST7735::initScreenImpl(void) {
 	SPI.setDataMode(SPI_MODE0);
 	// init the screen	
 	while (1) {
-		memcpy_P(buffer, &(ArduRCT_ST7735_initialization_code[i]), 32);
+		memcpy_P(buffer, &(ArduRCT_ST7735_initialization_code[i]), 20);
 		if (buffer[0] == 0xFF) break;
 		else if (buffer[0] & ST7735_DELAY) {
 			uint16_t ms = (buffer[0] & ~ST7735_DELAY) * 10;
@@ -170,6 +178,7 @@ void ArduRCT_ST7735::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_
 #if defined(CONFIGURATION_12B_COLORS_ALLOWED)
 	if (nbPixels > 64) {
 		// switch to 12b mode
+		// we will send nbPixels/2*3 instead of nbPixels*2 bytes: 33% improvment in speed
 		_writeCommand(ST7735_COLMOD);
 		*_csPort &= ~_csBitMask;
 		_spiWrite(ST7735_COLMOD_12B);
@@ -180,13 +189,13 @@ void ArduRCT_ST7735::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_
 	*_csPort &= ~_csBitMask;
 #if defined(CONFIGURATION_12B_COLORS_ALLOWED)
 	if (nbPixels > 64) {
-		// ensure the last pixel is drawn if odd
+		// ensure the last pixel is drawn if nbPixels is odd
 		nbPixels = (nbPixels >> 1) + (nbPixels & 0x01);
-		// keep 4 bits per color
+		// from 1 x 16b color, build 2 x 12b color	
+		// R5G6B5 -> R4G4,B4R4,G4B4
 		uint8_t colR = color >> 12;
 		uint8_t colG = (color >> 6) & 0x0F;
 		uint8_t colB = (color >> 1) & 0x0F;
-		// build 2 times 12b in 3 bytes
 		uint8_t colH = (colR << 4) + colG;
 		uint8_t colM = (colB << 4) + colR;	
 		uint8_t colL = (colG << 4) + colB;	
