@@ -1,9 +1,9 @@
-package com.google.code.ardurct.libraries.touchscreen;
+package com.google.code.ardurct.libraries.touscruino;
 
 import java.util.Date;
 
 
-public class TouchScreen_UserInterface extends ScreenHAL {
+public class TouchScreen_UserInterface extends ArduRCT_Graphics {
 
 	public class uiRectangle_t {
 		public int x;

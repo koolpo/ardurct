@@ -1,4 +1,4 @@
-package com.google.code.ardurct.libraries.touchscreen;
+package com.google.code.ardurct.libraries.touscruino;
 
 import com.google.code.ardurct.libraries.HardwareSerial;
 

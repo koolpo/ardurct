@@ -1,6 +1,6 @@
-package com.google.code.ardurct.libraries.touchscreen;
+package com.google.code.ardurct.libraries.touscruino;
 
-public class TouchScreen extends TouchScreen_Macros {
+public class TouchScreen extends ArduRCT_GraphicsMacros {
 	
 	private static final long serialVersionUID = 1L;
 

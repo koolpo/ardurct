@@ -1,4 +1,4 @@
-package com.google.code.ardurct.libraries.touchscreen;
+package com.google.code.ardurct.libraries.touscruino;
 
 public interface IDefines {
 	
@@ -88,9 +88,7 @@ public interface IDefines {
 	public static final int UI_BOTTOM_OF = 0x2000;
 	public static final int UI_BOTTOM_OF_WITH_MARGIN = 0x3000;
 	public static final int UI_PLACE_MODIFIER_MASK = 0xF000;
-	
-	public static final int TOUCHSCREEN_NO_TOUCH = -1;
-	
+		
 	public static final int CONFIGURATION_UI_LOOP_LENGTH = 20;
 	public static final int CONFIGURATION_UI_DEBOUNCE_STEPS = 6;
 

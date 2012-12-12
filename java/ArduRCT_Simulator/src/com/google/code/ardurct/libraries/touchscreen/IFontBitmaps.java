@@ -1,4 +1,4 @@
-package com.google.code.ardurct.libraries.touchscreen;
+package com.google.code.ardurct.libraries.touscruino;
 
 class fontDefinition_t {
 	public int width;
