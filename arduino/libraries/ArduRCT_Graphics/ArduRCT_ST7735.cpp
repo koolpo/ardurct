@@ -3,8 +3,8 @@
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *  ========================================================================
- *         Initialization data written by Limor Fried/Ladyada 
- *        for Adafruit Industries.
+ *        Initialization data copyrighted to Limor Fried/Ladyada 
+ *        at Adafruit Industries.
  *
  *         This library works with the Adafruit 1.8" TFT Breakout w/SD card
  *         ----> http://www.adafruit.com/products/358
@@ -34,8 +34,8 @@
 #include <SPI.h> 
 #include "ArduRCT_ST7735.h"
  
-#define ST7735_WIDTH    128
-#define ST7735_HEIGHT    160
+#define ST7735_WIDTH   128
+#define ST7735_HEIGHT  160
  
 #define ST7735_NOP     0x00
 #define ST7735_SWRESET 0x01
@@ -87,6 +87,10 @@
 
 #define ST7735_DELAY 0x80
 
+// Since there is an overhead going to and from 12b mode, it is only worth doing if we have enough
+// pixels to draw in the area. 
+#define ST7735_SWITCH_TO_12B_COLORS_TRIGGER 64
+
 #define _spiWrite(d) { SPDR = d; while (!(SPSR & _BV(SPIF))); }
 
 ArduRCT_ST7735::ArduRCT_ST7735(void) {
@@ -121,8 +125,8 @@ const unsigned char PROGMEM ArduRCT_ST7735_initialization_code[] = {
     1, ST7735_COLMOD, ST7735_COLMOD_16B,  // Color mode: 16bits/color
     4, ST7735_CASET, 0x00, 0x00, 0x00, 0x7F,  // Column addr set: 0 - 127
     4, ST7735_RASET, 0x00, 0x00, 0x00, 0x9F,  // Row addr set: 0 - 159
-    16, ST7735_GMCTRP1, 0x02, 0x1c, 0x07, 0x12, 0x37, 0x32, 0x29, 0x2d, 0x29, 0x25, 0x2B, 0x39, 0x00, 0x01, 0x03, 0x10,    // Gamma control
-    16, ST7735_GMCTRN1, 0x03, 0x1d, 0x07, 0x06, 0x2E, 0x2C, 0x29, 0x2D, 0x2E, 0x2E, 0x37, 0x3F, 0x00, 0x00, 0x02, 0x10,    // Gamma control
+    16, ST7735_GMCTRP1, 0x02, 0x1c, 0x07, 0x12, 0x37, 0x32, 0x29, 0x2d, 0x29, 0x25, 0x2B, 0x39, 0x00, 0x01, 0x03, 0x10,    // Gamma ctrl
+    16, ST7735_GMCTRN1, 0x03, 0x1d, 0x07, 0x06, 0x2E, 0x2C, 0x29, 0x2D, 0x2E, 0x2E, 0x37, 0x3F, 0x00, 0x00, 0x02, 0x10,    // Gamma ctrl
     0, ST7735_NORON,                // NOrmal display ON
     ST7735_DELAY+1,                 // Delay 10ms
     0, ST7735_DISPON,               // DISPlay ON
@@ -176,7 +180,7 @@ void ArduRCT_ST7735::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_
     nbPixels *= (hy - ly + 1);
 
 #if defined(GRAPHICS_12B_COLORS_ALLOWED)
-    if (nbPixels > 64) {
+    if (nbPixels > ST7735_SWITCH_TO_12B_COLORS_TRIGGER) {
         // switch to 12b mode
         // we will send nbPixels/2*3 instead of nbPixels*2 bytes: 33% improvment in speed
         _writeCommand(ST7735_COLMOD);
@@ -188,7 +192,7 @@ void ArduRCT_ST7735::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_
     _setClippingRectangle(lx, ly, hx, hy);
     *_csPort &= ~_csBitMask;
 #if defined(GRAPHICS_12B_COLORS_ALLOWED)
-    if (nbPixels > 64) {
+    if (nbPixels > ST7735_SWITCH_TO_12B_COLORS_TRIGGER) {
         // ensure the last pixel is drawn if nbPixels is odd
         nbPixels = (nbPixels >> 1) + (nbPixels & 0x01);
         // from 1 x 16b color, build 2 x 12b color    
