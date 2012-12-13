@@ -52,6 +52,7 @@ public class HardwareSerial extends JPanel {
 	}
 	
 	public void begin(int aBaudrate) {
+		clear();
 		baudrate = aBaudrate;
 	}
 	

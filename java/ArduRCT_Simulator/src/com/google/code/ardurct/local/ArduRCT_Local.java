@@ -1,9 +1,9 @@
 package com.google.code.ardurct.local;
 
 import com.google.code.ardurct.libraries.HMC6352;
-import com.google.code.ardurct.libraries.touscruino.IUIActionCallback;
-import com.google.code.ardurct.libraries.touscruino.IUIDrawCallback;
-import com.google.code.ardurct.libraries.touscruino.TouchScreen_UserInterface.uiRectangle_t;
+import com.google.code.ardurct.libraries.graphics.IUIActionCallback;
+import com.google.code.ardurct.libraries.graphics.IUIDrawCallback;
+import com.google.code.ardurct.libraries.graphics.TouchScreen_UserInterface.uiRectangle_t;
 
 public class ArduRCT_Local extends Radio {
 	

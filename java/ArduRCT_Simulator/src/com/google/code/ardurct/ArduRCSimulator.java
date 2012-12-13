@@ -19,8 +19,8 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.UIManager;
 
 import com.google.code.ardurct.libraries.HardwareSerial;
-import com.google.code.ardurct.libraries.touscruino.IDefines;
-import com.google.code.ardurct.libraries.touscruino.TouchScreen;
+import com.google.code.ardurct.libraries.graphics.IDefines;
+import com.google.code.ardurct.libraries.touscruino.ArduRCT_TouScruinoV2;
 import com.google.code.ardurct.local.ArduRCT_Local;
 
 public class ArduRCSimulator extends JFrame
@@ -28,7 +28,7 @@ implements ActionListener {
 	
 	private static final long serialVersionUID = -8128231225228032474L;
 	
-	public TouchScreen touchscreen;
+	public ArduRCT_TouScruinoV2 touchscreen;
 	public HardwareSerial serial;
 	XBeeSimulator xBee = new XBeeSimulator(null, null, null, 9600);
 	
@@ -61,7 +61,7 @@ implements ActionListener {
 		menuBar.add(menu);		
 		this.setJMenuBar(menuBar);
 
-		touchscreen = new TouchScreen();
+		touchscreen = new ArduRCT_TouScruinoV2();
 		serial = new HardwareSerial("Serial");				
 		touchscreen.addMouseListener(touchscreen);
 		touchscreen.addMouseMotionListener(touchscreen);

@@ -1,10 +1,11 @@
 package com.google.code.ardurct.local;
 
+import com.google.code.ardurct.libraries.ArduinoFirmware;
 import com.google.code.ardurct.libraries.HMC6352;
-import com.google.code.ardurct.libraries.touscruino.ArduinoFirmware;
-import com.google.code.ardurct.libraries.touscruino.TouchScreen_UserInterface.uiRectangle_t;
+import com.google.code.ardurct.libraries.graphics.TouchScreen_UserInterface.uiRectangle_t;
+import com.google.code.ardurct.libraries.touscruino.TouscruinoFirmware;
 
-public class Telemetry extends ArduinoFirmware {
+public class Telemetry extends TouscruinoFirmware {
 
 	static final int UI_OK_COLOR = GREEN;
 	static final int UI_WARNING_COLOR = ORANGE;

@@ -1,7 +1,5 @@
 package com.google.code.ardurct.remote;
 
-import java.util.Date;
-
 public class GPSFrameParser extends Radio {
 	
 	boolean gpsIsInitialized = false; 
