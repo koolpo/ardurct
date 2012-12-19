@@ -24,19 +24,29 @@
 
 /* 
  * Versions
- *	v0.1	Initial release
+ *    v0.1    Initial release
  */
  
 #ifndef TOUSCRUINO_V1_H
 #define TOUSCRUINO_V1_H 1
 
 #include "../ArduRCT_Graphics/ArduRCT_ST7735.h"
+#include "../ArduRCT_EventManager/ArduRCT_EventManager.h"
 
 class ArduRCT_TouScruinoV1: public ArduRCT_ST7735 {
 
-	public:
-		ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin = 0xFF);
-		
+    public:
+        ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin, ArduRCT_EventManager *eventManager,
+            ArduRCT_Switch *up, ArduRCT_Switch *down, ArduRCT_Switch *left, ArduRCT_Switch *right, ArduRCT_Switch *center);
+    
+        void update();
+        
+        ArduRCT_RealTimeClock *getRTC();
+        
+        void registerEventHandler(ArduRCT_EventHandler *handler);
+
+    private:
+        ArduRCT_EventManager *_eventManager;
 };
 
 #endif
