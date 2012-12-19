@@ -158,24 +158,23 @@ uint8_t ArduRCT_Graphics::getRotation() {
 }
 
 
-void ArduRCT_Graphics::getRotatedXY(int16_t *x, int16_t *y, uint8_t rotation) {
-    if (rotation == GRAPHICS_ROTATION_0) return;
+void ArduRCT_Graphics::getRotatedXY(int16_t *x, int16_t *y) {
+    if (_rotation == GRAPHICS_ROTATION_0) return;
 
     int16_t X = *x;
     int16_t Y = *y;
     
-    if (rotation == GRAPHICS_ROTATION_180) {
-        *x = _widthImpl - X;
-        *y = _heightImpl - Y;
-    } else if (rotation == GRAPHICS_ROTATION_90) {
-        *x = _heightImpl - Y;
+    if (_rotation == GRAPHICS_ROTATION_90) {
+        *x = _widthImpl - 1 - Y;
         *y = X;
-    } else if (rotation == GRAPHICS_ROTATION_270) {
+    } else if (_rotation == GRAPHICS_ROTATION_180) {
+        *x = _widthImpl - 1 - X;
+        *y = _heightImpl - 1 - Y;
+    } else if (_rotation == GRAPHICS_ROTATION_270) {
         *x = Y;
-        *y = _widthImpl - X;
+        *y = _heightImpl - 1 - X;
     } 
 }
-
 
 bool ArduRCT_Graphics::isVertical() {
     return ((_rotation == GRAPHICS_ROTATION_0) || (_rotation == GRAPHICS_ROTATION_180));
@@ -364,7 +363,7 @@ void ArduRCT_Graphics::write(uint8_t chr) {
 #endif
 }
 
-
+// Only 10 bytes, not worth putting in flash
 const uint8_t DIGIT_SEGMENTS[] = { 
     0x3F,    // b00111111    0
     0x30,    // b00110000    1
@@ -375,7 +374,7 @@ const uint8_t DIGIT_SEGMENTS[] = {
     0x5F,    // b01011111    6
     0x31,    // b00110001    7
     0x7F,    // b01111111    8
-    0x7B    // b01111011    9
+    0x7B     // b01111011    9
 };  
 
 void ArduRCT_Graphics::drawBigDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color, uint8_t thickness, uint8_t style, bool selectAndUnselectScreen) {
@@ -526,7 +525,7 @@ void ArduRCT_Graphics::fillCorner(int16_t x, int16_t y, uint16_t size, uint8_t t
 }
 
 /*
- *    From Wikipedia - Bresenham's line algorithm
+ * From Wikipedia - Bresenham's line algorithm
  */
 void ArduRCT_Graphics::drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness, bool selectAndUnselectScreen) {
     int16_t dx = abs(x2-x1);

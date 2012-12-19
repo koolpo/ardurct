@@ -167,7 +167,7 @@ class ArduRCT_Graphics: public Print {
 		
 		uint8_t getRotation();
 		
-		void getRotatedXY(int16_t *x, int16_t *y, uint8_t rotation);
+		void getRotatedXY(int16_t *x, int16_t *y);
 		
 		bool isVertical();
 
