@@ -1,7 +1,6 @@
 package com.google.code.ardurct;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -13,6 +12,7 @@ import java.util.Enumeration;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -21,22 +21,29 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
+import com.google.code.ardurct.hardware.RockerSwitch;
 import com.google.code.ardurct.hardware.Switch;
+import com.google.code.ardurct.hardware.TFTTouchPanel;
 import com.google.code.ardurct.libraries.HardwareSerial;
-import com.google.code.ardurct.libraries.graphics.ArduRCT_JAVA;
+import com.google.code.ardurct.libraries.touscruino.ITouscruinoDefines;
 import com.google.code.ardurct.libraries.touscruino.TouscruinoFirmware;
 import com.google.code.ardurct.libraries.touscruino.examples.BasicExample;
 
 public class TouscruinoSimulator extends JFrame
-implements ActionListener, Runnable {
+implements ActionListener, Runnable, ITouscruinoDefines {
 	
 	private static final long serialVersionUID = -8128231225228032474L;
+	
+	public static final boolean LANDSCAPE_ORIENTATION = true;
+	public static final boolean HAS_ROCKER_SWITCH = false;
 	
 	public final static String EXAMPLES_PATH = ".libraries.touscruino.examples"; 
 
 	public HardwareSerial serial;
 	public TouscruinoFirmware example;	
-	public GraphicsPanel graphicsPanel;
+	public TFTTouchPanel graphicsPanel;
+	
+	public int imgIndex = 0;
 	
 	List<String> exampleClassNames = null;
 	String exampleName = "BasicExample";
@@ -63,22 +70,38 @@ implements ActionListener, Runnable {
 		menuBar.add(menu);		
 		this.setJMenuBar(menuBar);
 
-		graphicsPanel = new GraphicsPanel();
+		if (LANDSCAPE_ORIENTATION) TFTTouchPanel.setLandscapeOrientation();
+		graphicsPanel = new TFTTouchPanel();
 		serial = new HardwareSerial("Serial");
 		
-		JPanel centerSouth = new JPanel();
-		centerSouth.add(new Switch(14, "Menu"),BorderLayout.NORTH);
-		centerSouth.add(new Switch(15, "Up"),BorderLayout.WEST);
-		centerSouth.add(new Switch(16, "Down"),BorderLayout.CENTER);
-		centerSouth.add(new Switch(17, "Right"),BorderLayout.EAST);
-		centerSouth.add(new Switch(18, "Enter"),BorderLayout.SOUTH);
+		JPanel switchPanel = new JPanel();
+		if (HAS_ROCKER_SWITCH) {
+			switchPanel.setLayout(new BorderLayout(2, 2));
+			switchPanel.add(new RockerSwitch(TOUSCRUINO_UP, TOUSCRUINO_MENU, TOUSCRUINO_ENTER, TOUSCRUINO_RIGHT, TOUSCRUINO_DOWN),BorderLayout.CENTER);
+		} else if (LANDSCAPE_ORIENTATION) {
+			switchPanel.setLayout(new BoxLayout(switchPanel, BoxLayout.Y_AXIS));
+			switchPanel.add(new Switch(TOUSCRUINO_ENTER, "Enter"));
+			switchPanel.add(new Switch(TOUSCRUINO_UP, "Up"));
+			switchPanel.add(new Switch(TOUSCRUINO_DOWN, "Down"));
+			switchPanel.add(new Switch(TOUSCRUINO_MENU, "Menu"));
+		} else {
+			switchPanel.setLayout(new BoxLayout(switchPanel, BoxLayout.X_AXIS));
+			switchPanel.add(new Switch(TOUSCRUINO_MENU, "Menu"));
+			switchPanel.add(new Switch(TOUSCRUINO_DOWN, "Down"));
+			switchPanel.add(new Switch(TOUSCRUINO_UP, "Up"));
+			switchPanel.add(new Switch(TOUSCRUINO_ENTER, "Enter"));
+		}
 		this.setLayout(new BorderLayout(2, 2));
 		JPanel center = new JPanel();
-		center.setPreferredSize(new Dimension(300, 400));
 		center.setLayout(new BorderLayout(3, 3));
 		center.add(new JLabel(" "), BorderLayout.NORTH);
-		center.add(centerSouth, BorderLayout.SOUTH);
-		center.add(new JLabel("   "), BorderLayout.EAST);
+		if (LANDSCAPE_ORIENTATION) {
+			center.add(switchPanel, BorderLayout.EAST);
+			center.add(new JLabel("   "), BorderLayout.SOUTH);
+		} else {
+			center.add(switchPanel, BorderLayout.SOUTH);
+			center.add(new JLabel("   "), BorderLayout.EAST);	
+		}
 		center.add(new JLabel("   "), BorderLayout.WEST);
 		center.add(graphicsPanel, BorderLayout.CENTER);
 		this.add(center, BorderLayout.CENTER);
@@ -114,7 +137,8 @@ implements ActionListener, Runnable {
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getActionCommand().equals("Sortie png")) {
 			try {
-				ImageIO.write((BufferedImage)graphicsPanel.getScreenPhoto(), "png", new File(exampleName+".png"));	
+				ImageIO.write((BufferedImage)graphicsPanel.getContentImage(), "png", new File(exampleName + "." + imgIndex +".png"));
+				imgIndex ++;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -125,7 +149,6 @@ implements ActionListener, Runnable {
 		assert classLoader != null;
 		example.stop();
 		// try with the filename as a class
-		ArduRCT_JAVA.setPortraitOrientation();
 		try {
 			String className = TouscruinoSimulator.class.getPackage().getName() + EXAMPLES_PATH + "." + exampleName;
 			example = (TouscruinoFirmware)classLoader.loadClass(className).newInstance();

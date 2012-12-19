@@ -29,7 +29,7 @@ implements Runnable {
 		while (running) {
 			if (!setupComplete) setup();
 			setupComplete = true;
-			try { Thread.sleep(2); } catch (Exception e) { }
+			try { Thread.sleep(1); } catch (Exception e) { }
 			loop();
 		}
 	}

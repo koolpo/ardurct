@@ -1,7 +1,10 @@
 package com.google.code.ardurct.libraries.graphics;
 
 public interface IGraphicsDefines {
-	
+
+	public static final int PHYSICAL_WIDTH = 128;
+	public static final int PHYSICAL_HEIGHT = 160;
+
 	public static final int BLACK =		0x0000;		/* 000000 */
 	public static final int RED =		0xF800;		/* FF0000 */
 	public static final int GREEN =		0x07E0;		/* 00FF00 */

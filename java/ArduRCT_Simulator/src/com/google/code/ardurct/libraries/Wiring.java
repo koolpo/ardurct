@@ -2,19 +2,12 @@ package com.google.code.ardurct.libraries;
 
 import java.util.Date;
 
-public class Wiring {
+public class Wiring implements IArduinoDefines {
 
-	public static int OUTPUT = 0; 
-	public static int INPUT = 1; 
-	public static int HIGH = 1; 
-	public static int LOW = 0; 
+	private long startTime = (new Date()).getTime();
 	
-	public static int HEX = 16;
-	public static int DEC = 10;
-
-
 	public long millis() {
-		return (new Date()).getTime();
+		return (new Date()).getTime() - startTime;
 	}
 
 	public void delay(long ms) {
@@ -28,6 +21,9 @@ public class Wiring {
 	}
 	
 	public void digitalWrite(int pin, int value) {
-		
+	}
+
+	public int digitalRead(int pin) {
+		return 1;
 	}
 }

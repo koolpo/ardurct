@@ -4,16 +4,8 @@ import java.util.Date;
 
 public class ArduRCT_EventManager 
 implements IEventDefines {
-
-	public class event_t {
-		public int type;
-		public int value;
-		public int x;
-		public int y;
-	}
 		
-	public static int EVENT_MANAGER_CYCLE = 20;
-	public static int EVENT_TYPE_MAX_EVENTS = 20;
+	public static int EVENT_MANAGER_CYCLE = 25;
 	
 	protected long millis() {
 		return (new Date()).getTime();
@@ -24,13 +16,9 @@ implements IEventDefines {
 	ArduRCT_Switch _switch = null;
 	ArduRCT_EventHandler _handler = null;
 	ArduRCT_RealTimeClock _rtc = null;
-	
-	event_t eventQueue[] = new event_t[EVENT_TYPE_MAX_EVENTS];
-	int eventQueueIndex = 0;
-	int eventQueueLastRead = 0;
+	ArduRCT_TouchPanel _touchPanel = null;
 	
 	public ArduRCT_EventManager() {
-		for (int i=0; i<EVENT_TYPE_MAX_EVENTS; i++) eventQueue[i] = new event_t();
 	}
 	
 	public void setRTC(ArduRCT_RealTimeClock rtc) {
@@ -48,6 +36,10 @@ implements IEventDefines {
 			while (nSwitch.getNext() != null) nSwitch = nSwitch.getNext();
 			nSwitch.setNext(aSwitch);
 		}
+	}
+	
+	public void registerTouchPanel(ArduRCT_TouchPanel touchPanel) {
+		_touchPanel = touchPanel;
 	}
 	
 	public void registerEventHandler(ArduRCT_EventHandler handler) {
@@ -69,7 +61,7 @@ implements IEventDefines {
 	    // and the handlers attached to it
 		ArduRCT_EventHandler handler = _handler;
 	    while (handler != null) {
-	    	handler.handle(EVENT_TIME_TICK, _tick, 0, 0);
+	    	handler.handle(EVENT_SYSTEM_TICK, _tick);
 	    	handler = handler.getNext();
 	    }
 
@@ -80,17 +72,29 @@ implements IEventDefines {
     	ArduRCT_Switch aSwitch = _switch;
 	    while (aSwitch != null) {
 	    	aSwitch.updateState();
-	    	if (aSwitch.isPressed()) addEvent(EVENT_BUTTON_PRESSED, aSwitch.getPin());
-    		else if (aSwitch.isRepeating()) addEvent(EVENT_BUTTON_REPEATING, aSwitch.getPin());
-    		else if (aSwitch.isReleased()) addEvent(EVENT_BUTTON_RELEASED, aSwitch.getPin());
+	    	if (aSwitch.isPressed()) addEvent(EVENT_SWITCH_PRESSED, aSwitch.getPin());
+    		else if (aSwitch.isRepeating()) addEvent(EVENT_SWITCH_REPEATING, aSwitch.getPin());
+    		else if (aSwitch.isReleased()) addEvent(EVENT_SWITCH_RELEASED, aSwitch.getPin());
 	    	aSwitch = aSwitch.getNext();
+	    }
+	    
+	    // look after the touchPanel
+	    if (_touchPanel != null) {
+	    	_touchPanel.update();
+	    	int x = _touchPanel.getPenX();
+	    	int y = _touchPanel.getPenY();
+	    	int z = _touchPanel.getPenZ();
+	    	if (_touchPanel.isPenPressed()) {
+	    		if (_touchPanel.isPenDragged()) addEvent(EVENT_TOUCHPANEL_DRAGGED, z, x, y);
+	    		else if (!_touchPanel.isPenPressedMotionless())  addEvent(EVENT_TOUCHPANEL_PRESSED, z, x, y);
+	    	} else if (_touchPanel.isPenReleased()) addEvent(EVENT_TOUCHPANEL_RELEASED, 0, 0, 0);
 	    }
 	}
 	
 	private void _updateTime() {
     	if (_rtc.updateTime()) {
     		addEvent(EVENT_TIME_SECOND, _rtc.getSecond());
-	    	if (_rtc.isAlarmStartingToRing()) addEvent(EVENT_TIME_ALARM);
+	    	if (_rtc.isAlarmStartingToRing()) addEvent(EVENT_TIME_ALARM, _rtc.getDayOfWeek());
 	    	if (_rtc.getSecond() == 0) {
 	    		addEvent(EVENT_TIME_MINUTE, _rtc.getMinute());
 	    		if (_rtc.getMinute() == 0) {
@@ -107,48 +111,21 @@ implements IEventDefines {
     	}		
 	}
 	
-	public event_t getEvent() {
-		if (eventQueueIndex == eventQueueLastRead) return null;
-		eventQueueLastRead ++;
-		if (eventQueueLastRead == EVENT_TYPE_MAX_EVENTS) eventQueueLastRead = 0;
-		return eventQueue[eventQueueLastRead == 0 ? EVENT_TYPE_MAX_EVENTS-1 : eventQueueLastRead-1];
-	}
-
-	public boolean hasEvent() {
-		return (eventQueueIndex != eventQueueLastRead);
-	}
-
-
-	public void addEvent(int type) {
-		addEvent(type, 0xFF, 0, 0);
-	}
-
 	public void addEvent(int type, int value) {
 		addEvent(type, value, 0, 0);
 	}
 
-	public void addEvent(int type, int x, int y) {
-		addEvent(type, 0xFF, x, y);
-	}
 
-	public void addEvent(int type, int value, int x, int y) {
-		// check if one of the handler has run
-		boolean hasRun = false;
+	public boolean addEvent(int type, int value, int x, int y) {
+		boolean atLeastOneHandlerHasRun = false;
 		ArduRCT_EventHandler handler = _handler;
 	    while (handler != null) {
-	    	if (handler.handle(type, value, x, y)) hasRun = true;
+	    	if (handler.handle(type, value, x, y)) atLeastOneHandlerHasRun = true;
+	    	else if (handler.handle(type, value)) atLeastOneHandlerHasRun = true;
+	    	else if (handler.handle(type)) atLeastOneHandlerHasRun = true;
 	    	handler = handler.getNext();
 	    }
-	    if (hasRun) return;
-		// if none have run, add the event to the queue
-		if (eventQueueIndex + 1 == eventQueueLastRead) return;
-		if ((eventQueueIndex == EVENT_TYPE_MAX_EVENTS-1) && (eventQueueLastRead == 0)) return;
-		eventQueue[eventQueueIndex].type = type;
-		eventQueue[eventQueueIndex].value = value;
-		eventQueue[eventQueueIndex].x = x;
-		eventQueue[eventQueueIndex].y = y;
-		eventQueueIndex ++;
-		if (eventQueueIndex == EVENT_TYPE_MAX_EVENTS) eventQueueIndex = 0;		
+	    return atLeastOneHandlerHasRun;
 	}
 
 }

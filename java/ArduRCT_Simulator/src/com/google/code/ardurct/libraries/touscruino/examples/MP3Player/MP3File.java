@@ -1,4 +1,4 @@
-package com.google.code.ardurct.libraries.touchscreen.examples.MP3Player;
+package com.google.code.ardurct.libraries.touscruino.examples.MP3Player;
 
 import com.google.code.ardurct.libraries.File;
 import com.google.code.ardurct.libraries.SD;

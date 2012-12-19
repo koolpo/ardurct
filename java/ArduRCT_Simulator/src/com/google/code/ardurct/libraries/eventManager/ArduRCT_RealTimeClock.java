@@ -2,13 +2,14 @@ package com.google.code.ardurct.libraries.eventManager;
 
 import java.util.Date;
 
-class rtcAlarm_t {
-	int hour = 0;
-	int minute = 0;
-}
 
 public class ArduRCT_RealTimeClock  
 implements IEventDefines {
+
+	public class rtcAlarm_t {
+		public int hour = 0;
+		public int minute = 0;
+	}
 	
 	public final static int RTC_MILLIS_TO_SEC = 50;
 
@@ -21,7 +22,7 @@ implements IEventDefines {
 
 	public final static int RTC_ALARM_MAX_RING = 10;
 	
-	String rtc_dayOfWeekString = "MonTueWedThuFriSatSun";
+	String rtc_dayOfWeekString = "SunMonTueWedThuFriSat";
 	String rtc_monthString = "JanFebMarAprMayJunJulAugSepOctNovDec";
 
 	int _year, _month, _day, _dayOfWeek, _hour, _minute, _second;
@@ -37,21 +38,26 @@ implements IEventDefines {
 
 	public ArduRCT_RealTimeClock() {
 		for (int i=0; i<7; i++) _alarm[i] = new rtcAlarm_t();
-	    setTime(2012, 01, 01, SUNDAY, 0, 0, 0);		
+	    setDateTime(2012, 01, 01, 0, 0, 0);		
 	}
 	
 	public ArduRCT_RealTimeClock(int year, int month, int day, int dayOfWeek, int hour, int minute, int second) {
 		for (int i=0; i<7; i++) _alarm[i] = new rtcAlarm_t();
-	    setTime(year, month, day, dayOfWeek, hour, minute, second);
+	    setDateTime(year, month, day, hour, minute, second);
 	}
 
-	public void setTime(int year, int month, int day, int dayOfWeek, int hour, int minute, int second) {
+	public void setDate(int year, int month, int day) {
 	    _year = year;
 	    _month = month % 13;
 	    if (_month == 0) _month = 1;
 	    _day = day % 32;
 	    if (_day == 0) _day = 1;
-	    _dayOfWeek = dayOfWeek % 7;
+	    int mld = getMonthLastDay(_year, _month);
+	    if (_day > mld) _day = mld;
+	    _dayOfWeek = getDayOfWeek(_year, _month, _day);
+	}
+
+	public void setTime(int hour, int minute, int second) {
 	    _hour = hour % 24;
 	    _minute = minute % 60;
 	    _second = second % 60;
@@ -63,6 +69,19 @@ implements IEventDefines {
 	    _timeDigit[RTC_SECOND1] = _second % 10;
 	    _nextSecond = millis() + RTC_MILLIS_TO_SEC;
 	    _alarmStatus = RTC_ALARM_STOPPED;
+	}
+
+
+	public int getDayOfWeek(int year, int month, int day) {
+		int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+		int y = year;
+	    if (month < 3) y --;
+	    return (y + y/4 - y/100 + y/400 + t[month-1] + day) % 7;
+	}
+	
+	public void setDateTime(int year, int month, int day, int hour, int minute, int second) {
+	    setDate(year, month, day);
+	    setTime(hour, minute, second);
 	}
 
 	public boolean updateTime() {
@@ -111,26 +130,9 @@ implements IEventDefines {
 	    _day ++;
 	    _dayOfWeek ++;
 	    if (_dayOfWeek > 6) _dayOfWeek = 0;
-	    if (_day <= 28) {
-	        _checkAlarms();
-	        return true;
-	    }
-	    
-	    if (_month == FEBRUARY) {
-	        // allow 29 days for leap years
-	        if (_day <= 29) {
-	            if ((_year % 100) == 0) {                        // if a century, year is not a leap year
-	                if (((_year/100) % 4) == 0) return true;     //    unless the century can be divided by 4
-	            } else {                                         // else 
-	                if ((_year % 4) == 0) return true;           // else if year can be divided by 4, year is a leap year
-	            }
-	        }        
-	    } else if ((_month == APRIL) || (_month == JUNE) || (_month == SEPTEMBER) || (_month == NOVEMBER)) {
-	        if (_day <= 30) return true;
-	    } else { // JANUARY, MARCH, MAY, JULY, AUGUST, OCTOBER, DECEMBER
-	        if (_day <= 31) return true;
-	    }
-	    
+        _checkAlarms();
+	    if (_day <= getMonthLastDay(_year, _month)) return true;
+	    	    
 	    _day = 1;
 	    _month ++;
 	    if (_month <= 12) return true;
@@ -140,6 +142,15 @@ implements IEventDefines {
 	    return true;
 	}
 
+	public int getMonthLastDay(int year, int month) {
+		if ((month == JANUARY) || (month == MARCH) || (month == MAY) || (month == JULY) || (month == AUGUST) || 
+				(month == OCTOBER) || (month == DECEMBER)) return 31;
+		if ((month == APRIL) || (month == JUNE) || (month == SEPTEMBER) || (month == NOVEMBER)) return 30;
+		if (((year % 100) == 0) && ((year / 100) != 4)) return 28;	// centuries are not leap years unless divided by 400
+		if ((year % 4) != 0) return 28;
+		return 29;
+	}
+	
 	public void setAlarmTime(int dayOfWeek, int hour, int minute, int turnOn) {
 	    if (dayOfWeek > 6) return;
 	    _alarm[dayOfWeek].hour = (hour % 24) + (turnOn != 0 ? RTC_ALARM_ON : 0);
@@ -195,26 +206,30 @@ implements IEventDefines {
 	}
 
 	public int[] getDayOfWeekAsString() {
-		for (int i=0; i<3; i++) _buffer[i] = rtc_dayOfWeekString.charAt(_dayOfWeek*3+i);
+	    return getDayOfWeekAsString(_dayOfWeek);
+	}
+
+	public int[] getDayOfWeekAsString(int dow) {
+		for (int i=0; i<3; i++) _buffer[i] = rtc_dayOfWeekString.charAt(dow*3+i);
 		_buffer[3] = 0;
 	    return _buffer;
 	}
 
-
-	public int[] getDateAsString(boolean withDayOfWeek) {
+	public int[] getDateAsString(int year, int month, int day, boolean withDayOfWeek) {
 	    for (int i=0; i<(withDayOfWeek ? 15 : 11); i++) _buffer[i] = ' ';
-		_buffer[withDayOfWeek ? 15 : 11] = 0;
+	    _buffer[withDayOfWeek ? 15 : 11] = 0;
 		int i = 0;
-	    if (withDayOfWeek) {
-	    	for (int j=0; j<3; j++) _buffer[j] = rtc_dayOfWeekString.charAt(_dayOfWeek*3+j);
+		if (withDayOfWeek) {
+			int dayOfWeek = getDayOfWeek(year, month, day);
+	    	for (int j=0; j<3; j++) _buffer[j] = rtc_dayOfWeekString.charAt(dayOfWeek*3+j);
 	        i = 4;
 	    }
-	    if (_day > 10) _buffer[i++] = (_day / 10) + '0';
-	    _buffer[i++] = (_day % 10) + '0';
+	    if (day > 10) _buffer[i++] = (day / 10) + '0';
+	    else _buffer[i++] = ' ';
+	    _buffer[i++] = (day % 10) + '0';
 		i++;
-    	for (int j=0; j<3; j++) _buffer[i+j] = rtc_monthString.charAt((_month-1)*3+j);
+    	for (int j=0; j<3; j++) _buffer[i+j] = rtc_monthString.charAt((month-1)*3+j);
 	    i += 4;
-	    int year = _year;
 	    if (year < 0) {
 	        _buffer[i++] = '-';
 	        year = -year;
@@ -232,8 +247,12 @@ implements IEventDefines {
 	    if ((year > 10) || yearStart) _buffer[i++] = (year / 10) + '0';
 	    _buffer[i++] = (year % 10) + '0';
 	    return _buffer;
+		
 	}
 
+	public int[] getDateAsString(boolean withDayOfWeek) {
+		return getDateAsString(_year, _month, _day, withDayOfWeek);
+	}
 
 	public int[] getTimeAsString(boolean withSeconds) {
 	    int j = 0;
@@ -259,11 +278,11 @@ implements IEventDefines {
 	    return _buffer;
 	}
 
-	int getYear() {
+	public int getYear() {
 	    return _year;
 	}
 
-	int getMonth() {
+	public int getMonth() {
 	    return _month;
 	}
 
@@ -275,11 +294,11 @@ implements IEventDefines {
 	    return _dayOfWeek;
 	}
 
-	int getHour() {
+	public int getHour() {
 	    return _hour;
 	}
 
-	int getMinute() {
+	public int getMinute() {
 	    return _minute;
 	}
 

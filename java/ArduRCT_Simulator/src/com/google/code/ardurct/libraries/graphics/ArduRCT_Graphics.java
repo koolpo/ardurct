@@ -41,7 +41,6 @@ implements IFontBitmaps, IGraphicsDefines {
 
 	public void begin(int foregroundColor, int backgroundColor, int fontSize, boolean fontBold, boolean fontOverlay) {
 		initScreen();
-		setRotation(0);
 		setFont(fontSize, fontBold, fontOverlay);
 		setBackgroundColor(backgroundColor);
 		setForegroundColor(foregroundColor);
@@ -102,7 +101,7 @@ implements IFontBitmaps, IGraphicsDefines {
 	}
 
 
-	void getRotatedXY(int x[], int y[]) {
+	public void getRotatedXY(int x[], int y[]) {
 		if (_rotation == GRAPHICS_ROTATION_0) return;
 
 		int X = x[0];

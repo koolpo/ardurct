@@ -1,16 +1,19 @@
-package com.google.code.ardurct.libraries.touchscreen.examples.MP3Player;
+package com.google.code.ardurct.libraries.touscruino.examples.MP3Player;
 
 import com.google.code.ardurct.libraries.File;
 import com.google.code.ardurct.libraries.SD;
-import com.google.code.ardurct.libraries.touchscreen.ArduinoFirmware;
+import com.google.code.ardurct.libraries.touscruino.ArduRCT_TouScruinoV1;
+import com.google.code.ardurct.libraries.touscruino.TouscruinoFirmware;
 
-public class MP3Player extends ArduinoFirmware {
+public class MP3Player extends TouscruinoFirmware {
 	
 	private static final int MAX_FILES = 10;
 	
 	MP3File mp3Files[] = new MP3File[MAX_FILES];
 	int nbMP3Files = -1;
 	
+	ArduRCT_TouScruinoV1 touscruino = new ArduRCT_TouScruinoV1();
+
 	public void setup() {
 		Serial.begin(9600);
 		Serial.print("Initializing SD card...");
@@ -30,9 +33,10 @@ public class MP3Player extends ArduinoFirmware {
   		findMP3s();
  		Serial.println("done!");
  		
-	    touchscreen.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
-	    touchscreen.setBacklight(180);
-	    touchscreen.setBackgroundColor(COLOR_565(0xEE, 0xEE, 0xCC));
+	    touscruino.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
+	    touscruino.setBacklight(180);
+	    touscruino.setBackgroundColor(COLOR_565(0xEE, 0xEE, 0xCC));
+		touscruino.setRotation(GRAPHICS_ROTATION_90);
 	    for (int i=0; i<nbMP3Files; i++) drawMP3(i, i*45, 45);
 	}
 
@@ -68,21 +72,21 @@ public class MP3Player extends ArduinoFirmware {
 	}
 
 	void drawMP3(int id, int y, int height) {
-		touchscreen.fillRectangle(0, y, touchscreen.getWidth(), height, touchscreen.getBackgroundColor());
-		touchscreen.drawLine(0, y, touchscreen.getWidth(), y, touchscreen.getForegroundColor(), 1);
-		touchscreen.drawString(mp3Files[id].title, 5, y+5, touchscreen.getForegroundColor(), FONT_MEDIUM, FONT_BOLD, false);
-		touchscreen.drawString(mp3Files[id].duration, touchscreen.getWidth()-5-touchscreen.getStringWidth(mp3Files[id].duration, FONT_MEDIUM), 
-				y+5, touchscreen.getForegroundColor(), FONT_MEDIUM, FONT_BOLD, false);
-		touchscreen.drawString(mp3Files[id].performer, 5, y+22, touchscreen.getForegroundColor(), FONT_SMALL, FONT_PLAIN, false);
+		touscruino.fillRectangle(0, y, touscruino.getWidth(), height, touscruino.getBackgroundColor());
+		touscruino.drawLine(0, y, touscruino.getWidth(), y, touscruino.getForegroundColor(), 1);
+		touscruino.drawString(mp3Files[id].title, 5, y+5, touscruino.getForegroundColor(), FONT_MEDIUM, FONT_BOLD, false);
+		touscruino.drawString(mp3Files[id].duration, touscruino.getWidth()-5-touscruino.getStringWidth(mp3Files[id].duration, FONT_MEDIUM), 
+				y+5, touscruino.getForegroundColor(), FONT_MEDIUM, FONT_BOLD, false);
+		touscruino.drawString(mp3Files[id].performer, 5, y+22, touscruino.getForegroundColor(), FONT_SMALL, FONT_PLAIN, false);
 		int[] kbps = { ' ', ' ', ' ', 'k', 'b', 'p', 's', 0 };
 		MP3File.numberToString(mp3Files[id].bitRate, kbps, 0, 2, ' ');
-		touchscreen.drawString(kbps, touchscreen.getWidth()-5-touchscreen.getStringWidth(kbps, FONT_SMALL), 
-				y+22, touchscreen.getForegroundColor(), FONT_SMALL, FONT_PLAIN, false);
-		touchscreen.drawString(mp3Files[id].album, 5, y+35, touchscreen.getForegroundColor(), FONT_SMALL, FONT_PLAIN, false);
+		touscruino.drawString(kbps, touscruino.getWidth()-5-touscruino.getStringWidth(kbps, FONT_SMALL), 
+				y+22, touscruino.getForegroundColor(), FONT_SMALL, FONT_PLAIN, false);
+		touscruino.drawString(mp3Files[id].album, 5, y+35, touscruino.getForegroundColor(), FONT_SMALL, FONT_PLAIN, false);
 		int[] hz = { ' ', ' ', ' ', ' ', ' ', 'H', 'z', 0 };
 		MP3File.numberToString(mp3Files[id].samplingRate, hz, 0, 4, ' ');
-		touchscreen.drawString(hz, touchscreen.getWidth()-5-touchscreen.getStringWidth(hz, FONT_SMALL), 
-				y+35, touchscreen.getForegroundColor(), FONT_SMALL, FONT_PLAIN, false);
-		touchscreen.drawLine(0, y+height, touchscreen.getWidth(), y+height, touchscreen.getForegroundColor(), 1);
+		touscruino.drawString(hz, touscruino.getWidth()-5-touscruino.getStringWidth(hz, FONT_SMALL), 
+				y+35, touscruino.getForegroundColor(), FONT_SMALL, FONT_PLAIN, false);
+		touscruino.drawLine(0, y+height, touscruino.getWidth(), y+height, touscruino.getForegroundColor(), 1);
 	}
 }

@@ -14,29 +14,48 @@ import javax.swing.JPanel;
 public class Switch extends JPanel 
 implements MouseListener {
 
+	private final static int SWITCH_SIZE = 34;
+	
 	private static final long serialVersionUID = 1L;
 	
-	private boolean pressed = false;
+	protected boolean pressed = false;
 	private int pin;
 	private String name;
 	
 	public static Hashtable<Integer, Switch> switches = new Hashtable<Integer, Switch>();
 
-	public Switch(int pin, String name) {
-		this.pin = pin;
-		this.name = name;
-		this.pressed = false;
-		switches.put(pin, this);
-		addMouseListener(this);
-	}
-
 	public static boolean isPressed(int pin) {
 		if (!switches.containsKey(pin)) return false;
 		return switches.get(pin).isPressed();
 	}
-	
+
+	public static void setPressed(int pin, boolean pressed) {
+		if (!switches.containsKey(pin)) return;
+		switches.get(pin).setPressed(pressed);
+	}
+
+	public Switch(int pin, String name) {
+		this(pin);
+		this.name = name;
+		addMouseListener(this);
+	}
+
+	public Switch(int pin) {
+		this.pin = pin;
+		this.pressed = false;
+		switches.put(pin, this);
+	}
+
 	public boolean isPressed() {
 		return pressed;
+	}
+
+	public void setPressed(boolean pressed) {
+		this.pressed = pressed;
+	}
+	
+	public int getPin() {
+		return pin;
 	}
 	
 	public void mousePressed(MouseEvent arg0) { 
@@ -50,22 +69,26 @@ implements MouseListener {
 	}
 
 	public Dimension getPreferredSize() {
-		return new Dimension(40, 40);
+		return new Dimension(SWITCH_SIZE+4, SWITCH_SIZE+4);
 	}
-	
+
 	protected void paintComponent(Graphics g) {
 		Graphics2D g2d = (Graphics2D)g;
+		int x = (getWidth()-SWITCH_SIZE)/2;
+		int y = (getHeight()-SWITCH_SIZE)/2;
+		g2d.setColor(new Color(240, 240, 240));
+		g2d.fillRect(0, 0, getWidth(), getHeight());
 		if (pressed) g2d.setColor(new Color(130, 130, 130));
 		else g2d.setColor(new Color(200, 200, 200));
-		g2d.fillRect(0, 0, getWidth(), getHeight());
+		g2d.fillRect(x, y, SWITCH_SIZE, SWITCH_SIZE);
 		g2d.setColor(Color.BLACK);
-		g2d.drawRect(0, 0, getWidth()-1, getHeight()-1);
-		g2d.drawRect(1, 1, getWidth()-3, getHeight()-3);
+		g2d.drawRect(x, y, SWITCH_SIZE-1, SWITCH_SIZE-1);
+		g2d.drawRect(x+1, y+1, SWITCH_SIZE-3, SWITCH_SIZE-3);
 		Rectangle2D strBounds = g2d.getFontMetrics().getStringBounds(pin+"", g2d);
-		int y = (getHeight() - 2 * g2d.getFontMetrics().getHeight())/2 + g2d.getFontMetrics().getAscent(); 
-		g2d.drawString(pin+"", Math.round((getWidth()-strBounds.getWidth())/2), y);
+		y = (getHeight() - 2 * g2d.getFontMetrics().getHeight())/2 + g2d.getFontMetrics().getAscent(); 
+		g2d.drawString(pin+"", x+Math.round((SWITCH_SIZE-strBounds.getWidth())/2), y);
 		strBounds = g2d.getFontMetrics().getStringBounds(name, g2d);
-		g2d.drawString(name, Math.round((getWidth()-strBounds.getWidth())/2), y+g2d.getFontMetrics().getHeight());
+		g2d.drawString(name, x+Math.round((SWITCH_SIZE-strBounds.getWidth())/2), y+g2d.getFontMetrics().getHeight());
 	}
 	
 	public void mouseClicked(MouseEvent arg0) { }

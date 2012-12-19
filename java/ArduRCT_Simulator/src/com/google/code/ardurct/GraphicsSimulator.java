@@ -1,7 +1,6 @@
 package com.google.code.ardurct;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -21,8 +20,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
+import com.google.code.ardurct.hardware.TFTTouchPanel;
 import com.google.code.ardurct.libraries.HardwareSerial;
-import com.google.code.ardurct.libraries.graphics.ArduRCT_JAVA;
 import com.google.code.ardurct.libraries.graphics.GraphicsFirmware;
 import com.google.code.ardurct.libraries.graphics.examples.BasicExample;
 
@@ -35,11 +34,13 @@ implements ActionListener {
 
 	public HardwareSerial serial;
 	public GraphicsFirmware example;	
-	public GraphicsPanel graphicsPanel;
+	public TFTTouchPanel graphicsPanel;
 	
 	List<String> exampleClassNames = null;
 	String exampleName = "BasicExample";
 	
+	public int imgIndex = 0;
+
 	GraphicsSimulator(String title) {
 		super(title);
 		exampleClassNames = getExampleClasses();
@@ -62,12 +63,11 @@ implements ActionListener {
 		menuBar.add(menu);		
 		this.setJMenuBar(menuBar);
 
-		graphicsPanel = new GraphicsPanel();
+		graphicsPanel = new TFTTouchPanel();
 		serial = new HardwareSerial("Serial");
 		
 		this.setLayout(new BorderLayout(2, 2));
 		JPanel center = new JPanel();
-		center.setPreferredSize(new Dimension(300, 400));
 		center.setLayout(new BorderLayout(3, 3));
 		center.add(new JLabel(" "), BorderLayout.NORTH);
 		center.add(new JLabel(" "), BorderLayout.SOUTH);
@@ -107,7 +107,8 @@ implements ActionListener {
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getActionCommand().equals("Sortie png")) {
 			try {
-				ImageIO.write((BufferedImage)graphicsPanel.getScreenPhoto(), "png", new File(exampleName+".png"));	
+				ImageIO.write((BufferedImage)graphicsPanel.getContentImage(), "png", new File(exampleName + "." + imgIndex +".png"));
+				imgIndex ++;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -117,7 +118,6 @@ implements ActionListener {
 		ClassLoader classLoader = GraphicsSimulator.class.getClassLoader();
 		assert classLoader != null;
 		example.stop();
-		ArduRCT_JAVA.setPortraitOrientation();
 		// try with the filename as a class
 		try {
 			String className = GraphicsSimulator.class.getPackage().getName() + EXAMPLES_PATH + "." + exampleName;
