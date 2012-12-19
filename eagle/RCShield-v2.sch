@@ -10319,7 +10319,6 @@ type 0309, grid 2.5 mm</description>
 <part name="R8" library="resistor" deviceset="R-US_" device="0207/7" value="22K"/>
 <part name="R9" library="resistor" deviceset="R-US_" device="0207/7" value="10K"/>
 <part name="P+15" library="SparkFun" deviceset="3.3V" device=""/>
-<part name="JP1" library="wibauxl" deviceset="M02" device="" value="USB"/>
 <part name="RE1" library="wibauxl" deviceset="PEC11" device=""/>
 <part name="U$4" library="wibauxl" deviceset="FRAME_LETTER" device=""/>
 <part name="SJ4" library="jumper" deviceset="SJ" device=""/>
@@ -10338,6 +10337,8 @@ type 0309, grid 2.5 mm</description>
 <part name="JP4" library="wibauxl" deviceset="M08" device="" value=""/>
 <part name="GND12" library="SparkFun" deviceset="GND" device=""/>
 <part name="P+4" library="SparkFun" deviceset="3.3V" device=""/>
+<part name="JP10" library="wibauxl" deviceset="M04" device="" value=""/>
+<part name="GND13" library="SparkFun" deviceset="GND" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -10425,7 +10426,6 @@ type 0309, grid 2.5 mm</description>
 <instance part="R8" gate="G$1" x="27.94" y="317.5" rot="R180"/>
 <instance part="R9" gate="G$1" x="43.18" y="302.26" rot="R90"/>
 <instance part="P+15" gate="G$1" x="53.34" y="78.74"/>
-<instance part="JP1" gate="G$1" x="76.2" y="104.14" rot="R180"/>
 <instance part="RE1" gate="G$1" x="154.94" y="147.32" rot="MR0"/>
 <instance part="U$4" gate="G$1" x="0" y="210.82"/>
 <instance part="SJ4" gate="1" x="198.12" y="154.94"/>
@@ -10444,6 +10444,8 @@ type 0309, grid 2.5 mm</description>
 <instance part="JP4" gate="G$1" x="182.88" y="261.62" rot="MR0"/>
 <instance part="GND12" gate="1" x="175.26" y="248.92"/>
 <instance part="P+4" gate="G$1" x="170.18" y="259.08"/>
+<instance part="JP10" gate="G$1" x="86.36" y="101.6" rot="MR0"/>
+<instance part="GND13" gate="1" x="78.74" y="93.98" rot="MR0"/>
 </instances>
 <busses>
 </busses>
@@ -10595,6 +10597,12 @@ type 0309, grid 2.5 mm</description>
 <wire x1="175.26" y1="259.08" x2="175.26" y2="251.46" width="0.1524" layer="91"/>
 <pinref part="GND12" gate="1" pin="GND"/>
 </segment>
+<segment>
+<pinref part="JP10" gate="G$1" pin="4"/>
+<wire x1="81.28" y1="106.68" x2="78.74" y2="106.68" width="0.1524" layer="91"/>
+<wire x1="78.74" y1="106.68" x2="78.74" y2="96.52" width="0.1524" layer="91"/>
+<pinref part="GND13" gate="1" pin="GND"/>
+</segment>
 </net>
 <net name="3.3V" class="0">
 <segment>
@@ -10709,10 +10717,13 @@ type 0309, grid 2.5 mm</description>
 <wire x1="58.42" y1="76.2" x2="40.64" y2="76.2" width="0.1524" layer="91"/>
 <wire x1="40.64" y1="76.2" x2="40.64" y2="66.04" width="0.1524" layer="91"/>
 <junction x="58.42" y="76.2"/>
-<label x="53.34" y="99.06" size="1.778" layer="95"/>
+<label x="66.04" y="99.06" size="1.778" layer="95"/>
 <pinref part="U2" gate="G$1" pin="VCC"/>
 <pinref part="X1" gate="G$1" pin="VBUS"/>
 <pinref part="C1" gate="G$1" pin="2"/>
+<pinref part="JP10" gate="G$1" pin="1"/>
+<wire x1="58.42" y1="99.06" x2="81.28" y2="99.06" width="0.1524" layer="91"/>
+<junction x="58.42" y="99.06"/>
 </segment>
 <segment>
 <pinref part="D1" gate="G$1" pin="A"/>
@@ -11311,12 +11322,12 @@ type 0309, grid 2.5 mm</description>
 <wire x1="66.04" y1="83.82" x2="63.5" y2="83.82" width="0.1524" layer="91"/>
 <wire x1="63.5" y1="83.82" x2="63.5" y2="104.14" width="0.1524" layer="91"/>
 <wire x1="63.5" y1="104.14" x2="45.72" y2="104.14" width="0.1524" layer="91"/>
-<label x="53.34" y="104.14" size="1.778" layer="95"/>
+<label x="66.04" y="104.14" size="1.778" layer="95"/>
 <pinref part="U2" gate="G$1" pin="USBDP"/>
 <pinref part="X1" gate="G$1" pin="D+"/>
-<wire x1="63.5" y1="104.14" x2="71.12" y2="104.14" width="0.1524" layer="91"/>
-<pinref part="JP1" gate="G$1" pin="1"/>
+<wire x1="63.5" y1="104.14" x2="81.28" y2="104.14" width="0.1524" layer="91"/>
 <junction x="63.5" y="104.14"/>
+<pinref part="JP10" gate="G$1" pin="3"/>
 </segment>
 </net>
 <net name="D-" class="0">
@@ -11324,12 +11335,12 @@ type 0309, grid 2.5 mm</description>
 <wire x1="66.04" y1="81.28" x2="60.96" y2="81.28" width="0.1524" layer="91"/>
 <wire x1="60.96" y1="81.28" x2="60.96" y2="101.6" width="0.1524" layer="91"/>
 <wire x1="60.96" y1="101.6" x2="45.72" y2="101.6" width="0.1524" layer="91"/>
-<label x="53.34" y="101.6" size="1.778" layer="95"/>
+<label x="66.04" y="101.6" size="1.778" layer="95"/>
 <pinref part="U2" gate="G$1" pin="USBDM"/>
 <pinref part="X1" gate="G$1" pin="D-"/>
-<wire x1="60.96" y1="101.6" x2="71.12" y2="101.6" width="0.1524" layer="91"/>
-<pinref part="JP1" gate="G$1" pin="2"/>
+<wire x1="60.96" y1="101.6" x2="81.28" y2="101.6" width="0.1524" layer="91"/>
 <junction x="60.96" y="101.6"/>
+<pinref part="JP10" gate="G$1" pin="2"/>
 </segment>
 </net>
 <net name="RE.S" class="0">
