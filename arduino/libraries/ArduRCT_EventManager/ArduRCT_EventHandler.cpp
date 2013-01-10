@@ -41,7 +41,7 @@ ArduRCT_EventHandler::ArduRCT_EventHandler(uint8_t type, uint8_t value, bool (*h
 	_handlerL = 0;
 }
 
-ArduRCT_EventHandler::ArduRCT_EventHandler(uint8_t type, uint8_t value, uint16_t x, uint16_t y, bool (*handler)(uint8_t type, uint8_t value, uint16_t x, uint16_t y)) {
+ArduRCT_EventHandler::ArduRCT_EventHandler(uint8_t type, uint8_t value, uint16_t x, uint16_t y, bool (*handler)(uint8_t type, uint8_t value, int16_t x, int16_t y)) {
 	_type = type;
 	_value = value;
 	_handlerS = 0;
@@ -67,7 +67,7 @@ bool ArduRCT_EventHandler::handle(uint8_t type, uint8_t value) {
 	return false;
 }
 
-bool ArduRCT_EventHandler::handle(uint8_t type, uint8_t value, uint16_t x, uint16_t y) {
+bool ArduRCT_EventHandler::handle(uint8_t type, uint8_t value, int16_t x, int16_t y) {
 	if (_handlerL != 0) return false;
 	// check if the _type matches the type, or if the _type is a class and matches the type class
 	if ((_type != type) && (_type != (type & 0xF0))) return false;

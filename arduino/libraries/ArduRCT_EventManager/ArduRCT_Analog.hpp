@@ -1,7 +1,7 @@
 /*
- * ArduRCT_EventHandler - Handles an event
+  * ArduRCT_Analog - Handles analog channel changes
  *
- * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ * Copyright (c) 2010 Laurent Wibaux <lm.wibaux@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,38 +22,43 @@
  * THE SOFTWARE.
  */
 
-#ifndef ARDURCT_EVENT_HANDLER
-#define ARDURCT_EVENT_HANDLER 1
+#ifndef ARDURCT_ANALOG
+#define ARDURCT_ANALOG 1
+
+#if ARDUINO >= 100
+ #include "Arduino.h"
+ #include "Print.h"
+#else
+ #include "WProgram.h"
+#endif
 
 #include <inttype.h>
 
-class ArduRCT_EventHandler {
+#include "ArduRCT_EventManager.h"
 
-	public:	
-		ArduRCT_EventHandler(uint8_t type, bool (*handler)(uint8_t type));
-		
-		ArduRCT_EventHandler(uint8_t type, uint8_t value, bool (*handler)(uint8_t type, uint8_t value));
+class ArduRCT_Analog {
 
-		ArduRCT_EventHandler(uint8_t type, uint8_t value, uint16_t x, uint16_t y, bool (*handler)(uint8_t type, uint8_t value, int16_t x, int16_t y));
-		
-		bool handle(uint8_t type);
-
-		bool handle(uint8_t type, uint8_t value);
-
-		bool handle(uint8_t type, uint8_t value, int16_t x, int16_t y);
-				
-		ArduRCT_EventHandler *getNext();
-		
-		void setNext(ArduRCT_EventHandler *next);
+	public:
+		ArduRCT_Analog(uint8_t pin, uint8_t resolution = ANALOG_HARDWARE_RESOLUTION);
+        
+        uint8_t getPin();
+        
+        ArduRCT_Analog getNext();
+        
+        void setNext(ArduRCT_Analog next);
+        
+        uint16_t updateValue();
+        
+        int16_t getChange();
+        
+        uint16_t getValue();
 		
 	private:
-		uint8_t _type;
+		ArduRCT_Analog *_next;
+		uint8_t _pin;
+        uint8_t precision;
+		uint16_t _value;
 		uint8_t _value;
-		bool (*_handlerL)(uint8_t type, uint8_t value, int16_t x, int16_t y);
-		bool (*_handlerM)(uint8_t type, uint8_t value);
-		bool (*_handlerS)(uint8_t type);
-		ArduRCT_EventHandler *_next;
-
 };
 
 #endif

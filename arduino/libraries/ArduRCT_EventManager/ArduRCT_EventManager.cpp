@@ -48,6 +48,15 @@ void ArduRCT_EventManager::registerSwitch(ArduRCT_Switch *aSwitch) {
 	}
 }
 
+void ArduRCT_EventManager::registerAnalog(ArduRCT_Analog *anAnalog) {
+	if (_switch == 0) _analog = anAnalog;
+	else {
+		ArduRCT_Analog *nAnalog = _analog;
+		while (nAnalog->getNext() != 0) nAnalog = nAnalog->getNext();
+		nAnalog->setNext(anAnalog);
+	}
+}
+
 void ArduRCT_EventManager::registerTouchPanel(ArduRCT_TouchPanel *touchPanel) {
 	_touchPanel = touchPanel;
 }
@@ -99,6 +108,18 @@ void ArduRCT_EventManager::update() {
 			else if (!_touchPanel->isPenPressedMotionless())  addEvent(EVENT_TOUCHPANEL_PRESSED, z, x, y);
 		} else if (_touchPanel->isPenReleased()) addEvent(EVENT_TOUCHPANEL_RELEASED, 0, 0, 0);
 	}
+    
+    // look after the analogs
+    ArduRCT_Analog *anAnalog = _analog;
+    while (anAnalog != 0) {
+        uint16_t value = anAnalog->updateValue();
+        // change can only been read once
+        int16_t change = anAnalog->getChange();
+        // send an event if the value changed
+        if (change != 0) addEvent(change > 0 ? EVENT_ANALOG_INCREASE : EVENT_ANALOG_DECREASE, anAnalog->getPin(), value, change);
+        anAnalog = anAnalog->getNext();
+    }
+
 }
 
 bool ArduRCT_EventManager::addEvent(uint8_t type, uint8_t value) {
