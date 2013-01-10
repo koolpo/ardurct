@@ -49,3 +49,11 @@ ArduRCT_RealTimeClock *ArduRCT_TouScruinoV1::getRTC() {
 void ArduRCT_TouScruinoV1::registerEventHandler(ArduRCT_EventHandler *handler) {
     _eventManager->registerEventHandler(handler);
 }
+
+void ArduRCT_TouScruinoV1::registerSwitch(ArduRCT_Switch *aSwitch) {
+    _eventManager.registerSwitch(aSwitch);	
+}
+
+void ArduRCT_TouScruinoV1::registerAnalog(ArduRCT_Analog *anAnalog) {
+    _eventManager.registerAnalog(anAnalog);
+}

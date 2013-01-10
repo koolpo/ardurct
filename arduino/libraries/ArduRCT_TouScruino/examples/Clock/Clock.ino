@@ -42,7 +42,7 @@
 #include <ArduRCT_TouScruino.h>
 
 // how long before we return to the TIME screen if no action was taken
-#define RETURN_TO_TIME_TRIGGER 60
+#define RETURN_TO_TIME_TRIGGER 30
 
 #define SCREEN_TIME         0
 #define SCREEN_SET_DATE     1
@@ -56,19 +56,6 @@
 #define SECONDS_WIDTH   120
 #define SECONDS_HEIGHT  6
 #define DIGIT_STYLE     GRAPHICS_STYLE_ADVANCED
-
-#define H1_X            0
-#define H2_X            38
-#define M1_X            88
-#define M2_X            130
-#define COLUMN_X        79
-#define ALARM_STRING_X  30
-#define ALARM_X         84
-#define DATE_X          12
-#define TIME_Y          0
-#define DATE_Y          89
-#define ALARM_Y         115
-#define SECONDS_Y       105
     
 uint8_t timeDigit[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 uint8_t timeDigit_x[] = { H1_X, H2_X, M1_X, M2_X };
@@ -114,13 +101,7 @@ bool handleButtons(uint8_t eventType, uint8_t buttonId) {
                 touscruino.getRTC()->stopAlarm();
                 showAlarmStatus();
             } else {
-                if (screen != SCREEN_TIME) {
-                     // memorize the values
-                    if (screen == SCREEN_SET_DATE) touscruino.getRTC()->setDate(field[0], field[1], field[2]);
-                    else if (screen == SCREEN_SET_TIME) touscruino.getRTC()->setTime(field[0], field[1], 0);
-                    else if (screen >= SCREEN_SET_ALARM_D1) touscruino.getRTC()->setAlarmTime(screen - SCREEN_SET_ALARM_D1, field[0], field[1], field[2]);
-                }
-                changeScreen();
+                changeScreen(screen + 1);
             }
         } else if (buttonId == TOUSCRUINO_ENTER) {
             if (screen == SCREEN_TIME) return true;
@@ -161,16 +142,28 @@ bool handleButtons(uint8_t eventType, uint8_t buttonId) {
     return true;
 }
 
+#define H1_X 0
+#define H2_X 38
+#define M1_X 88
+#define M2_X 130
+#define COLUMN_X 79
+#define ALARM_STRING_X 30
+#define ALARM_X 84
+#define DATE_X 12
+#define TIME_Y 0
+#define DATE_Y 89
+#define ALARM_Y 115
+#define SECONDS_Y 105
 bool drawDateAndTime(uint8_t eventType) {
     // show the alarm status
     showAlarmStatus();
 
     if (screen != SCREEN_TIME) {
+        // watchdog is reset every time a button is interacted with
         watchdog ++;
-        if (watchdog > RETURN_TO_TIME_TRIGGER) {
-            screen = SCREEN_SET_ALARM_D7 + 1;
-            changeScreen();
-        }
+        // check if we have stayed a long time doing nothing
+        // if yes, return to SCREEN_TIME
+        if (watchdog > RETURN_TO_TIME_TRIGGER) changeScreen(SCREEN_TIME);
         return true;
     }
     
@@ -210,9 +203,14 @@ bool drawDateAndTime(uint8_t eventType) {
     return true;
 }
         
-void changeScreen() {
+void changeScreen(uint8_t newScreen) {
     ArduRCT_RealTimeClock *rtc = touscruino.getRTC();
-    screen ++;
+    if (screen != SCREEN_TIME) {
+        if (screen == SCREEN_SET_DATE) rtc->setDate(field[0], field[1], field[2]);
+        else if (screen == SCREEN_SET_TIME) rtc->setTime(field[0], field[1], 0);
+        else if (screen >= SCREEN_SET_ALARM_D1) rtc->setAlarmTime(screen - SCREEN_SET_ALARM_D1, field[0], field[1], field[2]);
+    }
+    screen = newScreen;
     if (screen > SCREEN_SET_ALARM_D7) screen = SCREEN_TIME;
     fieldMax[0] = 23;
     fieldMax[1] = 59;
@@ -286,7 +284,7 @@ void drawTimeAdjust() {
 void drawAlarmAdjust() {
     uint8_t x = 80;
     uint8_t y = 108;
-    touscruino.fillRectangle(x-12, y-16, 32, 32, BLACK);
+    touscruino.fillRectangle(x-12, y-16, 50, 32, BLACK);
     touscruino.drawRectangle(x-8, y-8, 8, 16, activeField == 2 ? RED : WHITE, 2);
     touscruino.drawLine(x, y-8, x+8, y-16, activeField == 2 ? RED : WHITE, 2);
     touscruino.drawLine(x, y+8, x+8, y+16, activeField == 2 ? RED : WHITE, 2);
@@ -307,22 +305,21 @@ void drawNote(uint8_t x, uint8_t y, uint16_t color) {
     touscruino.drawLine(x+3, y-11, x+6, y-11, color, 1);
 }
 
+#define DATE_ADJUST_YEAR_X 10
+#define DATE_ADJUST_MONTH_X 100
+#define DATE_ADJUST_YEAR_Y 45
+#define DATE_ADJUST_DAY_Y 80
 void drawDateAdjust() {
+    // DOW DD MMM YYYY
     char *buffer = touscruino.getRTC()->getDateAsString(field[0], field[1], field[2], RTC_WITH_DAY_OF_WEEK);
-    char buffer2[5];
     uint8_t fcw = touscruino.getFontCharWidth(FONT_HUGE);
-    for (int i=0; i<4; i++) buffer2[i] = buffer[i+11];
-    buffer2[4] = 0;
-    touscruino.drawString(buffer2, 10, 45, activeField == 0 ? RED : WHITE, FONT_HUGE, FONT_BOLD, NO_OVERLAY);
-    for (int i=0; i<3; i++) buffer2[i] = buffer[i+7];
-    buffer2[3] = 0;
-    touscruino.drawString(buffer2, 100, 45, activeField == 1 ? RED : WHITE, FONT_HUGE, FONT_BOLD, NO_OVERLAY);
-    for (int i=0; i<3; i++) buffer2[i] = buffer[i];
-    buffer2[3] = 0;
-    touscruino.drawString(buffer2, 10 + fcw, 80, WHITE, FONT_HUGE, FONT_BOLD, NO_OVERLAY);
-    for (int i=0; i<3; i++) buffer2[i] = buffer[i+4];
-    buffer2[2] = 0;
-    touscruino.drawString(buffer2, 100 + fcw, 80, activeField == 2 ? RED : WHITE, FONT_HUGE, FONT_BOLD, NO_OVERLAY);
+    touscruino.drawString(&buffer[11], DATE_ADJUST_YEAR_X, DATE_ADJUST_YEAR_Y, activeField == 0 ? RED : WHITE, FONT_HUGE, FONT_BOLD, NO_OVERLAY);
+    buffer[10] = 0;
+    touscruino.drawString(&buffer[7], DATE_ADJUST_MONTH_X, DATE_ADJUST_YEAR_Y, activeField == 1 ? RED : WHITE, FONT_HUGE, FONT_BOLD, NO_OVERLAY);
+    buffer[6] = 0;
+    touscruino.drawString(&buffer[4], DATE_ADJUST_MONTH_X + fcw, DATE_ADJUST_DAY_Y, activeField == 2 ? RED : WHITE, FONT_HUGE, FONT_BOLD, NO_OVERLAY);
+    buffer[3] = 0;
+    touscruino.drawString(buffer, DATE_ADJUST_YEAR_X + fcw, DATE_ADJUST_DAY_Y, WHITE, FONT_HUGE, FONT_BOLD, NO_OVERLAY);
 }
 
 void drawColumn(uint8_t x, uint8_t y, uint8_t height, uint16_t color, uint8_t thickness) {

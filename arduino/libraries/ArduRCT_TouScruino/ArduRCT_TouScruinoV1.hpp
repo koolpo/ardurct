@@ -45,6 +45,10 @@ class ArduRCT_TouScruinoV1: public ArduRCT_ST7735 {
         
         void registerEventHandler(ArduRCT_EventHandler *handler);
 
+        void registerSwitch(ArduRCT_Switch *aSwitch);
+        
+        void registerAnalog(ArduRCT_Analog *anAnalog);
+        
     private:
         ArduRCT_EventManager *_eventManager;
 };
