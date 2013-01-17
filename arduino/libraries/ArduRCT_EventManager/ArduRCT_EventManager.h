@@ -41,8 +41,24 @@
 #include "ArduRCT_TouchPanel.hpp"
 
 // the lower the value, the better the reaction to switches and encoders
+// a value betweeen 20 and 50 is recommended
 #define EVENT_MANAGER_CYCLE 25
-  
+
+// number of samples to average while reading analog values
+// the higher the value, the higher the dampening of change,
+// value should be between 1 and 6
+#define ANALOG_AVERAGING 2
+
+// distance between 2 points to consider them equal
+#define TOUCHPANEL_TOLERANCE 2
+
+// number of steps in one rotation of the encoder
+// this is function of your hardware
+#define ENCODER_STEPS 24
+
+// ----------------------------------------
+// no need to modify the following defines  
+// ----------------------------------------
 #define EVENT_NO_VALUE 0xFF
 #define EVENT_ANY_VALUE 0xFF
 
@@ -74,22 +90,13 @@
 #define EVENT_ANALOG_DECREASE 0x51
 #define EVENT_ANALOG_INCREASE 0x52
 
-#define EVENT_ANALOG 0x50
-#define EVENT_ANALOG_DECREASE 0x51
-#define EVENT_ANALOG_INCREASE 0x52
-
 #define EVENT_ENCODER 0x60
 #define EVENT_ENCODER_DECREASE 0x61
 #define EVENT_ENCODER_INCREASE 0x62
 
-#define ENCODER_STEPS 24
-
 #define TOUCHPANEL_NO_TOUCH 0xFFFF
-#define TOUCHPANEL_TOLERANCE 2
 
 #define ANALOG_NO_VALUE 0xFFFF
-#define ANALOG_AVERAGING 2
-#define ANALOG_TOLERANCE 4
 #define ANALOG_RESOLUTION_16B 65536
 #define ANALOG_RESOLUTION_12B 1024
 #define ANALOG_RESOLUTION_8B 256
@@ -122,23 +129,27 @@ class ArduRCT_EventManager {
 
         void registerEncoder(ArduRCT_Encoder *anEncoder);
         
+        void registerAnalog(ArduRCT_Analog *anAnalog);
+        
         void registerTouchPanel(ArduRCT_TouchPanel *touchPanel);
         
         void registerEventHandler(ArduRCT_EventHandler *handler);
         
         void update();
-                
+        
         bool processEvent(uint8_t type, uint8_t value);
-                
+        
         bool processEvent(uint8_t type, uint8_t value, uint16_t x, uint16_t y);
 
     private:
         uint32_t _nextUpdate;
         uint8_t _tick;
-        ArduRCT_Switch *_switch;
-        ArduRCT_EventHandler *_handler;
         ArduRCT_RealTimeClock *_rtc;
+        ArduRCT_Switch *_switch;
+        ArduRCT_Encoder *_encoder;
+        ArduRCT_Analog *_analog;
         ArduRCT_TouchPanel *_touchPanel;
+        ArduRCT_EventHandler *_handler;
 
         void _updateTime();
 };

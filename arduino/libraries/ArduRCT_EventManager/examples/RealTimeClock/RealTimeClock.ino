@@ -21,5 +21,6 @@ void loop() {
 
 bool outputTime(uint8_t eventType) {
     Serial.print((char *)(eventManager.getRTC()->getDateAsString(RTC_WITH_DAY_OF_WEEK)));
+    Serial.print(" ");
     Serial.println((char *)(eventManager.getRTC()->getTimeAsString(RTC_WITH_SECONDS)));
 }
