@@ -39,13 +39,13 @@
 class ArduRCT_Analog {
 
 	public:
-		ArduRCT_Analog(uint8_t pin, uint8_t resolution = ANALOG_HARDWARE_RESOLUTION);
+		ArduRCT_Analog(uint8_t pin, uint8_t averaging = ANALOG_AVERAGING, uint8_t resolution = ANALOG_HARDWARE_RESOLUTION);
         
         uint8_t getPin();
         
-        ArduRCT_Analog getNext();
+        ArduRCT_Analog *getNext();
         
-        void setNext(ArduRCT_Analog next);
+        void setNext(ArduRCT_Analog *next);
         
         uint16_t updateValue();
         
@@ -56,9 +56,10 @@ class ArduRCT_Analog {
 	private:
 		ArduRCT_Analog *_next;
 		uint8_t _pin;
-        uint8_t precision;
+        uint8_t _averaging;
+        uint16_t _resolution;
 		uint16_t _value;
-		uint8_t _value;
+		uint16_t _previousValue;
 };
 
 #endif

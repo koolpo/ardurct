@@ -1,5 +1,5 @@
 /*
- * ArduRCT_Analog - Handles analog channel changes
+ * ArduRCT_Encoder - Handles rotary encoders
  *
  * Copyright (c) 2010 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -22,52 +22,50 @@
  * THE SOFTWARE.
  */
 
+#ifndef ARDURCT_SWITCH
+#define ARDURCT_SWITCH 1
 
-#include "ArduRCT_Analog.hpp"
+#if ARDUINO >= 100
+ #include "Arduino.h"
+ #include "Print.h"
+#else
+ #include "WProgram.h"
+#endif
+
+#include <inttype.h>
+
 #include "ArduRCT_EventManager.h"
 
-ArduRCT_Analog(uint8_t pin, uint8_t averaging, uint16_t resolution) {
-    _pin = pin;
-    _value = 0;
-    _averaging = averaging;
-    if (_averaging == 0) averaging = 1;
-    _resolution = resolution;
-    _previousValue = ANALOG_NO_VALUE;
-    pinMode(pin, INPUT);
-}
+class ArduRCT_Encoder {
 
-uint8_t getPin() {
-    return _pin;
-}
+    public:
+        ArduRCT_Encoder(uint8_t pinA, uint8_t pinB, int16_t value = 0, int16_t min = 0, int16_t max = ENCODER_STEPS-1);
+        
+        ArduRCT_Encoder *getNext();
+        
+        void setNext(ArduRCT_Encoder *next);
+        
+        uint8_t getPinA();
+        
+        int16_t updateValue();
+        
+        void setValue(int16_t value);
+        
+        void setMinMax(int16_t min, int16_t max);
+        
+        int16_t ArduRCT_Encoder::getValue();
+        
+        int16_t ArduRCT_Encoder::getChange() 
+		
+	private:
+        ArduRCT_Encoder *_next;
+        uint8_t _pinA;
+        uint8_t _pinB;
+        int16_t _value;
+        int16_t _previousValue;
+        int16_t _min;
+        int16_t _max;
+        uint8_t _previousPosition;
+};
 
-ArduRCT_Analog *getNext() {
-    return _next;
-}
-
-void setNext(ArduRCT_Analog *next) {
-    _next = next;
-}
-
-uint16_t updateValue() {
-    _value = 0;
-    for (uint8_t i=0; i<averaging; i++) _value += analogRead(_pin);
-    _value = _value/averaging;
-    if (_resolution != ANALOG_HARDWARE_RESOLUTION) {
-        uint32_t value32 = _value;
-        value32 = value32 * _resolution / ANALOG_HARDWARE_RESOLUTION;
-        _value = value32;
-    }
-    return _value;
-}
-
-int16_t getChange() {
-    int16_t change;
-    if (_previousValue == ANALOG_NO_VALUE) change = 0;
-    else change = _value - _previousValue;
-    _previousValue = _value;
-    return change;
-}
-
-uint16_t getValue() {
-    return _value;
-}
+#endif

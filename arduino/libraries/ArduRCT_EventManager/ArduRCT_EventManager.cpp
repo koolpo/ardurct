@@ -48,6 +48,15 @@ void ArduRCT_EventManager::registerSwitch(ArduRCT_Switch *aSwitch) {
 	}
 }
 
+void ArduRCT_EventManager::registerEncoder(ArduRCT_Encoder *anEncoder) {
+	if (_encoder == 0) _encoder = aSwitch;
+	else {
+		ArduRCT_Encoder *nEncoder = _encoder;
+		while (nEncoder->getNext() != 0) nEncoder = nEncoder->getNext();
+		nEncoder->setNext(anEncoder);
+	}
+}
+
 void ArduRCT_EventManager::registerAnalog(ArduRCT_Analog *anAnalog) {
 	if (_switch == 0) _analog = anAnalog;
 	else {
@@ -71,43 +80,43 @@ void ArduRCT_EventManager::registerEventHandler(ArduRCT_EventHandler *handler) {
 }
 
 void ArduRCT_EventManager::update() {
-	// check if we have to run or not
-	if ((int32_t)(millis() - _nextUpdate) < 0) return;
-	_nextUpdate = millis() + EVENT_MANAGER_CYCLE;
+    // check if we have to run or not
+    if ((int32_t)(millis() - _nextUpdate) < 0) return;
+    _nextUpdate = millis() + EVENT_MANAGER_CYCLE;
 
-	// update the tick counter
-	_tick ++;
-	// and the handlers attached to it
-	ArduRCT_EventHandler *handler = _handler;
-	while (handler != 0) {
-		handler->handle(EVENT_SYSTEM_TICK, _tick);
-		handler = handler->getNext();
-	}
+    // update the tick counter
+    _tick ++;
+    // and the handlers attached to it
+    ArduRCT_EventHandler *handler = _handler;
+    while (handler != 0) {
+        handler->handle(EVENT_SYSTEM_TICK, _tick);
+        handler = handler->getNext();
+    }
 
-	// update the time and generate corresponding events
-	if (_rtc != 0) _updateTime();
-	
-	// look after the switches
-	ArduRCT_Switch *aSwitch = _switch;
-	while (aSwitch != 0) {
-		aSwitch->updateState();
-		if (aSwitch->isPressed()) addEvent(EVENT_SWITCH_PRESSED, aSwitch->getPin());
-		else if (aSwitch->isRepeating()) addEvent(EVENT_SWITCH_REPEATING, aSwitch->getPin());
-		else if (aSwitch->isReleased()) addEvent(EVENT_SWITCH_RELEASED, aSwitch->getPin());
-		aSwitch = aSwitch->getNext();
-	}
-	
-	// look after the touchPanel
-	if (_touchPanel != 0) {
-		_touchPanel->update();
-		uint16_t x = _touchPanel->getPenX();
-		uint16_t y = _touchPanel->getPenY();
-		uint8_t z = _touchPanel->getPenZ();
-		if (_touchPanel->isPenPressed()) {
-			if (_touchPanel->isPenDragged()) addEvent(EVENT_TOUCHPANEL_DRAGGED, z, x, y);
-			else if (!_touchPanel->isPenPressedMotionless())  addEvent(EVENT_TOUCHPANEL_PRESSED, z, x, y);
-		} else if (_touchPanel->isPenReleased()) addEvent(EVENT_TOUCHPANEL_RELEASED, 0, 0, 0);
-	}
+    // update the time and generate corresponding events
+    if (_rtc != 0) _updateTime();
+
+    // look after the switches
+    ArduRCT_Switch *aSwitch = _switch;
+    while (aSwitch != 0) {
+        aSwitch->updateState();
+        if (aSwitch->isPressed()) processEvent(EVENT_SWITCH_PRESSED, aSwitch->getPin());
+        else if (aSwitch->isRepeating()) processEvent(EVENT_SWITCH_REPEATING, aSwitch->getPin());
+        else if (aSwitch->isReleased()) processEvent(EVENT_SWITCH_RELEASED, aSwitch->getPin());
+        aSwitch = aSwitch->getNext();
+    }
+
+    // look after the touchPanel
+    if (_touchPanel != 0) {
+        _touchPanel->update();
+        uint16_t x = _touchPanel->getPenX();
+        uint16_t y = _touchPanel->getPenY();
+        uint8_t z = _touchPanel->getPenZ();
+        if (_touchPanel->isPenPressed()) {
+            if (_touchPanel->isPenDragged()) processEvent(EVENT_TOUCHPANEL_DRAGGED, z, x, y);
+            else if (!_touchPanel->isPenPressedMotionless())  processEvent(EVENT_TOUCHPANEL_PRESSED, z, x, y);
+        } else if (_touchPanel->isPenReleased()) processEvent(EVENT_TOUCHPANEL_RELEASED, 0, 0, 0);
+    }
     
     // look after the analogs
     ArduRCT_Analog *anAnalog = _analog;
@@ -116,19 +125,37 @@ void ArduRCT_EventManager::update() {
         // change can only been read once
         int16_t change = anAnalog->getChange();
         // send an event if the value changed
-        if (change != 0) addEvent(change > 0 ? EVENT_ANALOG_INCREASE : EVENT_ANALOG_DECREASE, anAnalog->getPin(), value, change);
+        if (change != 0) processEvent(change > 0 ? EVENT_ANALOG_INCREASE : EVENT_ANALOG_DECREASE, anAnalog->getPin(), value, change);
         anAnalog = anAnalog->getNext();
+    }
+    
+    // look after the encoders
+    ArduRCT_Encoder *anEncoder = _encoder;
+    while (anEncoder != 0) {
+        int16_t value = anEncoder.updateValue();
+        // change can only been read once
+        int16_t change = anEncoder.getChange();
+        // send an event if the value changed
+        if (change != 0) processEvent(change > 0 ? EVENT_ENCODER_INCREASE : EVENT_ENCODER_DECREASE, anEncoder.getPinA(), value, change);
+        anEncoder = anEncoder.getNext();
     }
 
 }
 
-bool ArduRCT_EventManager::addEvent(uint8_t type, uint8_t value) {
-	return addEvent(type, value, EVENT_ANY_VALUE, EVENT_ANY_VALUE);
+bool ArduRCT_EventManager::processEvent(uint8_t type, uint8_t value) {
+    bool atLeastOneHandlerHasRun = false;
+    ArduRCT_EventHandler *handler = _handler;
+    while (handler != 0) {
+        if (handler->handle(type, value)) atLeastOneHandlerHasRun = true;
+        else if (handler->handle(type)) atLeastOneHandlerHasRun = true;
+        handler = handler->getNext();
+    }
+    return atLeastOneHandlerHasRun;
 }
 
 
-bool ArduRCT_EventManager::addEvent(uint8_t type, uint8_t value, uint16_t x, uint16_t y) {
-	boolean atLeastOneHandlerHasRun = false;
+bool ArduRCT_EventManager::processEvent(uint8_t type, uint8_t value, uint16_t x, uint16_t y) {
+	bool atLeastOneHandlerHasRun = false;
 	ArduRCT_EventHandler *handler = _handler;
 	while (handler != 0) {
 		if (handler->handle(type, value, x, y)) atLeastOneHandlerHasRun = true;
@@ -141,17 +168,17 @@ bool ArduRCT_EventManager::addEvent(uint8_t type, uint8_t value, uint16_t x, uin
 
 void ArduRCT_EventManager::_updateTime() {
 	if (_rtc->updateTime()) {
-		addEvent(EVENT_TIME_SECOND, _rtc->getSecond());
-		if (_rtc->isAlarmStartingToRing()) addEvent(EVENT_TIME_ALARM, _rtc->getDayOfWeek());
+		processEvent(EVENT_TIME_SECOND, _rtc->getSecond());
+		if (_rtc->isAlarmStartingToRing()) processEvent(EVENT_TIME_ALARM, _rtc->getDayOfWeek());
 		if (_rtc->getSecond() == 0) {
-			addEvent(EVENT_TIME_MINUTE, _rtc->getMinute());
+			processEvent(EVENT_TIME_MINUTE, _rtc->getMinute());
 			if (_rtc->getMinute() == 0) {
-				addEvent(EVENT_TIME_MINUTE, _rtc->getHour());
+				processEvent(EVENT_TIME_MINUTE, _rtc->getHour());
 				if (_rtc->getHour() == 0) {
-					addEvent(EVENT_TIME_DAY, _rtc->getDay());
+					processEvent(EVENT_TIME_DAY, _rtc->getDay());
 					if (_rtc->getDay() == 1) {
-						addEvent(EVENT_TIME_MONTH, _rtc->getMonth());
-						if (_rtc->getMonth() == 1) addEvent(EVENT_TIME_YEAR, _rtc->getYear());
+						processEvent(EVENT_TIME_MONTH, _rtc->getMonth());
+						if (_rtc->getMonth() == 1) processEvent(EVENT_TIME_YEAR, _rtc->getYear());
 					}
 				}
 			}

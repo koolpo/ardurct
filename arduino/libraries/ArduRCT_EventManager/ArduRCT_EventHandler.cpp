@@ -50,25 +50,25 @@ ArduRCT_EventHandler::ArduRCT_EventHandler(uint8_t type, uint8_t value, uint16_t
 }
 
 bool ArduRCT_EventHandler::handle(uint8_t type) {
-	if (_handlerS != 0) return false;
+	if (_handlerS == 0) return false;
 	// check if the _type matches the type, or if the _type is a class and matches the type class
 	if ((_type != type) && (_type != (type & 0xF0))) return false;
 	return (*_handlerS)(type);
 }
 
 bool ArduRCT_EventHandler::handle(uint8_t type, uint8_t value) {
-	if (_handlerM != 0) return false;
+	if (_handlerM == 0) return false;
 	// check if the _type matches the type, or if the _type is a class and matches the type class
 	if ((_type != type) && (_type != (type & 0xF0))) return false;
 	// check if we have a handler for the TICK event that needs to run
-	if ((_type == EVENT_SYSTEM_TICK) && ((value % _value) == 0)) return (*_handlerM)(type, value);
+	if ((_type == EVENT_SYSTEM_TICK) && ((_value <= 1) || ((value % _value) == 0))) return (*_handlerM)(type, value);
 	// check if we run in all matches of _type or only on some values
 	if ((_value == EVENT_ANY_VALUE) || (_value == value)) return (*_handlerM)(type, value);
 	return false;
 }
 
 bool ArduRCT_EventHandler::handle(uint8_t type, uint8_t value, int16_t x, int16_t y) {
-	if (_handlerL != 0) return false;
+	if (_handlerL == 0) return false;
 	// check if the _type matches the type, or if the _type is a class and matches the type class
 	if ((_type != type) && (_type != (type & 0xF0))) return false;
 	// check if we run in all matches of _type or only on some values

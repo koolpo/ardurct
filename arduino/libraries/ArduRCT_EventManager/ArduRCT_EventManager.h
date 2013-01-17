@@ -36,10 +36,11 @@
 
 #include "ArduRCT_RealTimeClock.hpp"
 #include "ArduRCT_Switch.hpp"
+#include "ArduRCT_Encoder.hpp"
 #include "ArduRCT_EventHandler.hpp"
 #include "ArduRCT_TouchPanel.hpp"
 
-// the lower the value, the better the reaction to switches
+// the lower the value, the better the reaction to switches and encoders
 #define EVENT_MANAGER_CYCLE 25
   
 #define EVENT_NO_VALUE 0xFF
@@ -64,14 +65,24 @@
 #define EVENT_SWITCH_RELEASED 0x32
 #define EVENT_SWITCH_REPEATING 0x33
 
-#define EVENT_TOUCHPANEL 0x40    
-#define EVENT_TOUCHPANEL_PRESSED 0x41    
-#define EVENT_TOUCHPANEL_DRAGGED 0x42    
-#define EVENT_TOUCHPANEL_RELEASED 0x43    
+#define EVENT_TOUCHPANEL 0x40
+#define EVENT_TOUCHPANEL_PRESSED 0x41
+#define EVENT_TOUCHPANEL_DRAGGED 0x42
+#define EVENT_TOUCHPANEL_RELEASED 0x43
     
 #define EVENT_ANALOG 0x50
 #define EVENT_ANALOG_DECREASE 0x51
 #define EVENT_ANALOG_INCREASE 0x52
+
+#define EVENT_ANALOG 0x50
+#define EVENT_ANALOG_DECREASE 0x51
+#define EVENT_ANALOG_INCREASE 0x52
+
+#define EVENT_ENCODER 0x60
+#define EVENT_ENCODER_DECREASE 0x61
+#define EVENT_ENCODER_INCREASE 0x62
+
+#define ENCODER_STEPS 24
 
 #define TOUCHPANEL_NO_TOUCH 0xFFFF
 #define TOUCHPANEL_TOLERANCE 2
@@ -108,6 +119,8 @@ class ArduRCT_EventManager {
         ArduRCT_RealTimeClock *getRTC();
         
         void registerSwitch(ArduRCT_Switch *aSwitch);
+
+        void registerEncoder(ArduRCT_Encoder *anEncoder);
         
         void registerTouchPanel(ArduRCT_TouchPanel *touchPanel);
         
@@ -115,9 +128,9 @@ class ArduRCT_EventManager {
         
         void update();
                 
-        bool addEvent(uint8_t type, uint8_t value);
+        bool processEvent(uint8_t type, uint8_t value);
                 
-        bool addEvent(uint8_t type, uint8_t value, uint16_t x, uint16_t y);
+        bool processEvent(uint8_t type, uint8_t value, uint16_t x, uint16_t y);
 
     private:
         uint32_t _nextUpdate;
