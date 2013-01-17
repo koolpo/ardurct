@@ -41,7 +41,7 @@
 #define TOUSCRUINO_VERSION 1
 #include <ArduRCT_TouScruino.h>
 
-// how long before we return to the TIME screen if no action was taken
+// how many seconds before we return to the TIME screen if no action was taken
 #define RETURN_TO_TIME_TRIGGER 30
 
 #define SCREEN_TIME         0
@@ -58,7 +58,7 @@
 #define DIGIT_STYLE     GRAPHICS_STYLE_ADVANCED
     
 uint8_t timeDigit[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-uint8_t timeDigit_x[] = { H1_X, H2_X, M1_X, M2_X };
+uint8_t timeDigit_x[] = { 0, 38, 88, 130 };
 
 uint8_t screen;
 uint8_t activeField = 0;
@@ -68,7 +68,9 @@ uint8_t fieldMin[] = { 0, 0, 0 };
 uint8_t nbFields = 0;
 uint8_t watchdog = 0;
 
+// define one handler which will draw the date and time every time an EVENT_TIME_* occurs
 ArduRCT_EventHandler timeEventHandler(EVENT_TIME, &drawDateAndTime);
+// define one handler which will manage the buttons
 ArduRCT_EventHandler buttonEventHandler(EVENT_SWITCH, EVENT_ANY_VALUE, &handleButtons);
 
 void setup() {
@@ -76,6 +78,7 @@ void setup() {
     touscruino.fillScreen(BLACK);
     touscruino.setRotation(GRAPHICS_ROTATION_90);
     
+    // register the handlers
     touscruino.registerEventHandler(&timeEventHandler);
     touscruino.registerEventHandler(&buttonEventHandler);
 
@@ -93,6 +96,7 @@ void loop() {
     touscruino.update();
 }
 
+// handle the buttons
 bool handleButtons(uint8_t eventType, uint8_t buttonId) {
     watchdog = 0;
     if (eventType == EVENT_SWITCH_PRESSED) {
@@ -142,10 +146,6 @@ bool handleButtons(uint8_t eventType, uint8_t buttonId) {
     return true;
 }
 
-#define H1_X 0
-#define H2_X 38
-#define M1_X 88
-#define M2_X 130
 #define COLUMN_X 79
 #define ALARM_STRING_X 30
 #define ALARM_X 84
@@ -202,7 +202,8 @@ bool drawDateAndTime(uint8_t eventType) {
 
     return true;
 }
-        
+
+// change the screen
 void changeScreen(uint8_t newScreen) {
     ArduRCT_RealTimeClock *rtc = touscruino.getRTC();
     if (screen != SCREEN_TIME) {
@@ -328,8 +329,8 @@ void drawColumn(uint8_t x, uint8_t y, uint8_t height, uint16_t color, uint8_t th
     touscruino.fillRectangle(x - ht , y + 2*height/3 - ht, thickness, thickness, color); 
 }
 
-int drawCenteredString(char *s, uint8_t y, uint8_t fontSize) {
-    int x = (touscruino.getWidth() - touscruino.getStringWidth(s, fontSize))/2;
+int16_t drawCenteredString(char *s, uint8_t y, uint8_t fontSize) {
+    int16_t x = (touscruino.getWidth() - touscruino.getStringWidth(s, fontSize))/2;
     touscruino.drawString(s, x, y, WHITE, fontSize, FONT_BOLD, NO_OVERLAY);
     y += 5+touscruino.getFontHeight(fontSize);
     touscruino.drawLine(0, y, touscruino.getWidth()-1, y, WHITE, 2);
@@ -351,7 +352,7 @@ void drawAlarmSignal(int color) {
 
 
 /**
- * Uncomment the following flock and replace touscruino.drawBigDigit by drawBigDigit in the code above
+ * Uncomment the following block and replace touscruino.drawBigDigit by drawBigDigit in the code above
  **/
 /*
 void drawBigDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color, uint8_t thickness, uint8_t style) {

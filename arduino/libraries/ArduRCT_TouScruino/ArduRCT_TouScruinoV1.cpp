@@ -51,13 +51,13 @@ void ArduRCT_TouScruinoV1::registerEventHandler(ArduRCT_EventHandler *handler) {
 }
 
 void ArduRCT_TouScruinoV1::registerSwitch(ArduRCT_Switch *aSwitch) {
-    _eventManager.registerSwitch(aSwitch);
+    _eventManager->registerSwitch(aSwitch);
 }
 
 void ArduRCT_TouScruinoV1::registerAnalog(ArduRCT_Analog *anAnalog) {
-    _eventManager.registerAnalog(anAnalog);
+    _eventManager->registerAnalog(anAnalog);
 }
 
 void ArduRCT_TouScruinoV1::registerEncoder(ArduRCT_Encoder *anEncoder) {
-    _eventManager.registerEncoder(anEncoder);
+    _eventManager->registerEncoder(anEncoder);
 }
