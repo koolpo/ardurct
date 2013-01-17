@@ -251,8 +251,8 @@ void changeScreen(uint8_t newScreen) {
 
 void drawScreen() {
     if (screen == SCREEN_TIME) {
-        timeEventHandler.handle(EVENT_TIME_MINUTE);
-        timeEventHandler.handle(EVENT_TIME_DAY);
+        drawDateAndTime(EVENT_TIME_MINUTE);
+        drawDateAndTime(EVENT_TIME_DAY);
     } else if (screen == SCREEN_SET_TIME) {
         drawCenteredString("Set time",  5, FONT_MEDIUM);
         drawTimeAdjust();

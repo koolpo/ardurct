@@ -49,6 +49,8 @@ class ArduRCT_TouScruinoV1: public ArduRCT_ST7735 {
         
         void registerAnalog(ArduRCT_Analog *anAnalog);
         
+        void registerEncoder(ArduRCT_Encoder *anEncoder);
+        
     private:
         ArduRCT_EventManager *_eventManager;
 };
