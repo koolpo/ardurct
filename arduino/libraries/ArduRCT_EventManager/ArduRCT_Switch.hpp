@@ -32,7 +32,7 @@
  #include "WProgram.h"
 #endif
 
-#include <inttype.h>
+#include <inttypes.h>
 
 class ArduRCT_Switch {
 

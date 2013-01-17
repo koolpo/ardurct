@@ -22,8 +22,8 @@
  * THE SOFTWARE.
  */
 
-#ifndef ARDURCT_SWITCH
-#define ARDURCT_SWITCH 1
+#ifndef ARDURCT_ENCODER
+#define ARDURCT_ENCODER 1
 
 #if ARDUINO >= 100
  #include "Arduino.h"
@@ -32,9 +32,9 @@
  #include "WProgram.h"
 #endif
 
-#include <inttype.h>
+#include <inttypes.h>
 
-#include "ArduRCT_EventManager.h"
+#include "ArduRCT_Events.hpp"
 
 class ArduRCT_Encoder {
 
@@ -53,9 +53,9 @@ class ArduRCT_Encoder {
         
         void setMinMax(int16_t min, int16_t max);
         
-        int16_t ArduRCT_Encoder::getValue();
+        int16_t getValue();
         
-        int16_t ArduRCT_Encoder::getChange() 
+        int16_t getChange();
 		
 	private:
         ArduRCT_Encoder *_next;

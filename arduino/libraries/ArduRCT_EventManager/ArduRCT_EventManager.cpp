@@ -49,7 +49,7 @@ void ArduRCT_EventManager::registerSwitch(ArduRCT_Switch *aSwitch) {
 }
 
 void ArduRCT_EventManager::registerEncoder(ArduRCT_Encoder *anEncoder) {
-	if (_encoder == 0) _encoder = aSwitch;
+	if (_encoder == 0) _encoder = anEncoder;
 	else {
 		ArduRCT_Encoder *nEncoder = _encoder;
 		while (nEncoder->getNext() != 0) nEncoder = nEncoder->getNext();
@@ -132,12 +132,12 @@ void ArduRCT_EventManager::update() {
     // look after the encoders
     ArduRCT_Encoder *anEncoder = _encoder;
     while (anEncoder != 0) {
-        int16_t value = anEncoder.updateValue();
+        int16_t value = anEncoder->updateValue();
         // change can only been read once
-        int16_t change = anEncoder.getChange();
+        int16_t change = anEncoder->getChange();
         // send an event if the value changed
-        if (change != 0) processEvent(change > 0 ? EVENT_ENCODER_INCREASE : EVENT_ENCODER_DECREASE, anEncoder.getPinA(), value, change);
-        anEncoder = anEncoder.getNext();
+        if (change != 0) processEvent(change > 0 ? EVENT_ENCODER_INCREASE : EVENT_ENCODER_DECREASE, anEncoder->getPinA(), value, change);
+        anEncoder = anEncoder->getNext();
     }
 
 }

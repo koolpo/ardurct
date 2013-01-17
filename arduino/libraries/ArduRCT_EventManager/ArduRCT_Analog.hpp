@@ -32,14 +32,14 @@
  #include "WProgram.h"
 #endif
 
-#include <inttype.h>
+#include <inttypes.h>
 
-#include "ArduRCT_EventManager.h"
+#include "ArduRCT_Events.hpp"
 
 class ArduRCT_Analog {
 
 	public:
-		ArduRCT_Analog(uint8_t pin, uint8_t averaging = ANALOG_AVERAGING, uint8_t resolution = ANALOG_HARDWARE_RESOLUTION);
+		ArduRCT_Analog(uint8_t pin, uint8_t averaging = ANALOG_AVERAGING, uint16_t resolution = ANALOG_HARDWARE_RESOLUTION);
         
         uint8_t getPin();
         
@@ -60,6 +60,7 @@ class ArduRCT_Analog {
         uint16_t _resolution;
 		uint16_t _value;
 		uint16_t _previousValue;
+        
 };
 
 #endif

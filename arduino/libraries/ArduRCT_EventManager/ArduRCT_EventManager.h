@@ -34,85 +34,13 @@
 
 #include <inttypes.h>
 
+#include "ArduRCT_Events.hpp"
 #include "ArduRCT_RealTimeClock.hpp"
 #include "ArduRCT_Switch.hpp"
+#include "ArduRCT_Analog.hpp"
 #include "ArduRCT_Encoder.hpp"
 #include "ArduRCT_EventHandler.hpp"
 #include "ArduRCT_TouchPanel.hpp"
-
-// the lower the value, the better the reaction to switches and encoders
-// a value betweeen 20 and 50 is recommended
-#define EVENT_MANAGER_CYCLE 25
-
-// number of samples to average while reading analog values
-// the higher the value, the higher the dampening of change,
-// value should be between 1 and 6
-#define ANALOG_AVERAGING 2
-
-// distance between 2 points to consider them equal
-#define TOUCHPANEL_TOLERANCE 2
-
-// number of steps in one rotation of the encoder
-// this is function of your hardware
-#define ENCODER_STEPS 24
-
-// ----------------------------------------
-// no need to modify the following defines  
-// ----------------------------------------
-#define EVENT_NO_VALUE 0xFF
-#define EVENT_ANY_VALUE 0xFF
-
-#define EVENT_CLASS_MASK 0xFF
-    
-#define EVENT_SYSTEM 0x10
-#define EVENT_SYSTEM_TICK 0x11
-
-#define EVENT_TIME 0x20    
-#define EVENT_TIME_SECOND 0x22
-#define EVENT_TIME_MINUTE 0x23
-#define EVENT_TIME_HOUR 0x24
-#define EVENT_TIME_DAY 0x25
-#define EVENT_TIME_MONTH 0x26
-#define EVENT_TIME_YEAR 0x27    
-#define EVENT_TIME_ALARM 0x2F
-    
-#define EVENT_SWITCH 0x30    
-#define EVENT_SWITCH_PRESSED 0x31
-#define EVENT_SWITCH_RELEASED 0x32
-#define EVENT_SWITCH_REPEATING 0x33
-
-#define EVENT_TOUCHPANEL 0x40
-#define EVENT_TOUCHPANEL_PRESSED 0x41
-#define EVENT_TOUCHPANEL_DRAGGED 0x42
-#define EVENT_TOUCHPANEL_RELEASED 0x43
-    
-#define EVENT_ANALOG 0x50
-#define EVENT_ANALOG_DECREASE 0x51
-#define EVENT_ANALOG_INCREASE 0x52
-
-#define EVENT_ENCODER 0x60
-#define EVENT_ENCODER_DECREASE 0x61
-#define EVENT_ENCODER_INCREASE 0x62
-
-#define TOUCHPANEL_NO_TOUCH 0xFFFF
-
-#define ANALOG_NO_VALUE 0xFFFF
-#define ANALOG_RESOLUTION_16B 65536
-#define ANALOG_RESOLUTION_12B 1024
-#define ANALOG_RESOLUTION_8B 256
-#define ANALOG_RESOLUTION_100 100
-#define ANALOG_RESOLUTION_4B 16
-#define ANALOG_HARDWARE_RESOLUTION ANALOG_RESOLUTION_12B
-
-#define EVENT_STATE_DEBOUNCING_UP 0
-#define EVENT_STATE_RELEASED 2
-#define EVENT_STATE_IDLE 3
-#define EVENT_STATE_DEBOUNCING_DOWN 4
-#define EVENT_STATE_PRESSED 6
-#define EVENT_STATE_PRESSED_MOTIONLESS 7
-#define EVENT_STATE_DRAGGED 8
-#define EVENT_STATE_REPEATING 20
-#define EVENT_STATE_FAST_REPEATING 80
 
 class ArduRCT_EventManager {
     

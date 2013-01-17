@@ -25,7 +25,7 @@
 #ifndef ARDURCT_EVENT_HANDLER
 #define ARDURCT_EVENT_HANDLER 1
 
-#include <inttype.h>
+#include <inttypes.h>
 
 class ArduRCT_EventHandler {
 
