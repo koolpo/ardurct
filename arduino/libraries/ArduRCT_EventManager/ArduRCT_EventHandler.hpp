@@ -27,20 +27,24 @@
 
 #include <inttypes.h>
 
+#define EVENT_HANDLING_VOID 0
+#define EVENT_HANDLING_EXIT -1
+#define EVENT_HANDLING_DONE 1
+
 class ArduRCT_EventHandler {
 
 	public:	
-		ArduRCT_EventHandler(uint8_t type, bool (*handler)(uint8_t type));
+		ArduRCT_EventHandler(uint8_t type, int8_t (*handler)(uint8_t type));
 		
-		ArduRCT_EventHandler(uint8_t type, uint8_t value, bool (*handler)(uint8_t type, uint8_t value));
+		ArduRCT_EventHandler(uint8_t type, uint8_t value, int8_t (*handler)(uint8_t type, uint8_t value));
 
-		ArduRCT_EventHandler(uint8_t type, uint8_t value, uint16_t x, uint16_t y, bool (*handler)(uint8_t type, uint8_t value, int16_t x, int16_t y));
+		ArduRCT_EventHandler(uint8_t type, uint8_t value, uint16_t x, uint16_t y, int8_t (*handler)(uint8_t type, uint8_t value, int16_t x, int16_t y));
 		
-		bool handle(uint8_t type);
+		int8_t handle(uint8_t type);
 
-		bool handle(uint8_t type, uint8_t value);
+		int8_t handle(uint8_t type, uint8_t value);
 
-		bool handle(uint8_t type, uint8_t value, int16_t x, int16_t y);
+		int8_t handle(uint8_t type, uint8_t value, int16_t x, int16_t y);
 				
 		ArduRCT_EventHandler *getNext();
 		
@@ -49,9 +53,9 @@ class ArduRCT_EventHandler {
 	private:
 		uint8_t _type;
 		uint8_t _value;
-		bool (*_handlerL)(uint8_t type, uint8_t value, int16_t x, int16_t y);
-		bool (*_handlerM)(uint8_t type, uint8_t value);
-		bool (*_handlerS)(uint8_t type);
+		int8_t (*_handlerL)(uint8_t type, uint8_t value, int16_t x, int16_t y);
+		int8_t (*_handlerM)(uint8_t type, uint8_t value);
+		int8_t (*_handlerS)(uint8_t type);
 		ArduRCT_EventHandler *_next;
 
 };

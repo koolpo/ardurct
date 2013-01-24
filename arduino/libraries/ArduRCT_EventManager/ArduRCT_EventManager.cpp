@@ -79,7 +79,7 @@ void ArduRCT_EventManager::registerEventHandler(ArduRCT_EventHandler *handler) {
 	}
 }
 
-void ArduRCT_EventManager::update() {
+void ArduRCT_EventManager::manageEvents() {
     // check if we have to run or not
     if ((int32_t)(millis() - _nextUpdate) < 0) return;
     _nextUpdate = millis() + EVENT_MANAGER_CYCLE;
@@ -142,28 +142,30 @@ void ArduRCT_EventManager::update() {
 
 }
 
-bool ArduRCT_EventManager::processEvent(uint8_t type, uint8_t value) {
-    bool atLeastOneHandlerHasRun = false;
+int8_t ArduRCT_EventManager::processEvent(uint8_t type, uint8_t value) {
+    int8_t processStatus = EVENT_HANDLING_VOID;
     ArduRCT_EventHandler *handler = _handler;
     while (handler != 0) {
-        if (handler->handle(type, value)) atLeastOneHandlerHasRun = true;
-        else if (handler->handle(type)) atLeastOneHandlerHasRun = true;
+        processStatus = handler->handle(type, value);
+        if (processStatus == EVENT_HANDLING_VOID) processStatus = handler->handle(type);
+        if (processStatus == EVENT_HANDLING_EXIT) return EVENT_HANDLING_EXIT;
         handler = handler->getNext();
     }
-    return atLeastOneHandlerHasRun;
+    return processStatus;
 }
 
 
-bool ArduRCT_EventManager::processEvent(uint8_t type, uint8_t value, uint16_t x, uint16_t y) {
-	bool atLeastOneHandlerHasRun = false;
-	ArduRCT_EventHandler *handler = _handler;
-	while (handler != 0) {
-		if (handler->handle(type, value, x, y)) atLeastOneHandlerHasRun = true;
-		else if (handler->handle(type, value)) atLeastOneHandlerHasRun = true;
-		else if (handler->handle(type)) atLeastOneHandlerHasRun = true;
-		handler = handler->getNext();
-	}
-	return atLeastOneHandlerHasRun;
+int8_t ArduRCT_EventManager::processEvent(uint8_t type, uint8_t value, uint16_t x, uint16_t y) {
+    int8_t processStatus = EVENT_HANDLING_VOID;
+    ArduRCT_EventHandler *handler = _handler;
+    while (handler != 0) {
+        processStatus = handler->handle(type, value, x, y);
+        if (processStatus == EVENT_HANDLING_VOID) processStatus = handler->handle(type, value);
+        if (processStatus == EVENT_HANDLING_VOID) processStatus = handler->handle(type);
+        if (processStatus == EVENT_HANDLING_EXIT) return EVENT_HANDLING_EXIT;
+        handler = handler->getNext();
+    }
+    return processStatus;
 }
 
 void ArduRCT_EventManager::_updateTime() {

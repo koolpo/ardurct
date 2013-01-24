@@ -19,8 +19,9 @@ void loop() {
     eventManager.update();
 }
 
-bool outputTime(uint8_t eventType) {
+int8_t outputTime(uint8_t eventType) {
     Serial.print((char *)(eventManager.getRTC()->getDateAsString(RTC_WITH_DAY_OF_WEEK)));
     Serial.print(" ");
     Serial.println((char *)(eventManager.getRTC()->getTimeAsString(RTC_WITH_SECONDS)));
+    return EVENT_HANDLING_DONE;
 }

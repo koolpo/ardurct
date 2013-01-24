@@ -63,11 +63,11 @@ class ArduRCT_EventManager {
         
         void registerEventHandler(ArduRCT_EventHandler *handler);
         
-        void update();
+        void manageEvents();
         
-        bool processEvent(uint8_t type, uint8_t value);
+        int8_t processEvent(uint8_t type, uint8_t value);
         
-        bool processEvent(uint8_t type, uint8_t value, uint16_t x, uint16_t y);
+        int8_t processEvent(uint8_t type, uint8_t value, uint16_t x, uint16_t y);
 
     private:
         uint32_t _nextUpdate;
