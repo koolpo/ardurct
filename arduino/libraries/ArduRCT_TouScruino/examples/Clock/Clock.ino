@@ -93,11 +93,13 @@ void setup() {
 }
 
 void loop() {
-    touscruino.update();
+    // this function will check if any event happened since last check
+    // and call relevant EventHandler's if required
+    touscruino.manageEvents();
 }
 
 // handle the buttons
-bool handleButtons(uint8_t eventType, uint8_t buttonId) {
+int8_t handleButtons(uint8_t eventType, uint8_t buttonId) {
     watchdog = 0;
     if (eventType == EVENT_SWITCH_PRESSED) {
         if (buttonId == TOUSCRUINO_MENU) {
@@ -108,7 +110,7 @@ bool handleButtons(uint8_t eventType, uint8_t buttonId) {
                 changeScreen(screen + 1);
             }
         } else if (buttonId == TOUSCRUINO_ENTER) {
-            if (screen == SCREEN_TIME) return true;
+            if (screen == SCREEN_TIME) return EVENT_HANDLING_DONE;
             activeField ++;
             if (activeField >= nbFields) activeField = 0;
             if (screen >= SCREEN_SET_TIME) drawTimeAdjust();
@@ -143,7 +145,7 @@ bool handleButtons(uint8_t eventType, uint8_t buttonId) {
             if (screen == SCREEN_SET_DATE) drawDateAdjust();
         }
     }
-    return true;
+    return EVENT_HANDLING_DONE;
 }
 
 #define COLUMN_X 79
@@ -154,7 +156,7 @@ bool handleButtons(uint8_t eventType, uint8_t buttonId) {
 #define DATE_Y 89
 #define ALARM_Y 115
 #define SECONDS_Y 105
-bool drawDateAndTime(uint8_t eventType) {
+int8_t drawDateAndTime(uint8_t eventType) {
     // show the alarm status
     showAlarmStatus();
 
@@ -164,7 +166,7 @@ bool drawDateAndTime(uint8_t eventType) {
         // check if we have stayed a long time doing nothing
         // if yes, return to SCREEN_TIME
         if (watchdog > RETURN_TO_TIME_TRIGGER) changeScreen(SCREEN_TIME);
-        return true;
+        return EVENT_HANDLING_DONE;
     }
     
     ArduRCT_RealTimeClock *rtc = touscruino.getRTC();
@@ -200,7 +202,7 @@ bool drawDateAndTime(uint8_t eventType) {
         }
     }
 
-    return true;
+    return EVENT_HANDLING_DONE;
 }
 
 // change the screen

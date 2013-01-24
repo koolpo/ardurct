@@ -35,7 +35,7 @@
 #include <ArduRCT_EventManager.h>
 
 ArduRCT_RealTimeClock touscruinoRTC;
-ArduRCT_EventManager touscruinoEventManager(&touscruinoRTC);
+//ArduRCT_EventManager touscruinoEventManager(&touscruinoRTC);
 
 #if (TOUSCRUINO_VERSION == 1)
 /**
@@ -61,8 +61,9 @@ ArduRCT_Switch touscruinoLeft(CONFIGURATION_V1_LEFT);
 ArduRCT_Switch touscruinoRight(CONFIGURATION_V1_RIGHT);
 ArduRCT_Switch touscruinoCenter(CONFIGURATION_V1_CENTER);
 
-ArduRCT_TouScruinoV1 touscruino(CONFIGURATION_V1_CD, CONFIGURATION_V1_CS, CONFIGURATION_V1_RST, CONFIGURATION_V1_BL, &touscruinoEventManager, 
+ArduRCT_TouScruinoV1 touscruino(CONFIGURATION_V1_CD, CONFIGURATION_V1_CS, CONFIGURATION_V1_RST, CONFIGURATION_V1_BL, &touscruinoRTC,
     &touscruinoUp, &touscruinoDown, &touscruinoLeft, &touscruinoRight, &touscruinoCenter);
+
 
 #elif (TOUSCRUINO_VERSION == 2)
 /**

@@ -26,38 +26,14 @@
 #include <ArduRCT_Graphics.h>
 #include <ArduRCT_EventManager.h>
 
-ArduRCT_TouScruinoV1::ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin, ArduRCT_EventManager *eventManager,
+ArduRCT_TouScruinoV1::ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin, ArduRCT_RealTimeClock *rtc,
             ArduRCT_Switch *up, ArduRCT_Switch *down, ArduRCT_Switch *left, ArduRCT_Switch *right, ArduRCT_Switch *center) {
     setupScreen(cd, cs, reset);
     _backlightPin = backlightPin;
-    _eventManager = eventManager;
-    _eventManager->registerSwitch(up);
-    _eventManager->registerSwitch(down);
-    _eventManager->registerSwitch(right);
-    _eventManager->registerSwitch(left);
-    _eventManager->registerSwitch(center);
-}
-
-void ArduRCT_TouScruinoV1::update() {
-    _eventManager->update();
-}
-
-ArduRCT_RealTimeClock *ArduRCT_TouScruinoV1::getRTC() {
-    return _eventManager->getRTC();
-}
-
-void ArduRCT_TouScruinoV1::registerEventHandler(ArduRCT_EventHandler *handler) {
-    _eventManager->registerEventHandler(handler);
-}
-
-void ArduRCT_TouScruinoV1::registerSwitch(ArduRCT_Switch *aSwitch) {
-    _eventManager->registerSwitch(aSwitch);
-}
-
-void ArduRCT_TouScruinoV1::registerAnalog(ArduRCT_Analog *anAnalog) {
-    _eventManager->registerAnalog(anAnalog);
-}
-
-void ArduRCT_TouScruinoV1::registerEncoder(ArduRCT_Encoder *anEncoder) {
-    _eventManager->registerEncoder(anEncoder);
+    registerSwitch(up);
+    registerSwitch(down);
+    registerSwitch(right);
+    registerSwitch(left);
+    registerSwitch(center);
+    setRTC(rtc);
 }

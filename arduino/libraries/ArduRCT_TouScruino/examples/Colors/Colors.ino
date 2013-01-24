@@ -63,10 +63,10 @@ void setup() {
 }
 
 void loop() {
-    touscruino.update();
+    touscruino.manageEvents();
 }
 
-bool handleButtons(uint8_t eventType, uint8_t buttonId) {
+int8_t handleButtons(uint8_t eventType, uint8_t buttonId) {
     if (eventType == EVENT_SWITCH_PRESSED) {
         if (buttonId == TOUSCRUINO_MENU) {
             drawButton("Reset", 3, true);
@@ -108,7 +108,7 @@ bool handleButtons(uint8_t eventType, uint8_t buttonId) {
         int color = COLOR_565(colorPart[0], colorPart[1], colorPart[2]);
         drawColor(color);
     }
-    return true;
+    return EVENT_HANDLING_DONE;
 }
 
 

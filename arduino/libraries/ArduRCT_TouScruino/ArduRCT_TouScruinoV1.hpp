@@ -33,26 +33,11 @@
 #include "../ArduRCT_Graphics/ArduRCT_ST7735.h"
 #include "../ArduRCT_EventManager/ArduRCT_EventManager.h"
 
-class ArduRCT_TouScruinoV1: public ArduRCT_ST7735 {
+class ArduRCT_TouScruinoV1: public ArduRCT_ST7735, public ArduRCT_EventManager {
 
     public:
-        ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin, ArduRCT_EventManager *eventManager,
+        ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin, ArduRCT_RealTimeClock *rtc,
             ArduRCT_Switch *up, ArduRCT_Switch *down, ArduRCT_Switch *left, ArduRCT_Switch *right, ArduRCT_Switch *center);
-    
-        void update();
-        
-        ArduRCT_RealTimeClock *getRTC();
-        
-        void registerEventHandler(ArduRCT_EventHandler *handler);
-
-        void registerSwitch(ArduRCT_Switch *aSwitch);
-        
-        void registerAnalog(ArduRCT_Analog *anAnalog);
-        
-        void registerEncoder(ArduRCT_Encoder *anEncoder);
-        
-    private:
-        ArduRCT_EventManager *_eventManager;
 };
 
 #endif
