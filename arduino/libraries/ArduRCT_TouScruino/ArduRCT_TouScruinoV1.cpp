@@ -22,9 +22,9 @@
  * THE SOFTWARE.
  */
 
-#include "ArduRCT_TouScruinoV1.hpp"
 #include <ArduRCT_Graphics.h>
 #include <ArduRCT_EventManager.h>
+#include "ArduRCT_TouScruinoV1.hpp"
 
 ArduRCT_TouScruinoV1::ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin, ArduRCT_RealTimeClock *rtc,
             ArduRCT_Switch *up, ArduRCT_Switch *down, ArduRCT_Switch *left, ArduRCT_Switch *right, ArduRCT_Switch *center) {
@@ -35,5 +35,5 @@ ArduRCT_TouScruinoV1::ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset
     registerSwitch(right);
     registerSwitch(left);
     registerSwitch(center);
-    setRTC(rtc);
+    registerRTC(rtc);
 }
