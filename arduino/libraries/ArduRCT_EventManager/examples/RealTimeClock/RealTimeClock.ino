@@ -30,13 +30,11 @@ ArduRCT_RealTimeClock rtc(2012, DECEMBER, 17, 12, 18, 0);
 // create an eventManager with a RTC
 ArduRCT_EventManager eventManager(&rtc);
 
-// call outputTime every second
-ArduRCT_EventHandler timeHandler(EVENT_TIME_SECOND, &outputTime); 
-
 void setup() {
     Serial.begin(57600);
+    
     // register the timeHandler with the eventManager
-    eventManager.registerEventHandler(&timeHandler);
+    eventManager.registerEventHandler(new ArduRCT_EventHandler(EVENT_TIME_SECOND, &outputTime));
 }
 
 void loop() {
