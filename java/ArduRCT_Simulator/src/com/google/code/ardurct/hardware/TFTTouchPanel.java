@@ -35,6 +35,9 @@ implements Runnable, MouseListener, MouseMotionListener, IEventDefines, IGraphic
 	
 	public static void initPanel() {
 		img = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = (Graphics2D) img.getGraphics();
+		g2d.setColor(new Color(0, 0, 0));
+		g2d.fillRect(0, 0, WIDTH, HEIGHT);
 		TFTTouchPanel.setRotation(GRAPHICS_ROTATION_0);
 	}
 	

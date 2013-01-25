@@ -38,32 +38,32 @@ public class BasicExample extends TouscruinoFirmware {
 	}
 
 	class tickCB implements IEventCallback {
-		public boolean handle(int type, int value) {
+		public int handle(int type, int value) {
 			//System.out.print(millis() + " ");
-			return true;
+			return EVENT_HANDLING_DONE;
 		}
-		public boolean handle(int type, int value, int x, int y) { return false; }
-		public boolean handle(int type) { return false; }
+		public int handle(int type, int value, int x, int y) { return EVENT_HANDLING_VOID; }
+		public int handle(int type) { return EVENT_HANDLING_VOID; }
 	}
 
 	class switchesCB implements IEventCallback {
-		public boolean handle(int type, int value) {
+		public int handle(int type, int value) {
 			if (type == EVENT_SWITCH_PRESSED) Serial.print("B" + value + "P.");
 			else if (type == EVENT_SWITCH_REPEATING) Serial.print(".");
 			else if (type == EVENT_SWITCH_RELEASED) Serial.println("R");
-			return true;
+			return EVENT_HANDLING_DONE;
 		}
-		public boolean handle(int type, int value, int x, int y) { return false; }
-		public boolean handle(int type) { return false; }
+		public int handle(int type, int value, int x, int y) { return EVENT_HANDLING_VOID; }
+		public int handle(int type) { return EVENT_HANDLING_VOID; }
 	}
 
 	class touchPanelCB implements IEventCallback {
-		public boolean handle(int type, int value, int x, int y) {
+		public int handle(int type, int value, int x, int y) {
 			if (type == EVENT_TOUCHPANEL_PRESSED) touscruino.fillRectangle(x-1, y-1, 3, 3, BLUE);
 			else if (type == EVENT_TOUCHPANEL_DRAGGED) touscruino.fillRectangle(x-1, y-1, 3, 3, RED);
-			return true;
+			return EVENT_HANDLING_DONE;
 		}
-		public boolean handle(int type, int value) { return false; }
-		public boolean handle(int type) { return false; }
+		public int handle(int type, int value) { return EVENT_HANDLING_VOID; }
+		public int handle(int type) { return EVENT_HANDLING_VOID; }
 	}
 }

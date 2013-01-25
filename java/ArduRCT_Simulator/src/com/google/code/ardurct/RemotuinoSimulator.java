@@ -84,12 +84,12 @@ implements ActionListener {
 		if (ae.getActionCommand().equals("Start")) {
 			application = new ArduRCT_Remote();
 			application.setHardwareSerial(serial);
-			application.setHardwareSerial1(xBee.hardware);
+			application.setHardwareSerial1(xBee.serial);
 			application.start();
 		} else if (ae.getActionCommand().equals("Stop")) {
 			if (gps != null) gps.stop();
 			gps = null;
-			xBee.hardware.clear();
+			xBee.serial.clear();
 			serial.clear();
 			if (application != null) application.stop();
 		} else if (ae.getActionCommand().equals("Start GPS")) {

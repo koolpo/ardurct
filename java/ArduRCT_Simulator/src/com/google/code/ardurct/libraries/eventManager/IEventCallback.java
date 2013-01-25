@@ -2,9 +2,9 @@ package com.google.code.ardurct.libraries.eventManager;
 
 public interface IEventCallback {
 	
-	public boolean handle(int type, int value, int x, int y);
+	public int handle(int type, int value, int x, int y);
 	
-	public boolean handle(int type, int value);
+	public int handle(int type, int value);
 	
-	public boolean handle(int type);
+	public int handle(int type);
 }

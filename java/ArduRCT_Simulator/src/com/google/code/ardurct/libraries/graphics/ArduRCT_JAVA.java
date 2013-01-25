@@ -2,7 +2,7 @@ package com.google.code.ardurct.libraries.graphics;
 
 import com.google.code.ardurct.hardware.TFTTouchPanel;
 
-public class ArduRCT_JAVA extends ArduRCT_GraphicsMacros {
+public class ArduRCT_JAVA extends ArduRCT_GraphicsUI {
 
 	void initScreenImpl() {
 		TFTTouchPanel.initPanel();

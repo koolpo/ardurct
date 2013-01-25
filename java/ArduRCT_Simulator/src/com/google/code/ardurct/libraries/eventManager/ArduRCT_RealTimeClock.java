@@ -11,7 +11,7 @@ implements IEventDefines {
 		public int minute = 0;
 	}
 	
-	public final static int RTC_MILLIS_TO_SEC = 50;
+	public final static int RTC_MILLIS_TO_SEC = 1000;
 
 	private final static int RTC_ALARM_MAX_SNOOZE = 0x7E;
 	private final static int RTC_ALARM_STOPPED = (-RTC_ALARM_MAX_SNOOZE-1);
@@ -152,7 +152,7 @@ implements IEventDefines {
 	}
 	
 	public void setAlarmTime(int dayOfWeek, int hour, int minute, int turnOn) {
-	    if (dayOfWeek > 6) return;
+		if (dayOfWeek > 6) return;
 	    _alarm[dayOfWeek].hour = (hour % 24) + (turnOn != 0 ? RTC_ALARM_ON : 0);
 	    _alarm[dayOfWeek].minute = (minute % 60);
 	}

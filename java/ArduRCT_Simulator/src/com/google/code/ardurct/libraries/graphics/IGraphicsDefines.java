@@ -74,6 +74,20 @@ public interface IGraphicsDefines {
 	public static final boolean FONT_PLAIN = false;
 	public static final boolean FONT_BOLD = true;
 	
+	public static final int GRAPHICS_UI_ACTION_UP = 1;
+	public static final int GRAPHICS_UI_ACTION_DOWN = 2;
+	public static final int GRAPHICS_UI_ACTION_RIGHT = 3;
+	public static final int GRAPHICS_UI_ACTION_LEFT = 4;
+	public static final int GRAPHICS_UI_ACTION_MENU = 5;
+	public static final int GRAPHICS_UI_ACTION_ENTER = 6;
+	public static final int GRAPHICS_UI_ACTION_TOUCH = 7;
+	public static final int GRAPHICS_UI_ACTION_RELEASE = 8;
+	
+	public static final int GRAPHICS_UI_STATE_RELEASED = 0;
+	public static final int GRAPHICS_UI_STATE_SELECTED = 1;
+	public static final int GRAPHICS_UI_STATE_HIGHLIGHTED = 2;
+	
+	/*
 	public static final int UI_ERROR = -1;
 	
 	public static final int UI_AUTO_SIZE = 0;
@@ -99,7 +113,7 @@ public interface IGraphicsDefines {
 	public static final int CONFIGURATION_UI_MAX_TABS = 6;
 	
 	public static final int UI_DRAW_CALLBACK_TAB_ID = 0xFF;
-
+	*/
 
 	public static final int EEND = 0x1000-1;
 }

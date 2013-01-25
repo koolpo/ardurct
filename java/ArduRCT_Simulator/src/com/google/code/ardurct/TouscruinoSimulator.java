@@ -3,7 +3,6 @@ package com.google.code.ardurct;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -14,7 +13,6 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -94,15 +92,8 @@ implements ActionListener, Runnable, ITouscruinoDefines {
 		this.setLayout(new BorderLayout(2, 2));
 		JPanel center = new JPanel();
 		center.setLayout(new BorderLayout(3, 3));
-		center.add(new JLabel(" "), BorderLayout.NORTH);
-		if (LANDSCAPE_ORIENTATION) {
-			center.add(switchPanel, BorderLayout.EAST);
-			center.add(new JLabel("   "), BorderLayout.SOUTH);
-		} else {
-			center.add(switchPanel, BorderLayout.SOUTH);
-			center.add(new JLabel("   "), BorderLayout.EAST);	
-		}
-		center.add(new JLabel("   "), BorderLayout.WEST);
+		if (LANDSCAPE_ORIENTATION) center.add(switchPanel, BorderLayout.EAST);
+		else center.add(switchPanel, BorderLayout.SOUTH);
 		center.add(graphicsPanel, BorderLayout.CENTER);
 		this.add(center, BorderLayout.CENTER);
 		this.add(serial, BorderLayout.SOUTH);
@@ -137,7 +128,7 @@ implements ActionListener, Runnable, ITouscruinoDefines {
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getActionCommand().equals("Sortie png")) {
 			try {
-				ImageIO.write((BufferedImage)graphicsPanel.getContentImage(), "png", new File(exampleName + "." + imgIndex +".png"));
+				ImageIO.write(graphicsPanel.getContentImage(), "png", new File(exampleName + "." + imgIndex +".png"));
 				imgIndex ++;
 			} catch (Exception e) {
 				e.printStackTrace();

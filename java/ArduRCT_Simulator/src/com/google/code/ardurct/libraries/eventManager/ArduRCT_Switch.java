@@ -1,6 +1,6 @@
 package com.google.code.ardurct.libraries.eventManager;
 
-import com.google.code.ardurct.hardware.Switch;
+import com.google.code.ardurct.hardware.Digital;
 import com.google.code.ardurct.libraries.IArduinoDefines;
 
 public class ArduRCT_Switch implements IEventDefines, IArduinoDefines {
@@ -12,7 +12,9 @@ public class ArduRCT_Switch implements IEventDefines, IArduinoDefines {
 	public ArduRCT_Switch(int pin) {
 		_pin = pin;
 		_state = EVENT_STATE_IDLE;
+		// set as input
 		pinMode(pin, INPUT);
+		// add a pull up
 		digitalWrite(pin, HIGH);
 	}
 	
@@ -82,7 +84,7 @@ public class ArduRCT_Switch implements IEventDefines, IArduinoDefines {
 	}
 
 	private int digitalRead(int pin) {
-		return Switch.isPressed(pin) ? 0 : 1;
+		return Digital.read(pin);
 	}
 	
 	public void pinMode(int pin, int value) {

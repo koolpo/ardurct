@@ -2,6 +2,6 @@ package com.google.code.ardurct.libraries.graphics;
 
 public interface IUIActionCallback {
 
-	public void uiActionCallback(int id);
+	public boolean run(int elementId, int value);
 	
 }

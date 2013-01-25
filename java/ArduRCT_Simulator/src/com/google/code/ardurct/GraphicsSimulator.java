@@ -13,11 +13,9 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.UIManager;
 
 import com.google.code.ardurct.hardware.TFTTouchPanel;
@@ -67,14 +65,7 @@ implements ActionListener {
 		serial = new HardwareSerial("Serial");
 		
 		this.setLayout(new BorderLayout(2, 2));
-		JPanel center = new JPanel();
-		center.setLayout(new BorderLayout(3, 3));
-		center.add(new JLabel(" "), BorderLayout.NORTH);
-		center.add(new JLabel(" "), BorderLayout.SOUTH);
-		center.add(new JLabel("   "), BorderLayout.EAST);
-		center.add(new JLabel("   "), BorderLayout.WEST);
-		center.add(graphicsPanel, BorderLayout.CENTER);
-		this.add(center, BorderLayout.CENTER);
+		this.add(graphicsPanel, BorderLayout.CENTER);
 		this.add(serial, BorderLayout.SOUTH);
 	}
 		

@@ -29,31 +29,31 @@ implements IEventDefines {
 		_handlerL = handler;
 	}
 
-	public boolean handle(int type) {
-		if (_handlerS == null) return false;
+	public int handle(int type) {
+		if (_handlerS == null) return EVENT_HANDLING_VOID;
 		// check if the _type matches the type, or if the _type is a class and matches the type class
-		if ((_type != type) && (_type != (type & 0xF0))) return false;
+		if ((_type != type) && (_type != (type & 0xF0))) return EVENT_HANDLING_VOID;
 		return _handlerS.handle(type);
 	}
 
-	public boolean handle(int type, int value) {
-		if (_handlerM == null) return false;
+	public int handle(int type, int value) {
+		if (_handlerM == null) return EVENT_HANDLING_VOID;
 		// check if the _type matches the type, or if the _type is a class and matches the type class
-		if ((_type != type) && (_type != (type & 0xF0))) return false;
+		if ((_type != type) && (_type != (type & 0xF0))) return EVENT_HANDLING_VOID;
 		// check if we have a handler for the TICK event that needs to run
-		if ((_type == EVENT_SYSTEM_TICK) && ((value % _value) == 0)) return _handlerM.handle(type, value);
+		if ((_type == EVENT_SYSTEM_TICK) && ((_value <= 1) || ((value % _value) == 0))) return _handlerM.handle(type, value);
 		// check if we run in all matches of _type or only on some values
 		if ((_value == EVENT_ANY_VALUE) || (_value == value)) return _handlerM.handle(type, value);
-		return false;
+		return EVENT_HANDLING_VOID;
 	}
 	
-	public boolean handle(int type, int value, int x, int y) {
-		if (_handlerL == null) return false;
+	public int handle(int type, int value, int x, int y) {
+		if (_handlerL == null) return EVENT_HANDLING_VOID;
 		// check if the _type matches the type, or if the _type is a class and matches the type class
-		if ((_type != type) && (_type != (type & 0xF0))) return false;
+		if ((_type != type) && (_type != (type & 0xF0))) return EVENT_HANDLING_VOID;
 		// check if we run in all matches of _type or only on some values
 		if ((_value == EVENT_ANY_VALUE) || (_value == value)) return _handlerL.handle(type, value, x, y);
-		return false;
+		return EVENT_HANDLING_VOID;
 	}
 
 	public ArduRCT_EventHandler getNext() {

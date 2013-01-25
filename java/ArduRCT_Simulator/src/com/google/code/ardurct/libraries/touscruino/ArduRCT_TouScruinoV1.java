@@ -1,15 +1,17 @@
 package com.google.code.ardurct.libraries.touscruino;
 
+import com.google.code.ardurct.libraries.eventManager.ArduRCT_Analog;
+import com.google.code.ardurct.libraries.eventManager.ArduRCT_Encoder;
 import com.google.code.ardurct.libraries.eventManager.ArduRCT_EventHandler;
 import com.google.code.ardurct.libraries.eventManager.ArduRCT_EventManager;
 import com.google.code.ardurct.libraries.eventManager.ArduRCT_RealTimeClock;
 import com.google.code.ardurct.libraries.eventManager.ArduRCT_Switch;
 import com.google.code.ardurct.libraries.eventManager.ArduRCT_TouchPanel;
+import com.google.code.ardurct.libraries.eventManager.IEventDefines;
 import com.google.code.ardurct.libraries.graphics.ArduRCT_JAVA;
 
-
 public class ArduRCT_TouScruinoV1 extends ArduRCT_JAVA
-implements ITouscruinoDefines {
+implements ITouscruinoDefines, IEventDefines {
 			
 	ArduRCT_EventManager eventManager = new ArduRCT_EventManager();
 	ArduRCT_RealTimeClock rtc = new ArduRCT_RealTimeClock();
@@ -42,5 +44,17 @@ implements ITouscruinoDefines {
 	
 	public void registerEventHandler(ArduRCT_EventHandler handler) {
 		eventManager.registerEventHandler(handler);
+	}
+	
+	public void registerSwitch(ArduRCT_Switch aSwitch) {
+		eventManager.registerSwitch(aSwitch);	
+	}
+
+	public void registerEncoder(ArduRCT_Encoder anEncoder) {
+		eventManager.registerEncoder(anEncoder);	
+	}
+
+	public void registerAnalog(ArduRCT_Analog anAnalog) {
+		eventManager.registerAnalog(anAnalog);
 	}
 }

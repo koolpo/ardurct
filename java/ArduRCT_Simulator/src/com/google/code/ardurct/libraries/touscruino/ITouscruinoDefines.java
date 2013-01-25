@@ -9,4 +9,7 @@ public interface ITouscruinoDefines {
 	public final static int TOUSCRUINO_UP = 16;
 	public final static int TOUSCRUINO_RIGHT = 17;
 	public final static int TOUSCRUINO_ENTER = 18;
+	
+	public final static int TOUSCRUINO_CHANNEL_0 = 0;
+	public final static int TOUSCRUINO_CHANNEL_1 = 1;
 }

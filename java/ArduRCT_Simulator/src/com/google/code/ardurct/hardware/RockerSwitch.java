@@ -9,34 +9,41 @@ import java.awt.event.MouseListener;
 
 import javax.swing.JPanel;
 
+import com.google.code.ardurct.libraries.IArduinoDefines;
+
 public class RockerSwitch extends JPanel 
-implements MouseListener {
+implements MouseListener, IArduinoDefines {
 
 	private static final int SWITCH_SIZE = 24;
 	private static final int SWITCH_SPACING = 4;
 	
 	private static final long serialVersionUID = 1L;
 	
-	private Switch up = null;
-	private Switch left = null;
-	private Switch center = null;
-	private Switch right = null;
-	private Switch down = null;
+	private int upPin = 0xFF;
+	private int downPin = 0xFF;
+	private int leftPin = 0xFF;
+	private int rightPin = 0xFF;
+	private int centerPin = 0xFF;
 	
-	public RockerSwitch(int pinUp, int pinCenter, int pinDown) {
-		this(pinUp, 0xFF, pinCenter, 0xFF, pinDown);
+	public RockerSwitch(int upPin, int centerPin, int downPin) {
+		this(upPin, 0xFF, centerPin, 0xFF, downPin);
 	}
 
-	public RockerSwitch(int pinUp, int pinLeft, int pinRight, int pinDown) {
-		this(pinUp, pinLeft, 0xFF, pinRight, pinDown);
+	public RockerSwitch(int upPin, int leftPin, int rightPin, int downPin) {
+		this(upPin, leftPin, 0xFF, rightPin, downPin);
 	}
 	
-	public RockerSwitch(int pinUp, int pinLeft, int pinCenter, int pinRight, int pinDown) {
-		if (pinUp != 0xFF) up = new Switch(pinUp);
-		if (pinUp != 0xFF) left = new Switch(pinLeft);
-		if (pinUp != 0xFF) center = new Switch(pinCenter);
-		if (pinUp != 0xFF) right = new Switch(pinRight);
-		if (pinUp != 0xFF) down = new Switch(pinDown);
+	public RockerSwitch(int upPin, int leftPin, int centerPin, int rightPin, int downPin) {
+		this.upPin = upPin;
+		this.downPin = downPin;
+		this.centerPin = centerPin;
+		this.rightPin = rightPin;
+		this.leftPin = leftPin;
+		if (upPin != 0xFF) Digital.write(upPin, HIGH);
+		if (downPin != 0xFF) Digital.write(downPin, HIGH);
+		if (centerPin != 0xFF) Digital.write(centerPin, HIGH);
+		if (rightPin != 0xFF) Digital.write(rightPin, HIGH);
+		if (leftPin != 0xFF) Digital.write(leftPin, HIGH);
 		addMouseListener(this);
 	}
 	
@@ -44,29 +51,29 @@ implements MouseListener {
 		int x = (getWidth()-SWITCH_SIZE)/2;
 		int y = (getHeight()-SWITCH_SIZE)/2;
 		if ((me.getX() > x) && (me.getX() < x+SWITCH_SIZE) && (me.getY() > y) && (me.getY() < y+SWITCH_SIZE) 
-				&& center != null) center.setPressed(true);
+				&& centerPin != 0xFF) Digital.write(centerPin, LOW);
 		x -= SWITCH_SIZE + SWITCH_SPACING;
 		if ((me.getX() > x) && (me.getX() < x+SWITCH_SIZE) && (me.getY() > y) && (me.getY() < y+SWITCH_SIZE)
-				&& left != null) left.setPressed(true);
+				&& leftPin != 0xFF) Digital.write(leftPin, LOW);
 		x += 2*(SWITCH_SIZE + SWITCH_SPACING);
 		if ((me.getX() > x) && (me.getX() < x+SWITCH_SIZE) && (me.getY() > y) && (me.getY() < y+SWITCH_SIZE)
-				&& right != null) right.setPressed(true);
+				&& rightPin != 0xFF) Digital.write(rightPin, LOW);
 		x -= SWITCH_SIZE + SWITCH_SPACING;
 		y -= SWITCH_SIZE + SWITCH_SPACING;
 		if ((me.getX() > x) && (me.getX() < x+SWITCH_SIZE) && (me.getY() > y) && (me.getY() < y+SWITCH_SIZE)
-				&& up != null) up.setPressed(true);
+				&& upPin != 0xFF) Digital.write(upPin, LOW);
 		y += 2*(SWITCH_SIZE + SWITCH_SPACING);
 		if ((me.getX() > x) && (me.getX() < x+SWITCH_SIZE) && (me.getY() > y) && (me.getY() < y+SWITCH_SIZE)
-				&& down != null) down.setPressed(true);
+				&& downPin != 0xFF) Digital.write(downPin, LOW);
 		repaint();
 	}
 
 	public void mouseReleased(MouseEvent me) { 
-		if (up != null) up.setPressed(false);
-		if (left != null) left.setPressed(false);
-		if (center != null) center.setPressed(false);
-		if (right != null) right.setPressed(false);
-		if (down != null) down.setPressed(false);
+		if (upPin != 0xFF) Digital.write(upPin, HIGH);
+		if (leftPin != 0xFF) Digital.write(leftPin, HIGH);
+		if (centerPin != 0xFF) Digital.write(centerPin, HIGH);
+		if (rightPin != 0xFF) Digital.write(rightPin, HIGH);
+		if (downPin != 0xFF) Digital.write(downPin, HIGH);
 		repaint();
 	}
 
@@ -80,15 +87,16 @@ implements MouseListener {
 		g2d.fillRect(0, 0, getWidth(), getHeight());
 		int x = (getWidth()-SWITCH_SIZE)/2;
 		int y = (getHeight()-SWITCH_SIZE)/2;
-		if (center != null) paintSwitch(g2d, center.getPin(), x, y);
-		if (left != null) paintSwitch(g2d, left.getPin(), x-SWITCH_SIZE-SWITCH_SPACING, y);
-		if (right != null) paintSwitch(g2d, right.getPin(), x+SWITCH_SIZE+SWITCH_SPACING, y);
-		if (up != null) paintSwitch(g2d, up.getPin(), x, y-SWITCH_SIZE-SWITCH_SPACING);
-		if (down != null) paintSwitch(g2d, down.getPin(), x, y+SWITCH_SIZE+SWITCH_SPACING);
+		paintSwitch(g2d, centerPin, x, y);
+		paintSwitch(g2d, leftPin, x-SWITCH_SIZE-SWITCH_SPACING, y);
+		paintSwitch(g2d, rightPin, x+SWITCH_SIZE+SWITCH_SPACING, y);
+		paintSwitch(g2d, upPin, x, y-SWITCH_SIZE-SWITCH_SPACING);
+		paintSwitch(g2d, downPin, x, y+SWITCH_SIZE+SWITCH_SPACING);
 	}
 	
 	private void paintSwitch(Graphics2D g2d, int pin, int x, int y) {
-		if (Switch.isPressed(pin)) g2d.setColor(new Color(130, 130, 130));
+		if (pin == 0xFF) return;
+		if (Digital.read(pin) == LOW) g2d.setColor(new Color(130, 130, 130));
 		else g2d.setColor(new Color(200, 200, 200));
 		g2d.fillRect(x, y, SWITCH_SIZE, SWITCH_SIZE);
 		g2d.setColor(Color.BLACK);

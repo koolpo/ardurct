@@ -14,7 +14,7 @@ public class Clock extends TouscruinoFirmware {
 	private buttonsCB handleButtons = new buttonsCB();
 	// ------------------ Java specific ------------------------- //
 
-	static final int RETURN_TO_TIME_TRIGGER = 60;
+	static final int RETURN_TO_TIME_TRIGGER = 30;
 	
 	static final int SCREEN_TIME = 0;
 	static final int SCREEN_SET_DATE = 1;
@@ -84,7 +84,7 @@ public class Clock extends TouscruinoFirmware {
 	}
 
 	class buttonsCB implements IEventCallback {
-		public boolean handle(int eventType, int buttonId) {
+		public int handle(int eventType, int buttonId) {
 			watchdog = 0;
 			if (eventType == EVENT_SWITCH_PRESSED) {
 				if (buttonId == TOUSCRUINO_MENU) {
@@ -92,28 +92,20 @@ public class Clock extends TouscruinoFirmware {
 						touscruino.getRTC().stopAlarm();
 						showAlarmStatus();
 					} else {
-						if (screen != SCREEN_TIME) {
-							// memorize the values
-							if (screen == SCREEN_SET_DATE) touscruino.getRTC().setDate(field[0], field[1], field[2]);
-							else if (screen == SCREEN_SET_TIME) touscruino.getRTC().setTime(field[0], field[1], 0);
-							else if (screen >= SCREEN_SET_ALARM_D1) touscruino.getRTC().setAlarmTime(screen - SCREEN_SET_ALARM_D1, field[0], field[1], field[2]);
-						}
-						changeScreen();
+						changeScreen(screen + 1);
 					}
 				} else if (buttonId == TOUSCRUINO_ENTER) {
-					if (screen == SCREEN_TIME) return true;
+					if (screen == SCREEN_TIME) return EVENT_HANDLING_DONE;
 					activeField ++;
 					if (activeField >= nbFields) activeField = 0;
 					if (screen == SCREEN_SET_DATE) drawDateAdjust();
 					if (screen >= SCREEN_SET_TIME) drawTimeAdjust();
 					if (screen >= SCREEN_SET_ALARM_D1) drawAlarmAdjust();
-				} else {
-					if (screen == SCREEN_TIME) {
-						if (touscruino.getRTC().isAlarmRinging() || touscruino.getRTC().isAlarmSnoozing()) {
-							if (buttonId == TOUSCRUINO_UP) touscruino.getRTC().snoozeAlarm(5);
-							if (buttonId == TOUSCRUINO_DOWN) touscruino.getRTC().snoozeAlarm(10);
-							showAlarmStatus();
-						}
+				} else if (screen == SCREEN_TIME) {
+					if (touscruino.getRTC().isAlarmRinging() || touscruino.getRTC().isAlarmSnoozing()) {
+						if (buttonId == TOUSCRUINO_UP) touscruino.getRTC().snoozeAlarm(5);
+						if (buttonId == TOUSCRUINO_DOWN) touscruino.getRTC().snoozeAlarm(10);
+						showAlarmStatus();
 					} 
 				}
 			}
@@ -136,26 +128,21 @@ public class Clock extends TouscruinoFirmware {
 					if (screen >= SCREEN_SET_ALARM_D1) drawAlarmAdjust();
 				}
 			}
-			return true;
+			return EVENT_HANDLING_DONE;
 		}
-		public boolean handle(int type, int value, int x, int y) { return false; }
-		public boolean handle(int type) { return false; }
+		public int handle(int type, int value, int x, int y) { return EVENT_HANDLING_VOID; }
+		public int handle(int type) { return EVENT_HANDLING_VOID; }
 	}
-	
-	
+		
 	class timeHandlerCB implements IEventCallback {
-		public boolean handle(int eventType) {
-		    // show the alarm status
+		public int handle(int eventType) {
+		    // show the alarm status, whatever the screen
 		    showAlarmStatus();
 
 		    if (screen != SCREEN_TIME) {
 		        watchdog ++;
-		        if (watchdog > RETURN_TO_TIME_TRIGGER) {
-		        	// return to SCREEN_TIME
-		            screen = SCREEN_SET_ALARM_D7 + 1;
-		            changeScreen();
-		        }
-		    	return true;
+		        if (watchdog > RETURN_TO_TIME_TRIGGER) changeScreen(SCREEN_TIME);
+		    	return EVENT_HANDLING_DONE;
 		    }
 		    
 		    ArduRCT_RealTimeClock rtc = touscruino.getRTC();
@@ -165,7 +152,7 @@ public class Clock extends TouscruinoFirmware {
 		    
 		    // draw a progress bar for the seconds
 		    if (rtc.getSecond() == 0) touscruino.fillRectangle((touscruino.getWidth() - SECONDS_WIDTH)/2, SECONDS_Y, SECONDS_WIDTH, SECONDS_HEIGHT, BLACK);
-		    else touscruino.fillRectangle((touscruino.getWidth() - SECONDS_WIDTH)/2, SECONDS_Y, rtc.getSecond() * SECONDS_WIDTH / 60, SECONDS_HEIGHT, YELLOW);
+		    else touscruino.fillRectangle((touscruino.getWidth() - SECONDS_WIDTH)/2, SECONDS_Y, rtc.getSecond() * SECONDS_WIDTH / 60, SECONDS_HEIGHT, ORANGE);
 		    
 		    if (eventType == EVENT_TIME_MINUTE) {
 				// draw hour and minutes, digit by digit
@@ -191,19 +178,25 @@ public class Clock extends TouscruinoFirmware {
 		        }
 		    }
 
-			return true;
+			return EVENT_HANDLING_DONE;
 		}
 
-		public boolean handle(int type, int value, int x, int y) { return false; }
-		public boolean handle(int type, int value) { return false; }
+		public int handle(int type, int value, int x, int y) { return EVENT_HANDLING_VOID; }
+		public int handle(int type, int value) { return EVENT_HANDLING_VOID; }
 	}
 
-	void changeScreen() {
+	void changeScreen(int newScreen) {
 	    ArduRCT_RealTimeClock rtc = touscruino.getRTC();
-		screen ++;
+	    if (screen != SCREEN_TIME) {
+			if (screen == SCREEN_SET_DATE) rtc.setDate(field[0], field[1], field[2]);
+			else if (screen == SCREEN_SET_TIME) rtc.setTime(field[0], field[1], 0);
+			else if (screen >= SCREEN_SET_ALARM_D1) rtc.setAlarmTime(screen - SCREEN_SET_ALARM_D1, field[0], field[1], field[2]);
+	    }
+		screen = newScreen;
 		if (screen > SCREEN_SET_ALARM_D7) screen = SCREEN_TIME;
 		fieldMax[0] = 23;
 		fieldMax[1] = 59;
+		activeField = 0;
 		for (int i=0; i<3; i++) fieldMin[i] = 0;
 		if (screen == SCREEN_SET_TIME) {
 			field[0] = rtc.getHour();
@@ -217,9 +210,10 @@ public class Clock extends TouscruinoFirmware {
 			field[1] = alarm.minute;
 			timeDigit[2] = field[1] / 10;
 			timeDigit[3] = field[1] % 10;
-			field[2] = (alarm.hour & ~RTC_ALARM_ON) != 0 ? 1 : 0;
+			field[2] = (alarm.hour & RTC_ALARM_ON) != 0 ? 1 : 0;
 			fieldMax[2] = 1;
 			nbFields = 3;
+			activeField = 2;
 		} else if (screen == SCREEN_SET_DATE) {
 			field[0] = rtc.getYear();
 			fieldMax[0] = 2300;
@@ -235,7 +229,6 @@ public class Clock extends TouscruinoFirmware {
 			for (int i=0; i<4; i++) timeDigit[i] = 0xFF;			
 		}
 		touscruino.fillScreen(BLACK);
-		activeField = 0;
 		drawScreen();	
 	}
 
@@ -274,7 +267,7 @@ public class Clock extends TouscruinoFirmware {
 	void drawAlarmAdjust() {
 		int x = 80;
 		int y = 108;
-		touscruino.fillRectangle(x-12, y-16, 32, 32, BLACK);
+		touscruino.fillRectangle(x-12, y-16, 50, 32, BLACK);
 		touscruino.drawRectangle(x-8, y-8, 8, 16, activeField == 2 ? RED : WHITE, 2);
 		touscruino.drawLine(x, y-8, x+8, y-16, activeField == 2 ? RED : WHITE, 2);
 		touscruino.drawLine(x, y+8, x+8, y+16, activeField == 2 ? RED : WHITE, 2);
@@ -283,8 +276,8 @@ public class Clock extends TouscruinoFirmware {
 			touscruino.drawLine(x-10, y-13, x+16, y+13, RED, 3);
 			touscruino.drawLine(x-10, y+13, x+16, y-13, RED, 3);
 		} else {
-			drawNote(x+15, y+3, WHITE);
-			drawNote(x+25, y, WHITE);
+			drawNote(x+15, y+3,  activeField == 2 ? RED : WHITE);
+			drawNote(x+25, y,  activeField == 2 ? RED : WHITE);
 		}
 	}
 

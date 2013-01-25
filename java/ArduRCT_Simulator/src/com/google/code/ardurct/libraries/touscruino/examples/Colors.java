@@ -75,7 +75,7 @@ public class Colors extends TouscruinoFirmware {
 	}
 	
 	class buttonsCB implements IEventCallback {
-		public boolean handle(int eventType, int buttonId) {
+		public int handle(int eventType, int buttonId) {
 		    if (eventType == EVENT_SWITCH_PRESSED) {
 		        if (buttonId == TOUSCRUINO_MENU) {
 		        	drawButton("Reset", 3, true);
@@ -117,10 +117,10 @@ public class Colors extends TouscruinoFirmware {
 			    int color = COLOR_565(colorPart[0], colorPart[1], colorPart[2]);
 			    drawColor(color);
 		    }
-			return true;
+			return EVENT_HANDLING_DONE;
 		}
-		public boolean handle(int eventType, int eventValue, int eventX, int eventY) { return false; }
-		public boolean handle(int eventType) { return false; }
+		public int handle(int eventType, int eventValue, int eventX, int eventY) { return EVENT_HANDLING_VOID; }
+		public int handle(int eventType) { return EVENT_HANDLING_VOID; }
 	}
 
 	

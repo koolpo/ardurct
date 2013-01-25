@@ -12,18 +12,18 @@ public class XBeeSimulator extends JFrame {
 	
 	private static final long serialVersionUID = -8128231225228032474L;
 	
-	public XBeeRadio hardware;
+	public XBeeRadio serial;
 	
-	XBeeSimulator(String title, String id, String shsl, int aBaudrate) {
+	public XBeeSimulator(String title, String id, String shsl, int aBaudrate) {
 		super(title);
-		hardware = new XBeeRadio(id, shsl, aBaudrate);
-		hardware.begin(aBaudrate);
+		serial = new XBeeRadio(id, shsl, aBaudrate);
+		serial.begin(aBaudrate);
 	}
 
 	private void buildUI() {	
 		this.setLayout(new BorderLayout(2, 2));
-		hardware.setPreferredSize(new Dimension(340, 200));
-		this.add(hardware, BorderLayout.CENTER);
+		serial.setPreferredSize(new Dimension(340, 200));
+		this.add(serial, BorderLayout.CENTER);
 	}
 		
 
@@ -44,14 +44,14 @@ public class XBeeSimulator extends JFrame {
 
 	public static void main(final String[] args) {
 		XBeeSimulator localXBee = XBeeSimulator.createAndShowInstance("XBee - Local", "ABCD", "A87B43CD67AD0235", 9600);
-		localXBee.hardware.setDHDL("B79E12F287CE5431");
+		localXBee.serial.setDHDL("B79E12F287CE5431");
 		XBeeSimulator remoteXBee = XBeeSimulator.createAndShowInstance("XBee - Remote", "ABCD", "B79E12F287CE5431", 9600);
-		remoteXBee.hardware.setDHDL("A87B43CD67AD0235");		
+		remoteXBee.serial.setDHDL("A87B43CD67AD0235");		
 		remoteXBee.setLocation(localXBee.getWidth()+5, 0);
-		localXBee.hardware.start();
-		remoteXBee.hardware.start();
-		localXBee.hardware.connect(remoteXBee.hardware);
-		remoteXBee.hardware.connect(localXBee.hardware);
+		localXBee.serial.start();
+		remoteXBee.serial.start();
+		localXBee.serial.connect(remoteXBee.serial);
+		remoteXBee.serial.connect(localXBee.serial);
 	}
 
 }

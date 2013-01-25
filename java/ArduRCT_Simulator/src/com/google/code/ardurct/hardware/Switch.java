@@ -7,32 +7,21 @@ import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Rectangle2D;
-import java.util.Hashtable;
 
 import javax.swing.JPanel;
 
+import com.google.code.ardurct.libraries.IArduinoDefines;
+
 public class Switch extends JPanel 
-implements MouseListener {
+implements MouseListener, IArduinoDefines {
 
 	private final static int SWITCH_SIZE = 34;
 	
 	private static final long serialVersionUID = 1L;
 	
-	protected boolean pressed = false;
 	private int pin;
 	private String name;
 	
-	public static Hashtable<Integer, Switch> switches = new Hashtable<Integer, Switch>();
-
-	public static boolean isPressed(int pin) {
-		if (!switches.containsKey(pin)) return false;
-		return switches.get(pin).isPressed();
-	}
-
-	public static void setPressed(int pin, boolean pressed) {
-		if (!switches.containsKey(pin)) return;
-		switches.get(pin).setPressed(pressed);
-	}
 
 	public Switch(int pin, String name) {
 		this(pin);
@@ -42,29 +31,21 @@ implements MouseListener {
 
 	public Switch(int pin) {
 		this.pin = pin;
-		this.pressed = false;
-		switches.put(pin, this);
+		Digital.write(pin, HIGH);
 	}
 
-	public boolean isPressed() {
-		return pressed;
-	}
-
-	public void setPressed(boolean pressed) {
-		this.pressed = pressed;
-	}
 	
 	public int getPin() {
 		return pin;
 	}
 	
 	public void mousePressed(MouseEvent arg0) { 
-		pressed = true;
+		Digital.write(pin, LOW);
 		repaint();
 	}
 
 	public void mouseReleased(MouseEvent arg0) { 
-		pressed = false;
+		Digital.write(pin, HIGH);
 		repaint();
 	}
 
@@ -78,7 +59,7 @@ implements MouseListener {
 		int y = (getHeight()-SWITCH_SIZE)/2;
 		g2d.setColor(new Color(240, 240, 240));
 		g2d.fillRect(0, 0, getWidth(), getHeight());
-		if (pressed) g2d.setColor(new Color(130, 130, 130));
+		if (Digital.read(pin) == LOW) g2d.setColor(new Color(130, 130, 130));
 		else g2d.setColor(new Color(200, 200, 200));
 		g2d.fillRect(x, y, SWITCH_SIZE, SWITCH_SIZE);
 		g2d.setColor(Color.BLACK);

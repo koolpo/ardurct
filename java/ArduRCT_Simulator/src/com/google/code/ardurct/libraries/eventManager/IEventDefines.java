@@ -2,6 +2,8 @@ package com.google.code.ardurct.libraries.eventManager;
 
 public interface IEventDefines {
 	
+	public static int EVENT_MANAGER_CYCLE = 20;
+
 	public final static int EVENT_ANY_VALUE = 0xFF;
 	public final static int EVENT_NO_VALUE = 0xFF;
 	
@@ -25,9 +27,28 @@ public interface IEventDefines {
 	public final static int EVENT_TOUCHPANEL_PRESSED = 0x41;	
 	public final static int EVENT_TOUCHPANEL_DRAGGED = 0x42;	
 	public final static int EVENT_TOUCHPANEL_RELEASED = 0x43;	
-	
+
+	public final static int EVENT_ANALOG = 0x50;	
+	public final static int EVENT_ANALOG_DECREASE = 0x51;	
+	public final static int EVENT_ANALOG_INCREASE = 0x52;	
+
+	public final static int EVENT_ENCODER = 0x60;	
+	public final static int EVENT_ENCODER_DECREASE = 0x61;	
+	public final static int EVENT_ENCODER_INCREASE = 0x62;	
+
 	public final static int TOUCHPANEL_NO_TOUCH = 0xFFFF;
 	public final static int TOUCHPANEL_TOLERANCE = 2;
+	
+	public final static int ANALOG_NO_VALUE = 0xFFFF;
+	public final static int ANALOG_AVERAGING = 2;
+	public final static int ANALOG_TOLERANCE = 4;
+	public final static int ANALOG_RESOLUTION_16B = 65536;
+	public final static int ANALOG_RESOLUTION_12B = 1024;
+	public final static int ANALOG_RESOLUTION_8B = 256;
+	public final static int ANALOG_RESOLUTION_100 = 100;
+	public final static int ANALOG_RESOLUTION_4B = 16;
+	public final static int ANALOG_HARDWARE_RESOLUTION = ANALOG_RESOLUTION_12B;
+	public static final int ANALOG_MAX_AVERAGING = 6;
 	
 	public final static int EVENT_STATE_DEBOUNCING_UP = 0;
 	public final static int EVENT_STATE_RELEASED = 2;
@@ -38,7 +59,11 @@ public interface IEventDefines {
 	public final static int EVENT_STATE_DRAGGED = 8;
 	public final static int EVENT_STATE_REPEATING = 20;
 	public final static int EVENT_STATE_FAST_REPEATING = 80;
-
+	
+	public final static int EVENT_HANDLING_DONE = 1;
+	public final static int EVENT_HANDLING_EXIT = -1;
+	public final static int EVENT_HANDLING_VOID = 0;
+	
 	public final static int RTC_HOUR10   = 0;
 	public final static int RTC_HOUR1    = 1;
 	public final static int RTC_MINUTE10 = 2;
