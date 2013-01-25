@@ -49,12 +49,12 @@ class ArduRCT_EventManager {
 
         ArduRCT_EventManager(ArduRCT_RealTimeClock *rtc);
         
-        void setRTC(ArduRCT_RealTimeClock *rtc);
+        void registerRTC(ArduRCT_RealTimeClock *rtc);
         
         ArduRCT_RealTimeClock *getRTC();
         
         void registerSwitch(ArduRCT_Switch *aSwitch);
-
+        
         void registerEncoder(ArduRCT_Encoder *anEncoder);
         
         void registerAnalog(ArduRCT_Analog *anAnalog);

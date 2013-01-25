@@ -38,8 +38,8 @@ class ArduRCT_EventHandler {
 		
 		ArduRCT_EventHandler(uint8_t type, uint8_t value, int8_t (*handler)(uint8_t type, uint8_t value));
 
-		ArduRCT_EventHandler(uint8_t type, uint8_t value, uint16_t x, uint16_t y, int8_t (*handler)(uint8_t type, uint8_t value, int16_t x, int16_t y));
-		
+        ArduRCT_EventHandler(uint8_t type, uint8_t value, int8_t (*handler)(uint8_t type, uint8_t value, int16_t x, int16_t y));
+		        
 		int8_t handle(uint8_t type);
 
 		int8_t handle(uint8_t type, uint8_t value);

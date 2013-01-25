@@ -31,7 +31,7 @@ ArduRCT_EventManager::ArduRCT_EventManager(ArduRCT_RealTimeClock *rtc) {
 	_rtc = rtc;
 }
 
-void ArduRCT_EventManager::setRTC(ArduRCT_RealTimeClock *rtc) {
+void ArduRCT_EventManager::registerRTC(ArduRCT_RealTimeClock *rtc) {
 	_rtc = rtc;
 }
 
@@ -58,7 +58,7 @@ void ArduRCT_EventManager::registerEncoder(ArduRCT_Encoder *anEncoder) {
 }
 
 void ArduRCT_EventManager::registerAnalog(ArduRCT_Analog *anAnalog) {
-	if (_switch == 0) _analog = anAnalog;
+	if (_analog == 0) _analog = anAnalog;
 	else {
 		ArduRCT_Analog *nAnalog = _analog;
 		while (nAnalog->getNext() != 0) nAnalog = nAnalog->getNext();

@@ -46,8 +46,10 @@
 // ----------------------------------------
 #define EVENT_NO_VALUE 0xFF
 #define EVENT_ANY_VALUE 0xFF
+#define EVENT_ANY_CHANNEL 0xFF
+#define EVENT_ANY_ID 0xFF
 
-#define EVENT_CLASS_MASK 0xFF
+#define EVENT_CLASS_MASK 0xF0
     
 #define EVENT_SYSTEM 0x10
 #define EVENT_SYSTEM_TICK 0x11
