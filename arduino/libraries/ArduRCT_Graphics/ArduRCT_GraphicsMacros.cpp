@@ -171,6 +171,7 @@ uint8_t *ArduRCT_Graphics::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16
     uint16_t i = 0;
     // convert to upper case, transform all char below space as space
     _formatMacroSentence(s);
+Serial.println((char *)s);
     while (s[i] != 0) {
         bool hasText = false;
         // get the command
@@ -355,12 +356,16 @@ uint8_t *ArduRCT_Graphics::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16
             i++;
         }
         
+Serial.println("Finished parsing");
+        
         // Execute the command
         if (drawMode) executeMacroCommand(&mc, x, y, scaleMul, scaleDiv, true, selectAndUnselectScreen);
         else if (mc.cmd == GRAPHICS_MACRO_CMD_WRITE) {
             wBufferNb = mc.param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER];
             if (wBufferNb > GRAPHICS_MACRO_MAX_NUMBER) return 0;
         }
+Serial.println("Finished drawing");
+
 
         // At this stage, we have a struct containing the command to execute
         // this can be stored in EEPROM for future execution

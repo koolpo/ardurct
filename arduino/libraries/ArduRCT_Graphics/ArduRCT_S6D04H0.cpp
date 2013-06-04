@@ -90,7 +90,7 @@ ArduRCT_S6D04H0::ArduRCT_S6D04H0(uint8_t port, uint8_t cd, uint8_t wr, uint8_t r
     _widthImpl = S6D04H0_WIDTH;
     _heightImpl = S6D04H0_HEIGHT;
     setupScreen(port, cd, wr, rd, cs, reset, true);
-    _backlightPin = backlightPin;
+    setupBacklight(backlightPin);
 }
  
 /* ---------------- Protected functions ------------------------ */
@@ -136,7 +136,7 @@ void ArduRCT_S6D04H0::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
     _write16bData(color);
 }
 
-
+/*
 // Fill the area lx,ly -> hx, hy
 // this functions assumes that lx <= hx and ly <= hy
 void ArduRCT_S6D04H0::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {
@@ -158,6 +158,75 @@ void ArduRCT_S6D04H0::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16
             _writeData(colH);
             _writeData(colL);
         }
+    }
+}
+
+*/
+
+void ArduRCT_S6D04H0::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color) {
+    uint32_t nbPixels = hx - lx + 1;
+    nbPixels *= (hy - ly + 1);
+    _prepareWR();
+    _setClippingRectangle(lx, ly, hx, hy);
+    _writeCommand(S6D04H0_RAMWR);
+    uint8_t colH = color >> 8;
+    uint8_t colL = color;
+    uint8_t lowWR = (*_wrPort) & _wrLow; 
+    uint8_t highWR = (*_wrPort) | _wrHigh;
+    uint8_t nbPixelsH = 1 + (nbPixels >> 16);
+    uint8_t nbPixelsM = 1 + (nbPixels >> 8);
+    uint8_t nbPixelsL = nbPixels;
+    if (colH == colL) {
+        asm (
+          "out %1,%7\n\t"           // portB = colH
+        "pixelL1:\n\t"
+          "out %0,%2\n\t"           // WR low
+          "out %0,%3\n\t"           // WR high
+          "out %0,%2\n\t"           // WR low
+          "out %0,%3\n\t"           // WR high
+          "dec %6\n\t"              // nbPixelL --
+          "brne pixelL1\n\t"        // if nbPixelL != 0 goto pixelL1
+          "dec %5\n\t"              // nbPixelM --
+          "brne pixelL1\n\t"        // if nbPixelM != 0 goto pixelL1
+          "dec %4\n\t"              // nbPixelH --
+          "brne pixelL1\n\t"        // if nbPixelH != 0 goto pixelL1
+        ::
+        "I" (_SFR_IO_ADDR(PORTC)),  // %0
+        "I" (_SFR_IO_ADDR(PORTB)),  // %1
+        "r" (lowWR),                // %2
+        "r" (highWR),               // %3
+        "r" (nbPixelsH),            // %4
+        "r" (nbPixelsM),            // %5
+        "r" (nbPixelsL),            // %6
+        "r" (colH)                  // %7
+        );
+    } else {
+        asm (
+        "pixelL2:\n\t"
+          "out %1,%7\n\t"           // portB = colH
+          "out %0,%2\n\t"           // WR low
+          "out %0,%3\n\t"           // WR high
+          "out %1,%8\n\t"           // portB = colL
+          "out %0,%2\n\t"           // WR low
+          "out %0,%3\n\t"           // WR high
+          "dec %6\n\t"              // nbPixelL --
+          "brne pixelL2\n\t"        // if nbPixelL != 0 goto pixelL2
+          "dec %5\n\t"              // nbPixelM --
+          "brne pixelL2\n\t"        // if nbPixelM != 0 goto pixelL2
+          "dec %4\n\t"              // nbPixelH --
+          "brne pixelL2\n\t"        // if nbPixelH != 0 goto pixelL2
+        ::
+        "I" (_SFR_IO_ADDR(PORTC)),  // %0
+        "I" (_SFR_IO_ADDR(PORTB)),  // %1
+        "r" (lowWR),                // %2
+        "r" (highWR),               // %3
+        "r" (nbPixelsH),            // %4
+        "r" (nbPixelsM),            // %5
+        "r" (nbPixelsL),            // %6
+        "r" (colH),                 // %7
+        "r" (colL)                  // %8
+        );
+
     }
 }
 
@@ -201,7 +270,47 @@ void ArduRCT_S6D04H0::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, 
     _prepareWR();
     _setClippingRectangle(x, y, x+width-1, y+height-1); 
     _writeCommand(S6D04H0_RAMWR);
+    /*
     for (uint32_t i=0; i<nbPixels; i++) _write16bData(bitmap[i]);
+    */
+    uint8_t lowWR = (*_wrPort) & _wrLow; 
+    uint8_t highWR = (*_wrPort) | _wrHigh;
+    uint8_t nbPixelsH = 1 + (nbPixels >> 16);
+    uint8_t nbPixelsM = 1 + (nbPixels >> 8);
+    uint8_t nbPixelsL = nbPixels;
+    uint8_t temp = 0;
+    asm (
+      "push r28\n\t"
+      "push r29\n\t"
+      "movw r28,%8\n\t"         // Y = bitmap
+    "pixelL3:\n\t"
+      "ld %7, Y+\n\t"           // temp = (Y), Y++
+      "out %1,%7\n\t"           // portB = temp
+      "out %0,%2\n\t"           // WR low
+      "out %0,%3\n\t"           // WR high
+      "ld %7, Y+\n\t"           // temp = (Y), Y++
+      "out %1,%7\n\t"           // portB = temp
+      "out %0,%2\n\t"           // WR low
+      "out %0,%3\n\t"           // WR high
+      "dec %6\n\t"              // nbPixelL --
+      "brne pixelL3\n\t"        // if nbPixelL != 0 goto pixelL1
+      "dec %5\n\t"              // nbPixelM --
+      "brne pixelL3\n\t"        // if nbPixelM != 0 goto pixelL1
+      "dec %4\n\t"              // nbPixelH --
+      "brne pixelL3\n\t"        // if nbPixelH != 0 goto pixelL1
+      "pop r28\n\t"
+      "pop r29\n\t"
+    ::
+    "I" (_SFR_IO_ADDR(PORTC)),  // %0
+    "I" (_SFR_IO_ADDR(PORTB)),  // %1
+    "r" (lowWR),                // %2
+    "r" (highWR),               // %3
+    "r" (nbPixelsH),            // %4
+    "r" (nbPixelsM),            // %5
+    "r" (nbPixelsL),            // %6
+    "r" (temp),                 // %7
+    "w" (bitmap)                // %8
+    );
 }
 
 

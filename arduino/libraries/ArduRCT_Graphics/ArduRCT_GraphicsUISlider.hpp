@@ -1,7 +1,7 @@
 /*
- * MacroTests - Tests the macros (see TouchScreen_Macros.cpp for manual)
+ * GraphicsUISlider - an adjustable slider
  *
- * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ * Copyright (c) 2013 Laurent Wibaux <lm.wibaux@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,34 +22,34 @@
  * THE SOFTWARE.
  */
  
-#include <SPI.h>
+#ifndef GRAPHICS_UI_SLIDER_HPP
+#define GRAPHICS_UI_SLIDER_HPP 1
 
-#include <ArduRCT_S6D04H0.h>
-ArduRCT_S6D04H0 graphics(2, 21, 22, 23, 0xFF, 0xFF);		// graphics(PORT, CD, WR, RD, CS, RESET)
+#include <inttypes.h>
 
-//#include <ArduRCT_ST7735.h>
-//ArduRCT_ST7735 graphics(10, 9 , 8);							// graphics(CD, CS, RESET)
-
-void setup() {
-    Serial.begin(57600);  
-    graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
-    graphics.setupBacklight(5);
-    graphics.setBacklight(180);
-}
-
-void loop() {
-    while (Serial.available()) buffer[bufferPtr++] = Serial.read();
-    if (bufferPtr == 0) return;
+class ArduRCT_GraphicsUISlider : public ArduRCT_GraphicsUIElement {
     
-    // wait for end of sentence
-    if ((buffer[bufferPtr-1] == '.') || (buffer[bufferPtr-1] == '\n')) {
-        // mark end of macro
-        buffer[bufferPtr-1] = 0;
-        bufferPtr = 0;
-        // execute the macro
-        graphics.executeMacro(buffer, 10, 10);
-    }
-    delay(10);
-}
+    public:
+        ArduRCT_GraphicsUISlider(uint8_t id, int16_t value, int16_t min, int16_t max, bool (*actionHandler)(uint8_t elementId, int16_t value), int16_t step);
 
+        void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
 
+        ArduRCT_GraphicsUIElement *setValue(int16_t value);
+
+        bool release();
+        
+        bool escape();
+        
+        bool increase();
+        
+        bool decrease();
+        
+    protected:
+        int16_t _min;
+        int16_t _max;
+        int16_t _slider;
+        int16_t _step;
+
+}; 
+
+#endif

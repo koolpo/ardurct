@@ -38,9 +38,6 @@
 #include "ArduRCT_Fonts.hpp"
 #include "ArduRCT_Colors.hpp"
 
-
-//#define GRAPHICS_SPI_IS_SHARED 1
-
 // Max space that a pattern or a bitmap that needs to be overlaid can occupy
 // minimum is FONT_MAX_SPACE (from font.hpp)
 // RAM taken can be up to 5 times this, so beware! 
@@ -58,8 +55,17 @@
 // this number can not be bigger than 255
 #define GRAPHICS_MACRO_MAX_SIZE 128
 
+// Comment this if you don't want to use the UI
+#define GRAPHICS_HAS_UI 1
+
 #if defined(GRAPHICS_HAS_MACROS)
 #include "ArduRCT_GraphicsMacros.hpp"
+#endif
+
+#if defined(GRAPHICS_HAS_UI)
+#include "ArduRCT_GraphicsUI.hpp"
+#include "ArduRCT_GraphicsUIElement.hpp"
+#include "ArduRCT_GraphicsUIScreen.hpp"
 #endif
 
 // Meaningful aliases
@@ -84,10 +90,15 @@
 
 #define GRAPHICS_ARC_ALL (GRAPHICS_ARC_N+GRAPHICS_ARC_S)
 
-#define GRAPHICS_CORNER_NW 0
-#define GRAPHICS_CORNER_NE 1
-#define GRAPHICS_CORNER_SE 2
-#define GRAPHICS_CORNER_SW 3
+#define GRAPHICS_POSITION_NW (1 << 0)
+#define GRAPHICS_POSITION_NE (1 << 1)
+#define GRAPHICS_POSITION_SE (1 << 2)
+#define GRAPHICS_POSITION_SW (1 << 3)
+#define GRAPHICS_POSITION_CENTER (1 << 4)
+#define GRAPHICS_POSITION_N (GRAPHICS_POSITION_NW+GRAPHICS_POSITION_NE)
+#define GRAPHICS_POSITION_S (GRAPHICS_POSITION_SW+GRAPHICS_POSITION_SE)
+#define GRAPHICS_POSITION_E (GRAPHICS_POSITION_NE+GRAPHICS_POSITION_SE)
+#define GRAPHICS_POSITION_W (GRAPHICS_POSITION_NW+GRAPHICS_POSITION_SW)
 
 #define GRAPHICS_STYLE_SIMPLE 0
 #define GRAPHICS_STYLE_NORMAL 1
@@ -159,6 +170,8 @@ class ArduRCT_Graphics: public Print {
 
 		uint8_t getFontCharWidth(uint8_t fontSize);
 		
+        void getStringBoundingBox(char *s, uint8_t fontSize, bool isBold, uint8_t marginX, uint16_t *width, uint16_t *height);
+        
 		uint16_t getWidth();
 
 		uint16_t getHeight();
@@ -226,8 +239,16 @@ class ArduRCT_Graphics: public Print {
 		
 		void executeEepromMacro(uint8_t macroNb, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1,
 			bool continueLastMacro = false, bool selectAndUnselectScreen = true);
-#endif		
-		
+#endif
+
+#if defined(GRAPHICS_HAS_UI)
+        void setupGraphicsUIHome(ArduRCT_GraphicsUIScreen *screen, ArduRCT_GraphicsUIElement *element = 0);
+
+        void setGraphicsUIScreen(ArduRCT_GraphicsUIScreen *screen, ArduRCT_GraphicsUIScreen *returnToScreen = 0);
+        
+        bool handleGraphicsUI(uint8_t actionId, int16_t x, int16_t y);
+#endif
+
 	protected:
 		uint16_t _backgroundColor;
 		uint16_t _foregroundColor;
@@ -283,6 +304,12 @@ class ArduRCT_Graphics: public Print {
 		fontDefinition_t *_fontDef;
 		uint8_t _fontScale;
 
+#if defined(GRAPHICS_HAS_UI)
+        ArduRCT_GraphicsUIScreen *_homeScreen;
+        ArduRCT_GraphicsUIScreen *_screen;
+        ArduRCT_GraphicsUIElement *_homeElement;
+#endif
+
 #if defined(GRAPHICS_HAS_MACROS)
 		int16_t _mThickness;
 		int16_t _mX;
@@ -336,5 +363,16 @@ class ArduRCT_Graphics: public Print {
 
 };
 
+
+#if defined(GRAPHICS_HAS_UI)
+#include "ArduRCT_GraphicsUIButton.hpp"
+#include "ArduRCT_GraphicsUIOption.hpp"
+#include "ArduRCT_GraphicsUITab.hpp"
+#include "ArduRCT_GraphicsUIListItem.hpp"
+#include "ArduRCT_GraphicsUIValue.hpp"
+#include "ArduRCT_GraphicsUILabel.hpp"
+#include "ArduRCT_GraphicsUIGauge.hpp"
+#include "ArduRCT_GraphicsUISlider.hpp"
+#endif
 
 #endif

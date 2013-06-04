@@ -1,7 +1,7 @@
 /*
- * MacroTests - Tests the macros (see TouchScreen_Macros.cpp for manual)
+ * GraphicsUITab - a tab like Option
  *
- * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ * Copyright (c) 2013 Laurent Wibaux <lm.wibaux@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,34 +22,26 @@
  * THE SOFTWARE.
  */
  
-#include <SPI.h>
+#ifndef GRAPHICS_UI_TAB_HPP
+#define GRAPHICS_UI_TAB_HPP 1
 
-#include <ArduRCT_S6D04H0.h>
-ArduRCT_S6D04H0 graphics(2, 21, 22, 23, 0xFF, 0xFF);		// graphics(PORT, CD, WR, RD, CS, RESET)
+#include <inttypes.h>
 
-//#include <ArduRCT_ST7735.h>
-//ArduRCT_ST7735 graphics(10, 9 , 8);							// graphics(CD, CS, RESET)
-
-void setup() {
-    Serial.begin(57600);  
-    graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
-    graphics.setupBacklight(5);
-    graphics.setBacklight(180);
-}
-
-void loop() {
-    while (Serial.available()) buffer[bufferPtr++] = Serial.read();
-    if (bufferPtr == 0) return;
+class ArduRCT_GraphicsUITab : public ArduRCT_GraphicsUIOption {
     
-    // wait for end of sentence
-    if ((buffer[bufferPtr-1] == '.') || (buffer[bufferPtr-1] == '\n')) {
-        // mark end of macro
-        buffer[bufferPtr-1] = 0;
-        bufferPtr = 0;
-        // execute the macro
-        graphics.executeMacro(buffer, 10, 10);
-    }
-    delay(10);
-}
+    public:
+        ArduRCT_GraphicsUITab(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group) ;
 
+        ArduRCT_GraphicsUITab(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
+                bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group);
 
+        void autoSize(ArduRCT_Graphics *graphics);
+
+        void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
+        
+    protected:
+        uint16_t _drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color);
+
+}; 
+
+#endif

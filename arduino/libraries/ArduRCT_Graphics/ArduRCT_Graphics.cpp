@@ -54,6 +54,9 @@ void ArduRCT_Graphics::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t
     _spiUsed = false;
     _screenSelected = false;
     _backlightPin = 0xFF;
+    _width = _widthImpl;
+    _height = _heightImpl;
+
 }
 
 void ArduRCT_Graphics::setupScreen(uint8_t cd, uint8_t cs, uint8_t reset) {    
@@ -72,6 +75,8 @@ void ArduRCT_Graphics::setupScreen(uint8_t cd, uint8_t cs, uint8_t reset) {
     _spiUsed = true;
     _screenSelected = false;
     _backlightPin = 0xFF;
+    _width = _widthImpl;
+    _height = _heightImpl;
 }
 
 void ArduRCT_Graphics::setupBacklight(uint8_t backlightPin) {
@@ -115,8 +120,6 @@ void ArduRCT_Graphics::begin(uint16_t foregroundColor, uint16_t backgroundColor,
 #if defined(CONFIGURATION_HAS_MACROS)    
     _initializeMacros();
 #endif    
-    _width = _widthImpl;
-    _height = _heightImpl;
     if (_backlightPin != 0xFF) setupBacklight(_backlightPin);
     setFont(fontSize, fontBold, fontOverlay);
     setBackgroundColor(backgroundColor);
@@ -269,6 +272,30 @@ uint8_t ArduRCT_Graphics::getFontCharWidth(uint8_t fontSize) {
     return (fontDef->width + fontDef->charSpacing) * fontScale;
 }
 
+void ArduRCT_Graphics::getStringBoundingBox(char *s, uint8_t fontSize, bool isBold, uint8_t marginX, uint16_t *width, uint16_t *height) {
+    uint8_t validFontSize = (fontSize > FONT_LAST_DEF*2 ? FONT_LAST_DEF*2 : (fontSize < 1 ? 1 : fontSize));
+    uint8_t fontScale = (validFontSize <= FONT_LAST_DEF ? 1 : 2);
+    fontDefinition_t *fontDef = &fontDefinition_small;
+    if ((FONT_LAST_DEF >= 2) && ((validFontSize == 2) || (validFontSize == 2+FONT_LAST_DEF))) fontDef = &fontDefinition_medium;
+    else if ((FONT_LAST_DEF >= 3) && ((validFontSize == 3) || (validFontSize == 3+FONT_LAST_DEF))) fontDef = &fontDefinition_big;
+    uint8_t lineHeight = (fontDef->height + fontDef->lineSpacing + (isBold ? 1 : 0)) * fontScale;
+    uint8_t chrWidth = (fontDef->width + fontDef->charSpacing) * fontScale;
+    *width = 0;
+    *height = lineHeight;
+    int16_t x = 0;
+    uint8_t i = 0;
+    while (s[i] != 0) {
+        if (s[i] == '\n') *height += lineHeight;
+        else x += chrWidth;
+        if (x > *width) *width = x;
+        if (x > getWidth()-2*marginX-chrWidth) {
+            x = 0;
+            *height += lineHeight;
+        }
+        i++;
+    }
+}
+
 void ArduRCT_Graphics::setCursor(int16_t x, int16_t y) {
     _x = x;
     _y = y;
@@ -393,67 +420,67 @@ void ArduRCT_Graphics::drawBigDigit(uint8_t d, uint16_t x, uint16_t y, uint16_t 
         // horizontal top
         _fillBoundedArea(x+thickness, y1, x+width-thickness-1, y1+thickness-1, color);
         if (style >= GRAPHICS_STYLE_NORMAL) {
-            fillCorner(x+thickness-1, y1+thickness-1, thickness, GRAPHICS_CORNER_NW, color, false);
-            fillCorner(x+width-thickness, y1+thickness-1, thickness, GRAPHICS_CORNER_NE, color, false);
+            fillCorner(x+thickness-1, y1+thickness-1, thickness, GRAPHICS_POSITION_NW, color, false);
+            fillCorner(x+width-thickness, y1+thickness-1, thickness, GRAPHICS_POSITION_NE, color, false);
         }
     }
     if ((DIGIT_SEGMENTS[d] & 0x02) != 0) {
         // vertical top left
         _fillBoundedArea(x, y1+thickness, x+thickness-1, y1+thickness+h-1, color);
         if (style >= GRAPHICS_STYLE_NORMAL) {
-            fillCorner(x+thickness-1, y1+thickness-1, thickness, GRAPHICS_CORNER_NW, color, false);
-            fillCorner(x+thickness-1, y1+h+thickness, thickness, GRAPHICS_CORNER_SW, color, false);
+            fillCorner(x+thickness-1, y1+thickness-1, thickness, GRAPHICS_POSITION_NW, color, false);
+            fillCorner(x+thickness-1, y1+h+thickness, thickness, GRAPHICS_POSITION_SW, color, false);
         }
         if (style >= GRAPHICS_STYLE_ADVANCED) {
-            if ((DIGIT_SEGMENTS[d] & 0x01) != 0) fillCorner(x+thickness, y1+thickness, t2, GRAPHICS_CORNER_SE, color, false);
-            if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+thickness, y1+h+thickness-1, t2, GRAPHICS_CORNER_NE, color, false);
+            if ((DIGIT_SEGMENTS[d] & 0x01) != 0) fillCorner(x+thickness, y1+thickness, t2, GRAPHICS_POSITION_SE, color, false);
+            if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+thickness, y1+h+thickness-1, t2, GRAPHICS_POSITION_NE, color, false);
         }
     }
     if ((DIGIT_SEGMENTS[d] & 0x04) != 0) {
         // vertical bottom left
         _fillBoundedArea(x, y2+thickness, x+thickness-1, y2+thickness+h-1, color);
         if (style >= GRAPHICS_STYLE_NORMAL) {            
-            fillCorner(x+thickness-1, y2+thickness-1, thickness, GRAPHICS_CORNER_NW, color, false);
-            fillCorner(x+thickness-1, y2+h+thickness, thickness, GRAPHICS_CORNER_SW, color, false);
+            fillCorner(x+thickness-1, y2+thickness-1, thickness, GRAPHICS_POSITION_NW, color, false);
+            fillCorner(x+thickness-1, y2+h+thickness, thickness, GRAPHICS_POSITION_SW, color, false);
             if (DIGIT_SEGMENTS[d] == 0x3F || DIGIT_SEGMENTS[d] == 0x5F) fillRectangle(x, y2, thickness, thickness, color, false);
         }
         if (style >= GRAPHICS_STYLE_ADVANCED) {
-            if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+thickness, y2+thickness, t2, GRAPHICS_CORNER_SE, color, false);
-            if ((DIGIT_SEGMENTS[d] & 0x08) != 0) fillCorner(x+thickness, y2+h+thickness-1, t2, GRAPHICS_CORNER_NE, color, false);
+            if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+thickness, y2+thickness, t2, GRAPHICS_POSITION_SE, color, false);
+            if ((DIGIT_SEGMENTS[d] & 0x08) != 0) fillCorner(x+thickness, y2+h+thickness-1, t2, GRAPHICS_POSITION_NE, color, false);
         }
     }
     if ((DIGIT_SEGMENTS[d] & 0x08) != 0) {
         // horizontal bottom
         _fillBoundedArea(x+thickness, y3, x+width-thickness-1, y3+thickness-1, color);
         if (style >= GRAPHICS_STYLE_NORMAL) {    
-            fillCorner(x+thickness-1, y3, thickness, GRAPHICS_CORNER_SW, color, false);
-            fillCorner(x+width-thickness, y3, thickness, GRAPHICS_CORNER_SE, color, false);
+            fillCorner(x+thickness-1, y3, thickness, GRAPHICS_POSITION_SW, color, false);
+            fillCorner(x+width-thickness, y3, thickness, GRAPHICS_POSITION_SE, color, false);
         }
     }
     if ((DIGIT_SEGMENTS[d] & 0x10) != 0) {
         // vertical bottom right
         _fillBoundedArea(x1, y2+thickness, x1+thickness-1, y2+thickness+h-1, color);
         if (style >= GRAPHICS_STYLE_NORMAL) {
-            fillCorner(x+width-thickness, y2+thickness-1, thickness, GRAPHICS_CORNER_NE, color, false);
-            fillCorner(x+width-thickness, y2+h+thickness, thickness, GRAPHICS_CORNER_SE, color, false);
+            fillCorner(x+width-thickness, y2+thickness-1, thickness, GRAPHICS_POSITION_NE, color, false);
+            fillCorner(x+width-thickness, y2+h+thickness, thickness, GRAPHICS_POSITION_SE, color, false);
         }
         if (style >= GRAPHICS_STYLE_ADVANCED) {
-            if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+width-thickness-1, y2+thickness, t2, GRAPHICS_CORNER_SW, color, false);
-            if ((DIGIT_SEGMENTS[d] & 0x08) != 0) fillCorner(x+width-thickness-1, y2+h+thickness-1, t2, GRAPHICS_CORNER_NW, color, false);
+            if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+width-thickness-1, y2+thickness, t2, GRAPHICS_POSITION_SW, color, false);
+            if ((DIGIT_SEGMENTS[d] & 0x08) != 0) fillCorner(x+width-thickness-1, y2+h+thickness-1, t2, GRAPHICS_POSITION_NW, color, false);
         }
     }
     if ((DIGIT_SEGMENTS[d] & 0x20) != 0) {
         // vertical top right
         _fillBoundedArea(x1, y1+thickness, x1+thickness-1, y1+thickness+h-1, color);
         if (style >= GRAPHICS_STYLE_NORMAL) {
-            fillCorner(x+width-thickness, y1+thickness-1, thickness, GRAPHICS_CORNER_NE, color, false);
-            fillCorner(x+width-thickness, y1+h+thickness, thickness, GRAPHICS_CORNER_SE, color, false);
+            fillCorner(x+width-thickness, y1+thickness-1, thickness, GRAPHICS_POSITION_NE, color, false);
+            fillCorner(x+width-thickness, y1+h+thickness, thickness, GRAPHICS_POSITION_SE, color, false);
             if (DIGIT_SEGMENTS[d] == 0x3F || DIGIT_SEGMENTS[d] == 0x30 || DIGIT_SEGMENTS[d] == 0x72 || DIGIT_SEGMENTS[d] == 0x31 || DIGIT_SEGMENTS[d] == 0x7B) 
                 fillRectangle(x1, y2, thickness, thickness, color, false);
         }
         if (style >= GRAPHICS_STYLE_ADVANCED) {
-            if ((DIGIT_SEGMENTS[d] & 0x01) != 0) fillCorner(x+width-thickness-1, y1+thickness, t2, GRAPHICS_CORNER_SW, color, false);
-            if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+width-thickness-1, y1+h+thickness-1, t2, GRAPHICS_CORNER_NW, color, false);
+            if ((DIGIT_SEGMENTS[d] & 0x01) != 0) fillCorner(x+width-thickness-1, y1+thickness, t2, GRAPHICS_POSITION_SW, color, false);
+            if ((DIGIT_SEGMENTS[d] & 0x40) != 0) fillCorner(x+width-thickness-1, y1+h+thickness-1, t2, GRAPHICS_POSITION_NW, color, false);
         }
     }
     if ((DIGIT_SEGMENTS[d] & 0x40) != 0) {
@@ -503,23 +530,17 @@ void ArduRCT_Graphics::drawVerticalLine(int16_t x, int16_t y1, int16_t y2, uint1
     if (selectAndUnselectScreen) unselectScreenImpl();
 }
 
-void ArduRCT_Graphics::fillCorner(int16_t x, int16_t y, uint16_t size, uint8_t type, uint16_t color, bool selectAndUnselectScreen) {
+void ArduRCT_Graphics::fillCorner(int16_t x, int16_t y, uint16_t size, uint8_t corner, uint16_t color, bool selectAndUnselectScreen) {
     if (size == 0) return;
     if (selectAndUnselectScreen) selectScreenImpl();
     if (size == 1) _drawBoundedPixel(x, y, color);
-    else switch (type) {
-        case GRAPHICS_CORNER_NW:
-            for (int i=0; i<size; i++) _fillBoundedArea(x-size+i+1, y-i, x, y-i, color);
-            break;
-        case GRAPHICS_CORNER_NE:
-            for (int i=0; i<size; i++) _fillBoundedArea(x, y-i, x+size-i-1, y-i, color);
-            break;
-        case GRAPHICS_CORNER_SE:
-            for (int i=0; i<size; i++) _fillBoundedArea(x, y+i, x+size-i-1, y+i, color);
-            break;
-        case GRAPHICS_CORNER_SW:
-            for (int i=0; i<size; i++) _fillBoundedArea(x-size+i+1, y+i, x, y+i, color);
-            break;
+    else {
+        for (int i=0; i<size; i++) {
+            if (corner & GRAPHICS_POSITION_NW) _fillBoundedArea(x-size+i+1, y-i, x, y-i, color);
+            if (corner & GRAPHICS_POSITION_NE) _fillBoundedArea(x, y-i, x+size-i-1, y-i, color);
+            if (corner & GRAPHICS_POSITION_SE) _fillBoundedArea(x, y+i, x+size-i-1, y+i, color);
+            if (corner & GRAPHICS_POSITION_SW) _fillBoundedArea(x-size+i+1, y+i, x, y+i, color);
+        }    
     }
     if (selectAndUnselectScreen) unselectScreenImpl();
 }

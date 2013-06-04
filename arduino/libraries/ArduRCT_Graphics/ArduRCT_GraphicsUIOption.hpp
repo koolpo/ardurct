@@ -1,5 +1,5 @@
 /*
- * MacroTests - Tests the macros (see TouchScreen_Macros.cpp for manual)
+ * GraphicsUIButton - a clickable button
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -22,34 +22,30 @@
  * THE SOFTWARE.
  */
  
-#include <SPI.h>
+#ifndef GRAPHICS_UI_OPTION_HPP
+#define GRAPHICS_UI_OPTION_HPP 1
 
-#include <ArduRCT_S6D04H0.h>
-ArduRCT_S6D04H0 graphics(2, 21, 22, 23, 0xFF, 0xFF);		// graphics(PORT, CD, WR, RD, CS, RESET)
+#include <inttypes.h>
 
-//#include <ArduRCT_ST7735.h>
-//ArduRCT_ST7735 graphics(10, 9 , 8);							// graphics(CD, CS, RESET)
-
-void setup() {
-    Serial.begin(57600);  
-    graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
-    graphics.setupBacklight(5);
-    graphics.setBacklight(180);
-}
-
-void loop() {
-    while (Serial.available()) buffer[bufferPtr++] = Serial.read();
-    if (bufferPtr == 0) return;
+class ArduRCT_GraphicsUIOption : public ArduRCT_GraphicsUIButton {
     
-    // wait for end of sentence
-    if ((buffer[bufferPtr-1] == '.') || (buffer[bufferPtr-1] == '\n')) {
-        // mark end of macro
-        buffer[bufferPtr-1] = 0;
-        bufferPtr = 0;
-        // execute the macro
-        graphics.executeMacro(buffer, 10, 10);
-    }
-    delay(10);
-}
+    public:
+        ArduRCT_GraphicsUIOption();
+        
+        ArduRCT_GraphicsUIOption(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group);
 
+        ArduRCT_GraphicsUIOption(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
+                bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group);
 
+        ArduRCT_GraphicsUIElement *setValue(int16_t value) ;
+
+        ArduRCT_GraphicsUIElement *enter();
+
+        boolean release();
+        
+    protected:
+        uint16_t _drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color);
+
+}; 
+
+#endif
