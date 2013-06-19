@@ -9082,7 +9082,7 @@ Source: http://www.atmel.com/dyn/resources/prod_documents/doc2593.pdf</descripti
 <part name="X2" library="SparkFun" deviceset="USB" device="-MICROB"/>
 <part name="C11" library="SparkFun" deviceset="CAP" device="0805" value="10nF"/>
 <part name="C12" library="SparkFun" deviceset="CAP" device="0805" value="10nF"/>
-<part name="C13" library="SparkFun" deviceset="CAP" device="0805" value="100nF"/>
+<part name="C13" library="SparkFun" deviceset="CAP" device="0805" value="0.1uF"/>
 <part name="C14" library="SparkFun" deviceset="CAP" device="0805" value="10uF"/>
 <part name="SJ4" library="SparkFun" deviceset="SOLDERJUMPER" device="TRACE" value=""/>
 <part name="SJ5" library="SparkFun" deviceset="SOLDERJUMPER" device="TRACE" value=""/>
@@ -9094,6 +9094,7 @@ Source: http://www.atmel.com/dyn/resources/prod_documents/doc2593.pdf</descripti
 <part name="P+10" library="SparkFun" deviceset="3.3V" device=""/>
 <part name="JP8" library="wibauxl" deviceset="M01" device=""/>
 <part name="LED2" library="wibauxl" deviceset="LED" device="" value="Red"/>
+<part name="SJ6" library="SparkFun" deviceset="SOLDERJUMPER" device="TRACE" value=""/>
 </parts>
 <sheets>
 <sheet>
@@ -9111,7 +9112,11 @@ the two outside pins</text>
 <text x="243.84" y="-177.8" size="2.54" layer="94" ratio="12" rot="R180">ArduRCT project</text>
 <text x="243.84" y="-181.864" size="2.54" layer="94" ratio="12" rot="R180">http://code.google.com/p/ardurct</text>
 <wire x1="207.264" y1="127" x2="209.042" y2="127" width="0.4064" layer="94"/>
-<wire x1="207.264" y1="116.84" x2="209.042" y2="116.84" width="0.4064" layer="94"/>
+<wire x1="207.264" y1="111.76" x2="209.042" y2="111.76" width="0.4064" layer="94"/>
+<text x="177.8" y="99.06" size="1.778" layer="94">If used as a shield, the bridges should be open
+and the ISP connector should not be used
+to prevent conflicts on the SPI bus.</text>
+<wire x1="207.264" y1="119.38" x2="209.042" y2="119.38" width="0.4064" layer="94"/>
 </plain>
 <instances>
 <instance part="C6" gate="G$1" x="210.82" y="-73.66"/>
@@ -9212,7 +9217,7 @@ the two outside pins</text>
 <instance part="C13" gate="G$1" x="121.92" y="40.64" rot="R180"/>
 <instance part="C14" gate="G$1" x="132.08" y="40.64" rot="R180"/>
 <instance part="SJ4" gate="1" x="208.28" y="127"/>
-<instance part="SJ5" gate="1" x="208.28" y="116.84"/>
+<instance part="SJ5" gate="1" x="208.28" y="111.76"/>
 <instance part="JP6" gate="G$1" x="170.18" y="63.5"/>
 <instance part="R9" gate="G$1" x="101.6" y="40.64" rot="MR90"/>
 <instance part="R10" gate="G$1" x="109.22" y="40.64" rot="MR90"/>
@@ -9221,6 +9226,7 @@ the two outside pins</text>
 <instance part="P+10" gate="G$1" x="7.62" y="175.26"/>
 <instance part="JP8" gate="G$1" x="114.3" y="17.78" rot="R180"/>
 <instance part="LED2" gate="G$1" x="147.32" y="175.26" rot="MR270"/>
+<instance part="SJ6" gate="1" x="208.28" y="119.38"/>
 </instances>
 <busses>
 </busses>
@@ -9723,7 +9729,7 @@ the two outside pins</text>
 <label x="104.14" y="139.7" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="(PCINT7/ADC7)PA7"/>
 <wire x1="121.92" y1="139.7" x2="121.92" y2="76.2" width="0.1524" layer="91"/>
-<label x="147.32" y="76.2" size="1.778" layer="95"/>
+<label x="142.24" y="76.2" size="1.778" layer="95"/>
 <pinref part="JP6" gate="G$1" pin="DC"/>
 <wire x1="157.48" y1="76.2" x2="121.92" y2="76.2" width="0.1524" layer="91"/>
 </segment>
@@ -9757,9 +9763,9 @@ the two outside pins</text>
 <pinref part="U1" gate="G$1" pin="(PCINT14/MISO)PB6"/>
 </segment>
 <segment>
-<wire x1="180.34" y1="124.46" x2="195.58" y2="124.46" width="0.1524" layer="91"/>
-<label x="182.88" y="124.46" size="1.778" layer="95"/>
-<pinref part="JP7" gate="G$1" pin="D12"/>
+<pinref part="SJ6" gate="1" pin="2"/>
+<wire x1="213.36" y1="119.38" x2="228.6" y2="119.38" width="0.1524" layer="91"/>
+<label x="215.9" y="119.38" size="1.778" layer="95"/>
 </segment>
 <segment>
 <wire x1="157.48" y1="48.26" x2="142.24" y2="48.26" width="0.1524" layer="91"/>
@@ -9774,9 +9780,9 @@ the two outside pins</text>
 </net>
 <net name="D13/SCK" class="0">
 <segment>
-<label x="215.9" y="116.84" size="1.778" layer="95"/>
+<label x="215.9" y="111.76" size="1.778" layer="95"/>
 <pinref part="SJ5" gate="1" pin="2"/>
-<wire x1="213.36" y1="116.84" x2="228.6" y2="116.84" width="0.1524" layer="91"/>
+<wire x1="213.36" y1="111.76" x2="228.6" y2="111.76" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <wire x1="157.48" y1="45.72" x2="142.24" y2="45.72" width="0.1524" layer="91"/>
@@ -10084,7 +10090,7 @@ the two outside pins</text>
 <junction x="124.46" y="91.44"/>
 <label x="104.14" y="93.98" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="(PCINT23/TOSC2)PC7"/>
-<label x="147.32" y="71.12" size="1.778" layer="95"/>
+<label x="142.24" y="71.12" size="1.778" layer="95"/>
 <pinref part="D1" gate="G$1" pin="A2"/>
 <wire x1="137.16" y1="91.44" x2="137.16" y2="93.98" width="0.1524" layer="91"/>
 <pinref part="JP6" gate="G$1" pin="RD"/>
@@ -10100,7 +10106,7 @@ the two outside pins</text>
 <junction x="127" y="96.52"/>
 <label x="104.14" y="96.52" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="(PCINT22/TOSC1)PC6"/>
-<label x="147.32" y="73.66" size="1.778" layer="95"/>
+<label x="142.24" y="73.66" size="1.778" layer="95"/>
 <pinref part="D1" gate="G$1" pin="A1"/>
 <wire x1="137.16" y1="111.76" x2="137.16" y2="109.22" width="0.1524" layer="91"/>
 <pinref part="JP6" gate="G$1" pin="WR"/>
@@ -10112,7 +10118,7 @@ the two outside pins</text>
 <wire x1="101.6" y1="99.06" x2="129.54" y2="99.06" width="0.1524" layer="91"/>
 <label x="104.14" y="99.06" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="(PCINT21/TDI)PC5"/>
-<label x="147.32" y="68.58" size="1.778" layer="95"/>
+<label x="142.24" y="68.58" size="1.778" layer="95"/>
 <pinref part="JP6" gate="G$1" pin="CS"/>
 <wire x1="129.54" y1="68.58" x2="157.48" y2="68.58" width="0.1524" layer="91"/>
 </segment>
@@ -10299,9 +10305,18 @@ the two outside pins</text>
 <segment>
 <pinref part="JP7" gate="G$1" pin="D13"/>
 <wire x1="180.34" y1="121.92" x2="195.58" y2="121.92" width="0.1524" layer="91"/>
-<wire x1="195.58" y1="121.92" x2="195.58" y2="116.84" width="0.1524" layer="91"/>
+<wire x1="195.58" y1="121.92" x2="195.58" y2="111.76" width="0.1524" layer="91"/>
 <pinref part="SJ5" gate="1" pin="1"/>
-<wire x1="195.58" y1="116.84" x2="203.2" y2="116.84" width="0.1524" layer="91"/>
+<wire x1="195.58" y1="111.76" x2="203.2" y2="111.76" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$14" class="0">
+<segment>
+<pinref part="JP7" gate="G$1" pin="D12"/>
+<wire x1="180.34" y1="124.46" x2="200.66" y2="124.46" width="0.1524" layer="91"/>
+<wire x1="200.66" y1="124.46" x2="200.66" y2="119.38" width="0.1524" layer="91"/>
+<pinref part="SJ6" gate="1" pin="1"/>
+<wire x1="200.66" y1="119.38" x2="203.2" y2="119.38" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
