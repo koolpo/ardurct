@@ -25,6 +25,13 @@
 #ifndef S6D0H0_HPP
 #define S6D0H0_HPP
 
+#define S6D04H0_DATA_OUT_PORT PORTB
+#define S6D04H0_DATA_IN_PORT PINB
+#define S6D04H0_DATA_DDR_PORT DDRB
+#define S6D04H0_WR_PORT PORTC
+#define S6D04H0_WR_PIN 22
+#define S6D04H0_RD_PIN 23
+
 #include "ArduRCT_Graphics.h"
 
 class ArduRCT_S6D04H0: public ArduRCT_Graphics {
@@ -32,7 +39,7 @@ class ArduRCT_S6D04H0: public ArduRCT_Graphics {
 	public:
 		ArduRCT_S6D04H0();
 		
-		ArduRCT_S6D04H0(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, uint8_t backlightPin = 0xFF);
+		ArduRCT_S6D04H0(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin = 0xFF);
 		
 	protected:
 		// see ArduRCT_Graphics

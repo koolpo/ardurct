@@ -24,11 +24,11 @@
  
 #include <SPI.h>
 
-//#include <ArduRCT_S6D04H0.h>
-//ArduRCT_S6D04H0 graphics(2, 21, 22, 23, 0xFF, 0xFF);		// graphics(PORT, CD, WR, RD, CS, RESET)
+#include <ArduRCT_S6D04H0.h>
+ArduRCT_S6D04H0 graphics(21, 0xFF, 0xFF, 5);   // graphics(CD, CS, RESET, BACKLIGHT)
 
-#include <ArduRCT_ST7735.h>
-ArduRCT_ST7735 graphics(10, 9 , 8);							// graphics(CD, CS, RESET)
+//#include <ArduRCT_ST7735.h>
+//ArduRCT_ST7735 graphics(10, 9 , 8, 5);         // graphics(CD, CS, RESET, BACKLIGHT)
 
 uint8_t rotation = GRAPHICS_ROTATION_0;
 

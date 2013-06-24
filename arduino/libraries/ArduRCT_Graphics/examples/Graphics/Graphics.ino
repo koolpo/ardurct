@@ -25,17 +25,17 @@
 
 #include <SPI.h>
 
-//#include <ArduRCT_S6D04H0.h>
-//ArduRCT_S6D04H0 graphics(2, 21, 22, 23, 0xFF, 0xFF);		// graphics(PORT, CD, WR, RD, CS, RESET)
+#include <ArduRCT_S6D04H0.h>
+ArduRCT_S6D04H0 graphics(21, 0xFF, 0xFF, 5);   // graphics(CD, CS, RESET, BACKLIGHT)
 
-#include <ArduRCT_ST7735.h>
-ArduRCT_ST7735 graphics(10, 9 , 8);							// graphics(CD, CS, RESET)
+//#include <ArduRCT_ST7735.h>
+//ArduRCT_ST7735 graphics(10, 9 , 8, 5);         // graphics(CD, CS, RESET, BACKLIGHT)
 
 uint16_t wait = 3000;
 
 void setup() {
     graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
-    graphics.setBacklight(180);
+    graphics.setupBacklight(5);
 }
 
 void loop() {
@@ -71,13 +71,13 @@ void loop() {
     // Corners
     graphics.fillScreen(WHITE);
     graphics.drawString("Corners", 3, 3, BLACK, FONT_MEDIUM, FONT_BOLD, NO_OVERLAY);
-    graphics.fillCorner(74, 90, 40, GRAPHICS_CORNER_SE, RED);
+    graphics.fillCorner(74, 90, 40, GRAPHICS_POSITION_SE, RED);
     graphics.drawString("SE", 100, 120, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
-    graphics.fillCorner(54, 90, 35, GRAPHICS_CORNER_SW, ORANGE);
+    graphics.fillCorner(54, 90, 35, GRAPHICS_POSITION_SW, ORANGE);
     graphics.drawString("SW", 10, 115, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
-    graphics.fillCorner(74, 70, 45, GRAPHICS_CORNER_NE, BLUE);
+    graphics.fillCorner(74, 70, 45, GRAPHICS_POSITION_NE, BLUE);
     graphics.drawString("NE", 110, 40, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
-    graphics.fillCorner(54, 70, 30, GRAPHICS_CORNER_NW, GREY);
+    graphics.fillCorner(54, 70, 30, GRAPHICS_POSITION_NW, GREY);
     graphics.drawString("NW", 20, 40, BLACK, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
     delay(wait);
     

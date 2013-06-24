@@ -25,15 +25,17 @@
 
 #include <SPI.h>
 
-//#include <ArduRCT_S6D04H0.h>
-//ArduRCT_S6D04H0 graphics(2, 21, 22, 23, 0xFF, 0xFF);		// graphics(PORT, CD, WR, RD, CS, RESET)
+#include <ArduRCT_S6D04H0.h>
+ArduRCT_S6D04H0 graphics(21, 0xFF, 0xFF, 5);   // graphics(CD, CS, RESET, BACKLIGHT)
 
-#include <ArduRCT_ST7735.h>
-ArduRCT_ST7735 graphics(10, 9 , 8);							// graphics(CD, CS, RESET)
+#define LOGO_SCALE_MUL 2
+#define LOGO_SCALE_DIV 1
 
+//#include <ArduRCT_ST7735.h>
+//ArduRCT_ST7735 graphics(10, 9 , 8, 5);         // graphics(CD, CS, RESET, BACKLIGHT)
 
-#define LOGO_SCALE_MUL 7
-#define LOGO_SCALE_DIV 5
+//#define LOGO_SCALE_MUL 7
+//#define LOGO_SCALE_DIV 5
 
 #define LOGO_WIDTH 57
 #define LOGO_HEIGHT 88
@@ -83,7 +85,7 @@ void setup() {
     int16_t y = (graphics.getHeight()-LOGO_HEIGHT*LOGO_SCALE_MUL/LOGO_SCALE_DIV)/2;
     
     // execute the macro without the initial write in slot 0
-    graphics.executeMacro(&sparkfun[3], x, y, LOGO_SCALE_MUL, LOGO_SCALE_DIV, true);
+    graphics.executeMacro(&sparkfun[3], x, y, LOGO_SCALE_MUL, LOGO_SCALE_DIV, false);
 
     // write the macro to eeprom slot 0
     //graphics.executeMacro(sparkfun);

@@ -114,6 +114,8 @@
  *                r        reset the macro variables before executing
  *                n        the macro number to execute
  */
+ 
+//#define GRAPHICS_MACRO_DEBUG 1
 
 #define GRAPHICS_MACRO_FORMAT_ERROR -1
 
@@ -169,10 +171,14 @@ uint8_t *ArduRCT_Graphics::executeMacro(uint8_t *s, int16_t x, int16_t y, uint16
     // initialize relative origin
     if (!continueLastMacro) _initializeMacros();
     uint16_t i = 0;
+    uint16_t macroStart;
     // convert to upper case, transform all char below space as space
     _formatMacroSentence(s);
-Serial.println((char *)s);
+#ifdef GRAPHICS_MACRO_DEBUG
+    Serial.println((char *)s);
+#endif
     while (s[i] != 0) {
+        macroStart = i;
         bool hasText = false;
         // get the command
         switch (s[i]) {
@@ -328,6 +334,15 @@ Serial.println((char *)s);
         
         if (mc.cmd == GRAPHICS_MACRO_CMD_NONE) continue;
         
+
+#ifdef GRAPHICS_MACRO_DEBUG
+        uint8_t endChar = s[i];
+        s[i] = 0;
+        Serial.print("\t");
+        Serial.print((char*)&s[macroStart]);
+        s[i] = endChar;
+        Serial.print(": ");
+#endif
         // parse the command parameters
         mc.nbParams = 0;
         int len = 0;
@@ -355,17 +370,18 @@ Serial.println((char *)s);
             mc.textLen = i - txtStart;
             i++;
         }
-        
-Serial.println("Finished parsing");
-        
+#ifdef GRAPHICS_MACRO_DEBUG
+        Serial.print("{");
+        Serial.print(mc.nbParams);
+        Serial.print("}: ");
+#endif
+
         // Execute the command
         if (drawMode) executeMacroCommand(&mc, x, y, scaleMul, scaleDiv, true, selectAndUnselectScreen);
         else if (mc.cmd == GRAPHICS_MACRO_CMD_WRITE) {
             wBufferNb = mc.param[GRAPHICS_MACRO_PARAM_MACRO_NUMBER];
             if (wBufferNb > GRAPHICS_MACRO_MAX_NUMBER) return 0;
         }
-Serial.println("Finished drawing");
-
 
         // At this stage, we have a struct containing the command to execute
         // this can be stored in EEPROM for future execution
@@ -374,6 +390,9 @@ Serial.println("Finished drawing");
             if (endWrite != GRAPHICS_MACRO_FORMAT_ERROR) wBufferPtr = endWrite;
         }
     }
+#ifdef GRAPHICS_MACRO_DEBUG
+        Serial.println("\tFinished drawing");
+#endif
     if (!drawMode) {
         // write to EEPROM
         if ((wBufferPtr > 0) && (wBufferPtr < GRAPHICS_MACRO_MAX_SIZE)) {
@@ -455,7 +474,7 @@ void ArduRCT_Graphics::_formatMacroSentence(uint8_t *s) {
 
 void ArduRCT_Graphics::_executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, int16_t x, int16_t y, uint16_t scaleMul, uint16_t scaleDiv) {
     uint8_t group = mc->cmd & GRAPHICS_MACRO_CMD_GROUP_MASK;
-    
+
     // presets
     if (group == GRAPHICS_MACRO_CMD_GROUP_PRESET) {
         if (mc->cmd == GRAPHICS_MACRO_CMD_PRESET_FOREGROUND) _mForegroundColor = mc->color;
@@ -473,6 +492,9 @@ void ArduRCT_Graphics::_executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, 
             _mScaleDiv = 1;
             if ((mc->nbParams > 1) && (mc->param[GRAPHICS_MACRO_PARAM_SCALE_DIV] != 0)) _mScaleDiv = mc->param[GRAPHICS_MACRO_PARAM_SCALE_DIV];
         }
+#ifdef GRAPHICS_MACRO_DEBUG
+        Serial.println("preset");    
+#endif
         return;
     }
     
@@ -489,7 +511,7 @@ void ArduRCT_Graphics::_executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, 
     
     // lines
     if (group == GRAPHICS_MACRO_CMD_GROUP_LINE) {
-        int sX2, sY2;
+        int32_t sX2, sY2;
         if (mc->nbParams < 2) return;
         if (mc->cmd == GRAPHICS_MACRO_CMD_LINE) {
             if (mc->nbParams > 2) {
@@ -538,6 +560,10 @@ void ArduRCT_Graphics::_executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, 
             }
             
         }
+#ifdef GRAPHICS_MACRO_DEBUG
+        Serial.print("line "); Serial.print(sX); Serial.print(" "); Serial.print(sY); Serial.print(" "); 
+            Serial.print(sX2); Serial.print(" "); Serial.println(sY2);
+#endif
         drawLine(sX, sY, sX2, sY2, _mForegroundColor, sThickness, false);
         return;
     }    
@@ -570,6 +596,9 @@ void ArduRCT_Graphics::_executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, 
         if ((mc->cmd == GRAPHICS_MACRO_CMD_ARC_REVERSED) || (mc->cmd == GRAPHICS_MACRO_CMD_ARC)) 
             drawArc(sX, sY, sRadius, mc->param[GRAPHICS_MACRO_PARAM_ARC_OCTANT], _mForegroundColor, sThickness, false);
         else fillArc(sX, sY, sRadius, mc->param[GRAPHICS_MACRO_PARAM_ARC_OCTANT], _mForegroundColor, false);            
+#ifdef GRAPHICS_MACRO_DEBUG
+        Serial.print("arc "); Serial.print(sX); Serial.print(" "); Serial.print(sY); Serial.print(" "); Serial.println(sRadius);
+#endif
         return;
     }
     
@@ -581,6 +610,9 @@ void ArduRCT_Graphics::_executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, 
         sRadius = sRadius * sMul/sDiv;
         if (mc->cmd == GRAPHICS_MACRO_CMD_CIRCLE) drawCircle(sX, sY, sRadius, _mForegroundColor, sThickness, false);
         else fillCircle(sX, sY, sRadius, _mForegroundColor, false);
+#ifdef GRAPHICS_MACRO_DEBUG
+        Serial.print("circle "); Serial.print(sX); Serial.print(" "); Serial.print(sY); Serial.print(" "); Serial.println(sRadius);
+#endif
         return;
     }
     
@@ -594,6 +626,9 @@ void ArduRCT_Graphics::_executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, 
         sHeight = sHeight * sMul/sDiv;
         if (mc->cmd == GRAPHICS_MACRO_CMD_RECTANGLE) drawRectangle(sX, sY, sWidth, sHeight, _mForegroundColor, sThickness, false);
         else if (mc->cmd == GRAPHICS_MACRO_CMD_RECTANGLE_FILLED) fillRectangle(sX, sY, sWidth, sHeight, _mForegroundColor, false);
+#ifdef GRAPHICS_MACRO_DEBUG
+        Serial.print("rectangle "); Serial.print(sX); Serial.print(" "); Serial.print(sY); Serial.print(" "); Serial.print(sWidth); Serial.print(" "); Serial.println(sHeight);
+#endif
         // we need at least 1 more parameter to display the rounded rectangle
         if (mc->nbParams < 5) return;
         int32_t sRadius = mc->param[GRAPHICS_MACRO_PARAM_ROUNDING];
@@ -617,6 +652,10 @@ void ArduRCT_Graphics::_executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, 
         sY3 = y + sY3 * sMul/sDiv;
         if (mc->cmd == GRAPHICS_MACRO_CMD_TRIANGLE) drawTriangle(sX, sY, sX2, sY2, sX3, sY3, _mForegroundColor, sThickness, false);
         else if (mc->cmd == GRAPHICS_MACRO_CMD_TRIANGLE_FILLED) fillTriangle(sX, sY, sX2, sY2, sX3, sY3, _mForegroundColor, false);
+#ifdef GRAPHICS_MACRO_DEBUG
+        Serial.print("triangle "); Serial.print(sX); Serial.print(" "); Serial.print(sY); Serial.print(" "); Serial.print(sX2); Serial.print(" "); Serial.print(sY2); 
+            Serial.print(" "); Serial.print(sX3); Serial.print(" "); Serial.println(sY3);
+#endif
         return;
     }
         
@@ -627,6 +666,10 @@ void ArduRCT_Graphics::_executeMacroCommand(ardurct_graphicsMacroCommand_t *mc, 
         if (!_mIsFontOverlay) setBackgroundColor(_mBackgroundColor);
         drawString((char *)mc->text, sX, sY, _mForegroundColor, _mFontSize, _mIsFontBold, _mIsFontOverlay, false);
         if (!_mIsFontOverlay) setBackgroundColor(bc);
+#ifdef GRAPHICS_MACRO_DEBUG
+        Serial.print("text "); Serial.println((char *)mc->text);
+#endif
+
         return;
     }
     
@@ -696,8 +739,15 @@ int8_t ArduRCT_Graphics::_parseMacroCommandParameter(uint8_t *s, int16_t n, ardu
         value = value * 10 + s[i] - '0';
         i++;
     }
-    if (negative) mc->param[paramId] = -value;
-    else mc->param[paramId] = value;
+    if (negative) value = -value;
+#ifdef GRAPHICS_MACRO_DEBUG
+    Serial.print("[");
+    Serial.print(paramId);
+    Serial.print("] ");
+    Serial.print(value);
+    Serial.print(", ");
+#endif
+    mc->param[paramId] = value;
     return i-n;
 }
 

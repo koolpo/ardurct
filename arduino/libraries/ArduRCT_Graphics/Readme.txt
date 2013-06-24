@@ -11,7 +11,7 @@ ArduRCT_Graphics*			High level drawing functions (includes GraphicsMacros.* if G
 
 Headers
 -------
-CArduRCT_olors.hpp			Defines some constant colors
+CArduRCT_Colors.hpp			Defines some constant colors
 ArduRCT_Fonts.hpp			Describes some constants and structs for the fonts
 ArduRCT_FontBitmaps.hpp		Defines the patterns for the fonts
 ArduRCT_EepromUtils.hpp		Utilities to write several bytes at once to EEPROM

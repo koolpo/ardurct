@@ -29,10 +29,7 @@
 ArduRCT_Graphics::ArduRCT_Graphics(void) {
 }
 
-void ArduRCT_Graphics::setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, bool spiOnBus) {    
-    _outPort = portOutputRegister(port);
-    _inPort = portInputRegister(port);
-    _portMode = portModeRegister(port);
+void ArduRCT_Graphics::setupScreen(uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, bool spiOnBus) {    
     _rdPort = portOutputRegister(digitalPinToPort(rd));
     _rdHigh = digitalPinToBitMask(rd);
     _rdLow = ~_rdHigh;

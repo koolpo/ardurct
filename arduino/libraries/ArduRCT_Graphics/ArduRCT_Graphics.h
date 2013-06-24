@@ -127,7 +127,7 @@ class ArduRCT_Graphics: public Print {
 #endif
 
 		// used for parallel port screens
-		void setupScreen(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, bool spiOnBus = false);
+		void setupScreen(uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, bool spiOnBus = false);
 
 		// used for spi screens
 		void setupScreen(uint8_t cd, uint8_t cs, uint8_t reset);
@@ -256,9 +256,6 @@ class ArduRCT_Graphics: public Print {
 		bool _isFontBold;
 		bool _isFontOverlay;
 		int8_t _thickness;
-		volatile uint8_t *_outPort;
-		volatile uint8_t *_inPort;
-		volatile uint8_t *_portMode;
 		volatile uint8_t *_rdPort;
 		volatile uint8_t *_wrPort;
 		volatile uint8_t *_cdPort;
