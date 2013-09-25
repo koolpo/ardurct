@@ -8212,7 +8212,7 @@ on the SPI bus</text>
 <instance part="U$2" gate="G$1" x="0" y="-198.12"/>
 <instance part="X1" gate="G$1" x="25.4" y="-68.58" rot="MR0"/>
 <instance part="GND3" gate="1" x="35.56" y="-73.66" rot="MR0"/>
-<instance part="U$3" gate="G$1" x="15.24" y="12.7"/>
+<instance part="U$3" gate="G$1" x="233.68" y="33.02"/>
 <instance part="JP5" gate="G$1" x="172.72" y="-40.64" rot="R180"/>
 <instance part="P+1" gate="G$1" x="17.78" y="175.26"/>
 <instance part="P+2" gate="G$1" x="33.02" y="162.56"/>
@@ -8226,7 +8226,7 @@ on the SPI bus</text>
 <instance part="P+6" gate="G$1" x="91.44" y="40.64"/>
 <instance part="GND17" gate="1" x="91.44" y="25.4"/>
 <instance part="JP3" gate="G$1" x="137.16" y="-129.54" rot="R180"/>
-<instance part="U$5" gate="G$1" x="15.24" y="-182.88"/>
+<instance part="U$5" gate="G$1" x="231.14" y="-165.1"/>
 <instance part="JP4" gate="G$1" x="203.2" y="-109.22" rot="R180"/>
 <instance part="SJ3" gate="1" x="180.34" y="-109.22"/>
 <instance part="P+7" gate="G$1" x="172.72" y="-106.68"/>

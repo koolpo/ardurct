@@ -9458,7 +9458,6 @@ Source: http://www.atmel.com/dyn/resources/prod_documents/doc2593.pdf</descripti
 <part name="P+10" library="SparkFun" deviceset="3.3V" device=""/>
 <part name="LED2" library="wibauxl" deviceset="LED" device="" value="Red"/>
 <part name="SJ6" library="SparkFun" deviceset="SOLDERJUMPER" device="TRACE" value=""/>
-<part name="GND31" library="supply1" deviceset="GND" device=""/>
 <part name="R11" library="SparkFun" deviceset="RESISTOR" device="0805-RES" value="10"/>
 <part name="R12" library="SparkFun" deviceset="RESISTOR" device="0805-RES" value="10"/>
 <part name="R13" library="SparkFun" deviceset="RESISTOR" device="0805-RES" value="10"/>
@@ -9601,7 +9600,6 @@ D1 and R4 don't have to be soldered</text>
 <instance part="P+10" gate="G$1" x="15.24" y="165.1"/>
 <instance part="LED2" gate="G$1" x="154.94" y="165.1" rot="MR270"/>
 <instance part="SJ6" gate="1" x="215.9" y="109.22"/>
-<instance part="GND31" gate="1" x="-43.18" y="-175.26"/>
 <instance part="R11" gate="G$1" x="106.68" y="-160.02"/>
 <instance part="R12" gate="G$1" x="106.68" y="-167.64"/>
 <instance part="R13" gate="G$1" x="106.68" y="-175.26"/>
@@ -9837,11 +9835,6 @@ D1 and R4 don't have to be soldered</text>
 <wire x1="15.24" y1="152.4" x2="15.24" y2="154.94" width="0.1524" layer="91"/>
 <pinref part="C15" gate="G$1" pin="1"/>
 <pinref part="GND29" gate="1" pin="GND"/>
-</segment>
-<segment>
-<wire x1="-40.64" y1="-170.18" x2="-43.18" y2="-170.18" width="0.1524" layer="91"/>
-<wire x1="-43.18" y1="-170.18" x2="-43.18" y2="-172.72" width="0.1524" layer="91"/>
-<pinref part="GND31" gate="1" pin="GND"/>
 </segment>
 <segment>
 <pinref part="GND33" gate="1" pin="GND"/>
