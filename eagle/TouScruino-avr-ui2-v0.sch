@@ -8193,18 +8193,6 @@ package type SS</description>
 <wire x1="1.37" y1="-1.25" x2="-1.817" y2="-1.25" width="0.127" layer="21"/>
 <wire x1="1.37" y1="-1.29" x2="-3.91" y2="-1.29" width="0.127" layer="51"/>
 </package>
-<package name="1X3_LONGPAD">
-<wire x1="-6.0325" y1="-1.5875" x2="0.9525" y2="-1.5875" width="0.127" layer="21"/>
-<wire x1="0.9525" y1="-1.5875" x2="0.9525" y2="1.5875" width="0.127" layer="21"/>
-<wire x1="0.9525" y1="1.5875" x2="-6.0325" y2="1.5875" width="0.127" layer="21"/>
-<wire x1="-6.0325" y1="1.5875" x2="-6.0325" y2="-1.5875" width="0.127" layer="21"/>
-<pad name="1" x="0" y="0" drill="1.016" diameter="1.2446" shape="long" rot="R270"/>
-<pad name="2" x="-2.54" y="0" drill="1.016" diameter="1.2446" shape="long" rot="R270"/>
-<pad name="3" x="-5.08" y="0" drill="1.016" diameter="1.2446" shape="long" rot="R270"/>
-<smd name="2A" x="-2.54" y="1.65" dx="2" dy="1" layer="1" rot="R90"/>
-<smd name="3A" x="-5.08" y="-1.65" dx="2" dy="1" layer="1" rot="R90"/>
-<smd name="1A" x="0" y="-1.65" dx="2" dy="1" layer="1" rot="R90"/>
-</package>
 <package name="USB-MICROB">
 <description>Micro USB Package</description>
 <wire x1="-3.4" y1="-2.15" x2="-3" y2="-2.15" width="0.127" layer="51"/>
@@ -8331,6 +8319,15 @@ package type SS</description>
 <smd name="3" x="-1.27" y="5" dx="3" dy="1" layer="1" rot="R90"/>
 <smd name="2" x="-3.81" y="5" dx="3" dy="1" layer="1" rot="R90"/>
 <smd name="1" x="-6.35" y="5" dx="3" dy="1" layer="1" rot="R90"/>
+</package>
+<package name="1X3_LONGPAD">
+<wire x1="-6.0325" y1="-1.5875" x2="0.9525" y2="-1.5875" width="0.127" layer="21"/>
+<wire x1="0.9525" y1="-1.5875" x2="0.9525" y2="1.5875" width="0.127" layer="21"/>
+<wire x1="0.9525" y1="1.5875" x2="-6.0325" y2="1.5875" width="0.127" layer="21"/>
+<wire x1="-6.0325" y1="1.5875" x2="-6.0325" y2="-1.5875" width="0.127" layer="21"/>
+<pad name="1" x="0" y="0" drill="1.016" diameter="1.2446" shape="long" rot="R270"/>
+<pad name="2" x="-2.54" y="0" drill="1.016" diameter="1.2446" shape="long" rot="R270"/>
+<pad name="3" x="-5.08" y="0" drill="1.016" diameter="1.2446" shape="long" rot="R270"/>
 </package>
 </packages>
 <symbols>
