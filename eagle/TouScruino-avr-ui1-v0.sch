@@ -8472,13 +8472,13 @@ on the SPI bus</text>
 <instance part="P+2" gate="G$1" x="33.02" y="162.56"/>
 <instance part="P+3" gate="G$1" x="43.18" y="162.56"/>
 <instance part="GND16" gate="1" x="190.5" y="-81.28"/>
-<instance part="JP1" gate="G$1" x="81.28" y="-116.84" rot="R180"/>
-<instance part="GND14" gate="1" x="73.66" y="-132.08"/>
-<instance part="P+8" gate="G$1" x="73.66" y="-106.68"/>
+<instance part="JP1" gate="G$1" x="35.56" y="27.94" rot="R180"/>
+<instance part="GND14" gate="1" x="27.94" y="12.7"/>
+<instance part="P+8" gate="G$1" x="27.94" y="38.1"/>
 <instance part="GND15" gate="1" x="165.1" y="45.72"/>
-<instance part="J1" gate="G$1" x="78.74" y="33.02"/>
-<instance part="P+6" gate="G$1" x="91.44" y="40.64"/>
-<instance part="GND17" gate="1" x="91.44" y="25.4"/>
+<instance part="J1" gate="G$1" x="83.82" y="27.94"/>
+<instance part="P+6" gate="G$1" x="96.52" y="35.56"/>
+<instance part="GND17" gate="1" x="96.52" y="20.32"/>
 <instance part="JP3" gate="G$1" x="137.16" y="-129.54" rot="R180"/>
 <instance part="U$5" gate="G$1" x="231.14" y="-165.1"/>
 <instance part="JP4" gate="G$1" x="203.2" y="-109.22" rot="R180"/>
@@ -8641,11 +8641,11 @@ on the SPI bus</text>
 <pinref part="GND16" gate="1" pin="GND"/>
 </segment>
 <segment>
-<wire x1="73.66" y1="-129.54" x2="73.66" y2="-124.46" width="0.1524" layer="91"/>
-<wire x1="73.66" y1="-124.46" x2="76.2" y2="-124.46" width="0.1524" layer="91"/>
-<wire x1="76.2" y1="-121.92" x2="73.66" y2="-121.92" width="0.1524" layer="91"/>
-<wire x1="73.66" y1="-121.92" x2="73.66" y2="-124.46" width="0.1524" layer="91"/>
-<junction x="73.66" y="-124.46"/>
+<wire x1="27.94" y1="15.24" x2="27.94" y2="20.32" width="0.1524" layer="91"/>
+<wire x1="27.94" y1="20.32" x2="30.48" y2="20.32" width="0.1524" layer="91"/>
+<wire x1="30.48" y1="22.86" x2="27.94" y2="22.86" width="0.1524" layer="91"/>
+<wire x1="27.94" y1="22.86" x2="27.94" y2="20.32" width="0.1524" layer="91"/>
+<junction x="27.94" y="20.32"/>
 <pinref part="GND14" gate="1" pin="GND"/>
 <pinref part="JP1" gate="G$1" pin="6"/>
 <pinref part="JP1" gate="G$1" pin="5"/>
@@ -8665,8 +8665,8 @@ on the SPI bus</text>
 <junction x="165.1" y="53.34"/>
 </segment>
 <segment>
-<wire x1="88.9" y1="30.48" x2="91.44" y2="30.48" width="0.1524" layer="91"/>
-<wire x1="91.44" y1="30.48" x2="91.44" y2="27.94" width="0.1524" layer="91"/>
+<wire x1="93.98" y1="25.4" x2="96.52" y2="25.4" width="0.1524" layer="91"/>
+<wire x1="96.52" y1="25.4" x2="96.52" y2="22.86" width="0.1524" layer="91"/>
 <pinref part="J1" gate="G$1" pin="6"/>
 <pinref part="GND17" gate="1" pin="GND"/>
 </segment>
@@ -8773,8 +8773,8 @@ on the SPI bus</text>
 <pinref part="C2" gate="G$1" pin="2"/>
 </segment>
 <segment>
-<wire x1="76.2" y1="-111.76" x2="63.5" y2="-111.76" width="0.1524" layer="91"/>
-<label x="63.5" y="-111.76" size="1.778" layer="95"/>
+<wire x1="30.48" y1="33.02" x2="17.78" y2="33.02" width="0.1524" layer="91"/>
+<label x="17.78" y="33.02" size="1.778" layer="95"/>
 <pinref part="JP1" gate="G$1" pin="1"/>
 </segment>
 </net>
@@ -8826,14 +8826,14 @@ on the SPI bus</text>
 <pinref part="P+3" gate="G$1" pin="3.3V"/>
 </segment>
 <segment>
-<wire x1="76.2" y1="-119.38" x2="73.66" y2="-119.38" width="0.1524" layer="91"/>
-<wire x1="73.66" y1="-119.38" x2="73.66" y2="-106.68" width="0.1524" layer="91"/>
+<wire x1="30.48" y1="25.4" x2="27.94" y2="25.4" width="0.1524" layer="91"/>
+<wire x1="27.94" y1="25.4" x2="27.94" y2="38.1" width="0.1524" layer="91"/>
 <pinref part="P+8" gate="G$1" pin="3.3V"/>
 <pinref part="JP1" gate="G$1" pin="4"/>
 </segment>
 <segment>
-<wire x1="88.9" y1="35.56" x2="91.44" y2="35.56" width="0.1524" layer="91"/>
-<wire x1="91.44" y1="35.56" x2="91.44" y2="40.64" width="0.1524" layer="91"/>
+<wire x1="93.98" y1="30.48" x2="96.52" y2="30.48" width="0.1524" layer="91"/>
+<wire x1="96.52" y1="30.48" x2="96.52" y2="35.56" width="0.1524" layer="91"/>
 <pinref part="J1" gate="G$1" pin="2"/>
 <pinref part="P+6" gate="G$1" pin="3.3V"/>
 </segment>
@@ -8886,8 +8886,8 @@ on the SPI bus</text>
 <pinref part="U3" gate="G$1" pin="RX"/>
 </segment>
 <segment>
-<wire x1="76.2" y1="-116.84" x2="63.5" y2="-116.84" width="0.1524" layer="91"/>
-<label x="63.5" y="-116.84" size="1.778" layer="95"/>
+<wire x1="30.48" y1="27.94" x2="17.78" y2="27.94" width="0.1524" layer="91"/>
+<label x="17.78" y="27.94" size="1.778" layer="95"/>
 <pinref part="JP1" gate="G$1" pin="3"/>
 </segment>
 </net>
@@ -8903,8 +8903,8 @@ on the SPI bus</text>
 <pinref part="U3" gate="G$1" pin="TX"/>
 </segment>
 <segment>
-<wire x1="76.2" y1="-114.3" x2="63.5" y2="-114.3" width="0.1524" layer="91"/>
-<label x="63.5" y="-114.3" size="1.778" layer="95"/>
+<wire x1="30.48" y1="30.48" x2="17.78" y2="30.48" width="0.1524" layer="91"/>
+<label x="17.78" y="30.48" size="1.778" layer="95"/>
 <pinref part="JP1" gate="G$1" pin="2"/>
 </segment>
 </net>
@@ -9002,8 +9002,8 @@ on the SPI bus</text>
 <pinref part="SJ4" gate="1" pin="2"/>
 </segment>
 <segment>
-<wire x1="88.9" y1="33.02" x2="109.22" y2="33.02" width="0.1524" layer="91"/>
-<label x="96.52" y="33.02" size="1.778" layer="95"/>
+<wire x1="93.98" y1="27.94" x2="114.3" y2="27.94" width="0.1524" layer="91"/>
+<label x="101.6" y="27.94" size="1.778" layer="95"/>
 <pinref part="J1" gate="G$1" pin="4"/>
 </segment>
 </net>
@@ -9014,8 +9014,8 @@ on the SPI bus</text>
 <pinref part="U1" gate="G$1" pin="(PCINT14/MISO)PB6"/>
 </segment>
 <segment>
-<wire x1="71.12" y1="35.56" x2="50.8" y2="35.56" width="0.1524" layer="91"/>
-<label x="50.8" y="35.56" size="1.778" layer="95"/>
+<wire x1="76.2" y1="30.48" x2="55.88" y2="30.48" width="0.1524" layer="91"/>
+<label x="55.88" y="30.48" size="1.778" layer="95"/>
 <pinref part="J1" gate="G$1" pin="1"/>
 </segment>
 <segment>
@@ -9033,8 +9033,8 @@ on the SPI bus</text>
 <pinref part="SJ5" gate="1" pin="1"/>
 </segment>
 <segment>
-<wire x1="71.12" y1="33.02" x2="50.8" y2="33.02" width="0.1524" layer="91"/>
-<label x="50.8" y="33.02" size="1.778" layer="95"/>
+<wire x1="76.2" y1="27.94" x2="55.88" y2="27.94" width="0.1524" layer="91"/>
+<label x="55.88" y="27.94" size="1.778" layer="95"/>
 <pinref part="J1" gate="G$1" pin="3"/>
 </segment>
 <segment>
@@ -9144,8 +9144,8 @@ on the SPI bus</text>
 <pinref part="U3" gate="G$1" pin="RES"/>
 </segment>
 <segment>
-<wire x1="71.12" y1="30.48" x2="50.8" y2="30.48" width="0.1524" layer="91"/>
-<label x="50.8" y="30.48" size="1.778" layer="95"/>
+<wire x1="76.2" y1="25.4" x2="55.88" y2="25.4" width="0.1524" layer="91"/>
+<label x="55.88" y="25.4" size="1.778" layer="95"/>
 <pinref part="J1" gate="G$1" pin="5"/>
 </segment>
 </net>
