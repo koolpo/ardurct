@@ -40,31 +40,31 @@ void Box::init(uint16_t color, uint16_t size, int16_t x, int16_t y, int16_t xSpe
     _y = toSoftware(y);
     _xSpeed = xSpeed;
     _ySpeed = ySpeed;
-	_xDraw = -1000;
-	_yDraw = 0;
+    _xDraw = -1000;
+    _yDraw = 0;
 }
 
 
-void Box::erase(ArduRCT_Graphics *display) {
-	// only erase if already drawn
-	if (_xDraw == -1000) return;
+void Box::erase(ArduRCT_Graphics *graphics) {
+    // only erase if already drawn
+    if (_xDraw == -1000) return;
 #if (BOX_FILLED == 1)
-    display->fillRectangle(_xDraw, _yDraw, _size, _size, display->getBackgroundColor());
+    graphics->fillRectangle(_xDraw, _yDraw, _size, _size, graphics->getBackgroundColor());
 #else
-    display->drawRectangle(_xDraw, _yDraw, _size, _size, display->getBackgroundColor(), BOX_THICKNESS);
-#endif	
-	_xDraw = -1000;
+    graphics->drawRectangle(_xDraw, _yDraw, _size, _size, graphics->getBackgroundColor(), BOX_THICKNESS);
+#endif    
+    _xDraw = -1000;
 }
 
 
 void Box::draw(ArduRCT_Graphics *display) {
-	_xDraw = toScreen(_x);
-	_yDraw = toScreen(_y);
+    _xDraw = toScreen(_x);
+    _yDraw = toScreen(_y);
 #if (BOX_FILLED == 1)
-    display->fillRectangle(_xDraw, _yDraw, _size, _size, _color);
+    graphics->fillRectangle(_xDraw, _yDraw, _size, _size, _color);
 #else
-    display->drawRectangle(_xDraw, _yDraw, _size, _size, _color, BOX_THICKNESS);
-#endif	
+    graphics->drawRectangle(_xDraw, _yDraw, _size, _size, _color, BOX_THICKNESS);
+#endif    
 }
 
 
@@ -93,7 +93,7 @@ void Box::checkWallCollisions(uint16_t wallX, uint16_t wallY) {
 
 
 void Box::checkBoxCollisions(Box *box) {
-	uint16_t size = toSoftware(_size);
+    uint16_t size = toSoftware(_size);
     if ((abs(_x-box->_x) < size) && (abs(_y-box->_y) < size)) {
         if (_xSpeed * box->_xSpeed < 0) {
             if (box->_x > _x) box->_x = _x + size;

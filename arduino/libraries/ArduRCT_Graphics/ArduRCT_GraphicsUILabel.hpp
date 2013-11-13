@@ -38,11 +38,11 @@ class ArduRCT_GraphicsUILabel : public ArduRCT_GraphicsUIElement {
 
         char *getText();
 
-        void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
+        virtual void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
 
-        void autoSize(ArduRCT_Graphics *graphics);
+        virtual void autoSize(ArduRCT_Graphics *graphics);
 
-        void placeLabel(ArduRCT_Graphics *graphics);
+        virtual void placeLabel(ArduRCT_Graphics *graphics);
         
     protected:
         char *_text;

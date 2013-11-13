@@ -32,16 +32,16 @@
  
 #include <SPI.h>
 
-#include <ArduRCT_S6D04H0.h>
-ArduRCT_S6D04H0 graphics(21, 0xFF, 0xFF, 5);   // graphics(CD, CS, RESET, BACKLIGHT)
+//#include <ArduRCT_S6D04H0.h>
+//ArduRCT_S6D04H0 graphics;
+
+#include <ArduRCT_SPFD5408.h>
+ArduRCT_SPFD5408 graphics;
 
 //#include <ArduRCT_ST7735.h>
-//ArduRCT_ST7735 graphics(10, 9 , 8, 5);         // graphics(CD, CS, RESET, BACKLIGHT)
+//ArduRCT_ST7735 graphics;
 
-ArduRCT_GraphicsUIScreen tab1(&graphics);
-ArduRCT_GraphicsUIScreen tab2(&graphics);
-ArduRCT_GraphicsUIScreen menu(&graphics);
-ArduRCT_GraphicsUIScreen popup(&graphics);
+#define FONT_FACE FONT_PLAIN
 
 #define TAB1 20
 #define TAB2 21
@@ -49,61 +49,96 @@ ArduRCT_GraphicsUIScreen popup(&graphics);
 #define MENU 4
 #define POPUP 5
 
+ArduRCT_GraphicsUIScreen screen1;
+ArduRCT_GraphicsUIScreen screen2;
+ArduRCT_GraphicsUIScreen menu;
+ArduRCT_GraphicsUIScreen popup;
+
+ArduRCT_GraphicsUILabel label1("Label");
+ArduRCT_GraphicsUIValue value1(0, 3, 0, 255, &handleActions, 1, 16);
+ArduRCT_GraphicsUIOption option1(1, "O1", &handleActions, 1);
+ArduRCT_GraphicsUIOption option2(2, "O2", &handleActions, 1);
+ArduRCT_GraphicsUIOption option3(3, "O3", &handleActions, 1);
+ArduRCT_GraphicsUIButton button1(4, "Menu", &handleActions);
+ArduRCT_GraphicsUIButton button2(5, "Popup", &handleActions);
+ArduRCT_GraphicsUIElement element1(6);
+ArduRCT_GraphicsUISlider slider1(7, 50, 0, 100, &handleActions, 5);
+ArduRCT_GraphicsUISlider slider2(8, 70, 0, 100, &handleActions, 5);
+ArduRCT_GraphicsUISlider slider3(9, 10, 0, 100, &handleActions, 5);
+ArduRCT_GraphicsUITab tab1(TAB1, "T1", &handleActions, 1);
+ArduRCT_GraphicsUITab tab2(TAB2, "T2", &handleActions, 1);
+ArduRCT_GraphicsUIElement element2(FOOTER, &drawFooter);
+ArduRCT_GraphicsUISlider slider4(40, 10, 0, 20, &handleActions, 1);
+ArduRCT_GraphicsUIGauge gauge1(41, 10, 0, 20);
+ArduRCT_GraphicsUILabel label2(42, "Test", FONT_SMALL);
+ArduRCT_GraphicsUILabel label3("Are you really sure you want to exit ?", FONT_SMALL);
+ArduRCT_GraphicsUIButton button3(50, "Yes", &handleActions);
+ArduRCT_GraphicsUIButton button4(51, "No", &handleActions);
+ArduRCT_GraphicsUIListItem listItem1(60, "Item 01", &handleActions);
+ArduRCT_GraphicsUIListItem listItem2(61, "Item 02", &handleActions);
+ArduRCT_GraphicsUIListItem listItem3(62, "Item 03", &handleActions);
+ArduRCT_GraphicsUIListItem listItem4(63, "Item 04", &handleActions);
+
 void setup() {
     Serial.begin(9600);
     graphics.begin(BLACK, WHITE, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
 
-    // define the tab1 screen
+    // add the screens
+    // define screen1
+    graphics.addScreen(&screen1);
     // show a few examples of elements
-    tab1.addElement(new ArduRCT_GraphicsUILabel("Label"), 5, 5, GUI_AS, GUI_AS);	
-    tab1.addElement(new ArduRCT_GraphicsUIValue(0, 3, 0, 255, &handleActions, 1, 16), GUI_ROPWM, GUI_SAP, GUI_AS, GUI_AS);
-    tab1.addElement(new ArduRCT_GraphicsUIOption(1, "O1", &handleActions, 1), 5, GUI_BOPWM, GUI_AS, GUI_AS);
-    tab1.addElement(new ArduRCT_GraphicsUIOption(2, "O2", &handleActions, 1), GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
-    tab1.addElement(new ArduRCT_GraphicsUIOption(3, "O3", &handleActions, 1), GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
-    tab1.setElementValue(1, GRAPHICS_UI_SELECTED);
-    tab1.getElement(2)->editable = false;
-    tab1.addElement(new ArduRCT_GraphicsUIButton(4, "Menu", &handleActions), 5, GUI_BOPWM, GUI_AS, GUI_AS);
-    tab1.addElement(new ArduRCT_GraphicsUIButton(5, "Popup", &handleActions), GUI_ROPWM, GUI_SAP, GUI_AS, GUI_AS);
-    tab1.addElement(new ArduRCT_GraphicsUIElement(6), 5, GUI_BOPWM, 118, GUI_SAP);
-    tab1.addElement(new ArduRCT_GraphicsUISlider(7, 50, 0, 100, &handleActions, 5), GUI_SAP, GUI_BOPWM, 118, 20);
-    tab1.addElement(new ArduRCT_GraphicsUISlider(8, 70, 0, 100, &handleActions, 5), GUI_SAP, GUI_BOPWM, GUI_SAP, GUI_SAP);
-    tab1.addElement(new ArduRCT_GraphicsUISlider(9, 10, 0, 100, &handleActions, 5), GUI_SAP, GUI_BOPWM, GUI_SAP, GUI_SAP);
+    screen1.addElement(&label1, 5, 5, GUI_AS, GUI_AS);	
+    screen1.addElement(&value1, GUI_ROPWM, GUI_SAP, GUI_AS, GUI_AS);
+    screen1.addElement(&option1, 5, GUI_BOPWM, GUI_AS, GUI_AS);
+    screen1.addElement(&option2, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
+    screen1.addElement(&option3, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
+    screen1.setElementValue(1, GRAPHICS_UI_SELECTED);
+    screen1.getElement(2)->editable = false;
+    screen1.addElement(&button1, 5, GUI_BOPWM, GUI_AS, GUI_AS);
+    screen1.addElement(&button2, GUI_ROPWM, GUI_SAP, GUI_AS, GUI_AS);
+    screen1.addElement(&element1, 5, GUI_BOPWM, 118, GUI_SAP);
+    screen1.addElement(&slider1, GUI_SAP, GUI_BOPWM, 118, 20);
+    screen1.addElement(&slider2, GUI_SAP, GUI_BOPWM, GUI_SAP, GUI_SAP);
+    screen1.addElement(&slider3, GUI_SAP, GUI_BOPWM, GUI_SAP, GUI_SAP);
     // set up a header with tabs
-    tab1.addElement(new ArduRCT_GraphicsUITab(TAB1, "T1", &handleActions, 1), 0, 0, GUI_AS, GUI_AS, GRAPHICS_UI_SECTION_HEADER);
-    tab1.setElementValue(TAB1, GRAPHICS_UI_SELECTED);
-    tab1.addElement(new ArduRCT_GraphicsUITab(TAB2, "T2", &handleActions, 1), GUI_ROP, 0, GUI_AS, GUI_AS, GRAPHICS_UI_SECTION_HEADER);
+    screen1.addElement(&tab1, 0, 0, GUI_AS, GUI_AS, GRAPHICS_UI_SECTION_HEADER);
+    screen1.setElementValue(TAB1, GRAPHICS_UI_SELECTED);
+    screen1.addElement(&tab2, GUI_ROP, 0, GUI_AS, GUI_AS, GRAPHICS_UI_SECTION_HEADER);
     // set a footer
-    tab1.addElement(new ArduRCT_GraphicsUIElement(30, drawFooter), 0, 0, GUI_W, 14, GRAPHICS_UI_SECTION_FOOTER);
-    tab1.getElement(FOOTER)->editable = false;
+    screen1.addElement(&element2, 0, 0, GUI_W, 14, GRAPHICS_UI_SECTION_FOOTER);
+    screen1.getElement(FOOTER)->editable = false;
     
-    // reuse the tabs for another screen: tab2
-    tab2.addElement(tab1.getElement(TAB1));
+    graphics.addScreen(&screen2);
+    // reuse the tabs for another screen: screen2
+    screen2.addElement(screen1.getElement(TAB1));
     // reuse the footer for another screen:tab2
-    tab2.addElement(tab1.getElement(FOOTER));
+    screen2.addElement(screen1.getElement(FOOTER));
     // check other UI elements
-    tab2.addElement(new ArduRCT_GraphicsUISlider(40, 10, 0, 20, &handleActions, 1), 10, 5, 20, 90);
-    tab2.addElement(new ArduRCT_GraphicsUIGauge(41, tab2.getElementValue(105), 0, 20), GUI_ROPWM, GUI_SAP, GUI_SAP, GUI_SAP);
-    tab2.addElement(new ArduRCT_GraphicsUILabel(42, "Test", FONT_SMALL), GUI_SAP, GUI_BOP, GUI_AS, GUI_AS);
-    tab2.getElement(42)->y ++; 
-    tab2.getElement(42)->x -= 4;
+    screen2.addElement(&slider4, 10, 5, 20, 90);
+    screen2.addElement(&gauge1, GUI_ROPWM, GUI_SAP, GUI_SAP, GUI_SAP);
+    screen2.addElement(&label2, GUI_SAP, GUI_BOP, GUI_AS, GUI_AS);
+    screen2.getElement(42)->y ++; 
+    screen2.getElement(42)->x -= 4;
     
     // define a popup
-    popup.addElement(new ArduRCT_GraphicsUILabel("Are you really sureyou want to exit ?", FONT_SMALL), 6, 5, GUI_AS, GUI_AS);
-    popup.addElement(new ArduRCT_GraphicsUIButton(50, "Yes", &handleActions), 5, GUI_BOPWM, GUI_AS, GUI_AS);
-    popup.addElement(new ArduRCT_GraphicsUIButton(51, "No", &handleActions), GUI_ROPWM, GUI_SAP, GUI_SAP, GUI_SAP);
+    graphics.addScreen(&popup);
+    popup.addElement(&label3, 6, 5, GUI_AS, GUI_AS);
+    popup.addElement(&button3, 5, GUI_BOPWM, GUI_AS, GUI_AS);
+    popup.addElement(&button4, GUI_ROPWM, GUI_SAP, GUI_SAP, GUI_SAP);
     popup.pack(GRAPHICS_POSITION_CENTER);
     popup.setBackgroundColor(GRAPHICS_UI_COLOR_POPUP_BACKGROUND);
 
     // define a menu
-    menu.addElement(new ArduRCT_GraphicsUIListItem(60, "Item 01", &handleActions), 0, 0, GUI_AS, GUI_AS);
-    menu.addElement(new ArduRCT_GraphicsUIListItem(61, "Item 02", &handleActions), GUI_SAP, GUI_BOP, GUI_SAP, GUI_SAP);
-    menu.addElement(new ArduRCT_GraphicsUIListItem(62, "Item 03", &handleActions), GUI_SAP, GUI_BOP, GUI_SAP, GUI_SAP);
-    menu.addElement(new ArduRCT_GraphicsUIListItem(63, "Item 04", &handleActions), GUI_SAP, GUI_BOP, GUI_SAP, GUI_SAP);
+    graphics.addScreen(&menu);
+    menu.addElement(&listItem1, 0, 0, GUI_AS, GUI_AS);
+    menu.addElement(&listItem2, GUI_SAP, GUI_BOP, GUI_SAP, GUI_SAP);
+    menu.addElement(&listItem3, GUI_SAP, GUI_BOP, GUI_SAP, GUI_SAP);
+    menu.addElement(&listItem4, GUI_SAP, GUI_BOP, GUI_SAP, GUI_SAP);
     // pack it as small as possible and make the menu popup from the SW of the screen
     menu.pack(GRAPHICS_POSITION_SW);
     
-    graphics.setupGraphicsUIHome(&tab1, tab1.getElement(20));
-    graphics.setGraphicsUIScreen(&tab1);
+    graphics.setGraphicsUIHome(&screen1, screen1.getElement(TAB1));
+    graphics.setGraphicsUIScreen(&screen1);
 }
 
 void loop() {
@@ -133,12 +168,12 @@ void loop() {
 }
 
 bool handleActions(uint8_t elementId, int16_t value) {
-    if (elementId == TAB2) graphics.setGraphicsUIScreen(&tab2);
-    else if (elementId == TAB1) graphics.setGraphicsUIScreen(&tab1);
+    if (elementId == TAB2) graphics.setGraphicsUIScreen(&screen2);
+    else if (elementId == TAB1) graphics.setGraphicsUIScreen(&screen1);
     else if (elementId == MENU) graphics.setGraphicsUIScreen(&menu);
     else if (elementId == POPUP) graphics.setGraphicsUIScreen(&popup);
-    else if ((elementId >= 50) && (elementId <= 63)) graphics.setGraphicsUIScreen(&tab1);
-    else if (elementId == 40) tab2.setElementValue(41, tab2.getElementValue(40));
+    else if ((elementId >= 50) && (elementId <= 63)) graphics.setGraphicsUIScreen(&screen1);
+    else if (elementId == 40) screen2.setElementValue(41, screen2.getElementValue(40));
     return false;
 }
 

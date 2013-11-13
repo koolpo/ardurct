@@ -58,16 +58,16 @@ class ArduRCT_GraphicsUIElement {
         
         uint8_t getFontSize(char *text);
         
-        void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
+        virtual void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
         
-        void autoSize(ArduRCT_Graphics *graphics);
+        virtual void autoSize(ArduRCT_Graphics *graphics);
         
-        void placeLabel(ArduRCT_Graphics *graphics);
+        virtual void placeLabel(ArduRCT_Graphics *graphics);
         
         // returns another element which changed if any
-        ArduRCT_GraphicsUIElement *setValue(int16_t value);
+        virtual ArduRCT_GraphicsUIElement *setValue(int16_t value);
         
-        void setState(uint8_t state);
+        virtual void setState(uint8_t state);
 
         int16_t getValue();
         
@@ -75,29 +75,29 @@ class ArduRCT_GraphicsUIElement {
         
         // called when the item is selected (enter is pressed, or item is touched)
         // returns another element which changed if any
-        ArduRCT_GraphicsUIElement *enter();
+        virtual ArduRCT_GraphicsUIElement *enter();
 
         // called when the item is touched with a pen
         // returns another element which changed if any
-        ArduRCT_GraphicsUIElement *touch(int16_t x, int16_t y);
+        virtual ArduRCT_GraphicsUIElement *touch(int16_t x, int16_t y);
 
         // called when the touch is released
         // return true if the element needs to be escaped after release
-        bool release();
+        virtual bool release();
 
         // called when the item is escaped
         // return true if the element needs to be run after escape
-        bool escape();
+        virtual bool escape();
         
         // called when the item is selected and Up is pressed
         // return true if the value was increased
-        bool increase();
+        virtual bool increase();
 
         // called when the item is selected and Down is pressed
         // return true if the value was decreased
-        bool decrease();
+        virtual bool decrease();
 
-        void highlight();
+        virtual void highlight();
                 
     protected:
         int16_t _value;

@@ -34,11 +34,13 @@ class ArduRCT_GraphicsUIScreen {
 
     public:
     
-        ArduRCT_GraphicsUIScreen(ArduRCT_Graphics *graphics, int16_t x = 0, int16_t y = 0, uint16_t width = 0, uint16_t height = 0);
+        ArduRCT_GraphicsUIScreen(int16_t x = 0, int16_t y = 0, uint16_t width = 0, uint16_t height = 0);
         
         void addElement(ArduRCT_GraphicsUIElement *elt);
         
         void addElement(ArduRCT_GraphicsUIElement *elt, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t section = GRAPHICS_UI_SECTION_MAIN);
+        
+        void setGraphics(ArduRCT_Graphics *graphics);
         
         void deactivate();
         

@@ -47,7 +47,7 @@
 #define GRAPHICS_12B_COLORS_ALLOWED 1
 
 // Comment this if you don't want to use macros
-#define GRAPHICS_HAS_MACROS 1
+//#define GRAPHICS_HAS_MACROS 1
 // the number of macros defined in eeprom
 // each compressed macro can be up to SCREEN_MACRO_MAX_SIZE character long
 // the eeprom taken will be SCREEN_MACRO_MAX_NUMBER * SCREEN_MACRO_MAX_SIZE bytes
@@ -242,7 +242,9 @@ class ArduRCT_Graphics: public Print {
 #endif
 
 #if defined(GRAPHICS_HAS_UI)
-        void setupGraphicsUIHome(ArduRCT_GraphicsUIScreen *screen, ArduRCT_GraphicsUIElement *element = 0);
+        void addScreen(ArduRCT_GraphicsUIScreen *screen);
+        
+        void setGraphicsUIHome(ArduRCT_GraphicsUIScreen *screen, ArduRCT_GraphicsUIElement *element = 0);
 
         void setGraphicsUIScreen(ArduRCT_GraphicsUIScreen *screen, ArduRCT_GraphicsUIScreen *returnToScreen = 0);
         
@@ -280,6 +282,8 @@ class ArduRCT_Graphics: public Print {
 		uint8_t _spiCR;
 		uint16_t _widthImpl;
 		uint16_t _heightImpl;
+		uint8_t _rotation;
+        bool _clipped;
 
 		// the following functions are overwritten by the implementing class
 		virtual void initScreenImpl();
@@ -297,7 +301,6 @@ class ArduRCT_Graphics: public Print {
 		int16_t _x;
 		int16_t _y;
 		uint16_t _margin;
-		uint8_t _rotation;
 		fontDefinition_t *_fontDef;
 		uint8_t _fontScale;
 

@@ -53,7 +53,6 @@ void ArduRCT_Graphics::setupScreen(uint8_t cd, uint8_t wr, uint8_t rd, uint8_t c
     _backlightPin = 0xFF;
     _width = _widthImpl;
     _height = _heightImpl;
-
 }
 
 void ArduRCT_Graphics::setupScreen(uint8_t cd, uint8_t cs, uint8_t reset) {    

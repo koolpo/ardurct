@@ -80,7 +80,7 @@ ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIOption::enter() {
     return 0;
 }
 
-boolean ArduRCT_GraphicsUIOption::release() {
+bool ArduRCT_GraphicsUIOption::release() {
     return true;
 }
 

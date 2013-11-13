@@ -28,20 +28,23 @@
 
 #include "ArduRCT_GraphicsUI.hpp"
 
-ArduRCT_GraphicsUIScreen::ArduRCT_GraphicsUIScreen(ArduRCT_Graphics *graphics, int16_t x, int16_t y, uint16_t width, uint16_t height) {
+ArduRCT_GraphicsUIScreen::ArduRCT_GraphicsUIScreen(int16_t x, int16_t y, uint16_t width, uint16_t height) {
     _x = x;
     _y = y;
     _width = width;
     _height = height;
     _topX = 0;
     _topY = 0;
-    _graphics = graphics;
     _enabled = false;
     _previousScreen = 0;
     _position = GRAPHICS_POSITION_NW;
     _backgroundColor = GRAPHICS_UI_COLOR_BACKGROUND;
     _headerHeight = 0;
     _footerHeight = 0;
+}
+
+void ArduRCT_GraphicsUIScreen::setGraphics(ArduRCT_Graphics *graphics) {
+    _graphics = graphics;
 }
 
 void ArduRCT_GraphicsUIScreen::setBackgroundColor(uint16_t color) {
@@ -172,6 +175,8 @@ bool ArduRCT_GraphicsUIScreen::process(uint8_t actionId, int16_t x, int16_t y) {
         ArduRCT_GraphicsUIElement *modifiedElement = _selectedElement->touch(touchX, touchY);
         if (modifiedElement != 0) _drawElement(modifiedElement);
         _drawElement(_selectedElement);
+
+        return true;
     } else if (actionId == GRAPHICS_UI_ACTION_UNTOUCH) {
         // release the item
         if (_selectedElement == 0) return false;
@@ -180,6 +185,7 @@ bool ArduRCT_GraphicsUIScreen::process(uint8_t actionId, int16_t x, int16_t y) {
         _drawElement(_selectedElement);
         if (runOnEscape) _selectedElement->run();
         _selectedElement = 0;
+        return true;
     } else if ((actionId == GRAPHICS_UI_ACTION_UP) || (actionId == GRAPHICS_UI_ACTION_DOWN)) {
         if (_currentElement == 0) {
             _currentElement = _findNextElement(false);
@@ -349,7 +355,7 @@ void ArduRCT_GraphicsUIScreen::_drawElement(ArduRCT_GraphicsUIElement *elt) {
     int topX = 0;
     int topY = 0;
     if (elt->section == GRAPHICS_UI_SECTION_MAIN) {
-        if (elt->y+_topY <= _headerHeight) return;
+        if (elt->y+_topY < _headerHeight) return;
         if (_topY+elt->y+elt->height > _height-_footerHeight) return;
         topX = _topX;
         topY = _topY;

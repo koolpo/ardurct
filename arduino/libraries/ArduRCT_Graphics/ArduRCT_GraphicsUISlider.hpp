@@ -32,17 +32,17 @@ class ArduRCT_GraphicsUISlider : public ArduRCT_GraphicsUIElement {
     public:
         ArduRCT_GraphicsUISlider(uint8_t id, int16_t value, int16_t min, int16_t max, bool (*actionHandler)(uint8_t elementId, int16_t value), int16_t step);
 
-        void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
+        virtual void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
 
-        ArduRCT_GraphicsUIElement *setValue(int16_t value);
+        virtual ArduRCT_GraphicsUIElement *setValue(int16_t value);
 
-        bool release();
+        virtual bool release();
         
-        bool escape();
+        virtual bool escape();
         
-        bool increase();
+        virtual bool increase();
         
-        bool decrease();
+        virtual bool decrease();
         
     protected:
         int16_t _min;

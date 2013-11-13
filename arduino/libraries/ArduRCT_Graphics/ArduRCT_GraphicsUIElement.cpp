@@ -43,7 +43,7 @@ ArduRCT_GraphicsUIElement::ArduRCT_GraphicsUIElement(uint8_t id, void (*drawHand
 }
 
 // returns the element modified when this value was set
-ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIElement::setValue(int16_t value) {
+ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIElement::setValue(int16_t value) {  
     _value = value;
     return 0;
 }

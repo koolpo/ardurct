@@ -25,17 +25,19 @@
 
 #include <SPI.h>
 
-#include <ArduRCT_S6D04H0.h>
-ArduRCT_S6D04H0 graphics(21, 0xFF, 0xFF, 5);   // graphics(CD, CS, RESET, BACKLIGHT)
+//#include <ArduRCT_S6D04H0.h>
+//ArduRCT_S6D04H0 graphics;
+
+#include <ArduRCT_SPFD5408.h>
+ArduRCT_SPFD5408 graphics;
 
 //#include <ArduRCT_ST7735.h>
-//ArduRCT_ST7735 graphics(10, 9 , 8, 5);         // graphics(CD, CS, RESET, BACKLIGHT)
+//ArduRCT_ST7735 graphics;
 
 uint16_t wait = 3000;
 
 void setup() {
     graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
-    graphics.setupBacklight(5);
 }
 
 void loop() {

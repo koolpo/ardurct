@@ -26,7 +26,7 @@
 #ifndef BOX_H
 #define BOX_H
 
-#include <ArduRCT_Graphics.hpp>
+#include <ArduRCT_Graphics.h>
 
 #define BOX_THICKNESS 3
 #define BOX_FILLED 1
@@ -38,9 +38,9 @@ class Box {
         
         void init(uint16_t color = RED, uint16_t size = 10, int16_t x = 0, int16_t y = 0, int16_t xSpeed = 10, int16_t ySpeed = 10);
         
-        void erase(ArduRCT_Graphics *display);
+        void erase(ArduRCT_Graphics *graphics);
 
-        void draw(ArduRCT_Graphics *display);
+        void draw(ArduRCT_Graphics *graphics);
         
         void move();
 
@@ -54,8 +54,8 @@ class Box {
         int16_t _xSpeed;
         int16_t _ySpeed;
         uint16_t _size;
-		int16_t _xDraw;
-		int16_t _yDraw;
+        int16_t _xDraw;
+        int16_t _yDraw;
 
     private:
         uint16_t _color;

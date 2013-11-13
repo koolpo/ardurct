@@ -9,6 +9,7 @@
 ArduRCT_Graphics	KEYWORD1
 ArduRCT_ST7735	KEYWORD1
 ArduRCT_S6D04H0	KEYWORD1
+ArduRCT_SPFD5408	KEYWORD1
 COLOR_565	KEYWORD1
 ArduRCT_GraphicsUIButton	KEYWORD1
 ArduRCT_GraphicsUIOption	KEYWORD1
@@ -70,7 +71,7 @@ fillScreen	KEYWORD2
 fillCorner	KEYWORD2
 drawBigDigit	KEYWORD2
 handleGraphicsUI	KEYWORD2
-setupGraphicsUIHome	KEYWORD2
+setGraphicsUIHome	KEYWORD2
 setGraphicsUIScreen	KEYWORD2
 addElement	KEYWORD2
 deactivate	KEYWORD2
@@ -82,6 +83,7 @@ setElementValue	KEYWORD2
 getElementValue	KEYWORD2
 setPreviousScreen	KEYWORD2
 getPreviousScreen	KEYWORD2
+addScreen	KEYWORD2
 
 #######################################
 #	Instances	(KEYWORD2)

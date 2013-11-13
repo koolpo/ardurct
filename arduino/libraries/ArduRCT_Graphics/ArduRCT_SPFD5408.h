@@ -1,14 +1,8 @@
 /*
- * ArduRCT_ST7735 - Screen driver layer
+
+ * SPFD5408 - Implementation of the ScreenHAL abstract functions for the SPFD5408
  *
- * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
- * Some parts written by Limor Fried/Ladyada for Adafruit Industries.
- * 
- * This is a library for the Adafruit 1.8" SPI display.
- * This library works with the Adafruit 1.8" TFT Breakout w/SD card
- * ----> http://www.adafruit.com/products/358
- * as well as Adafruit raw 1.8" TFT display
- * ----> http://www.adafruit.com/products/618
+ * Copyright (c) 2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,45 +22,54 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
- 
-#ifndef ARDURCT_ST7735_HPP
-#define ARDURCT_ST7735_HPP
+
+#ifndef SPFD5408_HPP
+#define SPFD5408_HPP
 
 // only define the connections if not defined before
-#ifndef ST7735_CD_PIN
-#define ST7735_CD_PIN 22
-#define ST7735_CS_PIN 18
-#define ST7735_RESET_PIN 23
+#ifndef SPFD5408_DATA_OUT_PORT
+#define SPFD5408_DATA_OUT_PORT PORTB
+#define SPFD5408_DATA_IN_PORT PINB
+#define SPFD5408_DATA_DDR_PORT DDRB
+#define SPFD5408_WR_PORT PORTC
+#define SPFD5408_WR_PIN 23
+#define SPFD5408_RD_PIN 21
+#define SPFD5408_CD_PIN 22
+#define SPFD5408_CS_PIN 31
+#define SPFD5408_RESET_PIN 0xFF
+#define SPFD5408_SPI_ON_BUS true
 #endif
 // same for backlight
-#ifndef ST7735_BACKLIGHT_PIN
-#define ST7735_BACKLIGHT_PIN 5
+#ifndef SPFD5408_BACKLIGHT_PIN
+#define SPFD5408_BACKLIGHT_PIN 5
 #endif
 
 #include "ArduRCT_Graphics.h"
- 
-class ArduRCT_ST7735: public ArduRCT_Graphics {
-   
+
+class ArduRCT_SPFD5408: public ArduRCT_Graphics {
+    
 	public:
-		ArduRCT_ST7735();
+		ArduRCT_SPFD5408();
 		
-		void invertDisplay(boolean invert);	
-		
+        uint16_t getChipId();
+        
 	protected:
 		// see ArduRCT_Graphics
 		void initScreenImpl();
 		void fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);
-		virtual uint16_t *retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+		uint16_t *retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 		void pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 		void setRotationImpl(uint8_t rotation);
 		void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
 		void selectScreenImpl();
 		void unselectScreenImpl();		
-	
-	private:		
-		void _setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy);
-		void _writeCommand(uint8_t cmd);
+
+	private:
+		uint8_t _wrPortLowWR;
+		uint8_t _wrPortHighWR;
 		
+        void _writeRegister(uint8_t reg, uint16_t data);
+		void _setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy);
 };
 
 #endif

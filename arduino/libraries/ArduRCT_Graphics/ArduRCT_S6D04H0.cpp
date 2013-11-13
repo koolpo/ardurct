@@ -83,14 +83,8 @@ const unsigned char PROGMEM ArduRCT_S6D04H0_initialization_code[] = {
 ArduRCT_S6D04H0::ArduRCT_S6D04H0() {    
     _widthImpl = S6D04H0_WIDTH;
     _heightImpl = S6D04H0_HEIGHT;
-}
-
-
-ArduRCT_S6D04H0::ArduRCT_S6D04H0(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
-    _widthImpl = S6D04H0_WIDTH;
-    _heightImpl = S6D04H0_HEIGHT;
-    setupScreen(cd, S6D04H0_WR_PIN, S6D04H0_RD_PIN, cs, reset, true);
-    setupBacklight(backlightPin);
+    setupScreen(S6D04H0_CD_PIN, S6D04H0_WR_PIN, S6D04H0_RD_PIN, S6D04H0_CS_PIN, S6D04H0_RESET_PIN, S6D04H0_SPI_ON_BUS);
+    setupBacklight(S6D04H0_BACKLIGHT_PIN);
 }
  
 /* ---------------- Protected functions ------------------------ */

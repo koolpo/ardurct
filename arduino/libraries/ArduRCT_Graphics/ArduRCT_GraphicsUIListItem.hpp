@@ -35,7 +35,7 @@ class ArduRCT_GraphicsUIListItem : public ArduRCT_GraphicsUIButton {
         ArduRCT_GraphicsUIListItem(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
                 bool (*actionHandler)(uint8_t elementId, int16_t value));
 
-        void placeLabel(ArduRCT_Graphics *graphics);
+        virtual void placeLabel(ArduRCT_Graphics *graphics);
 
     protected:
         uint16_t _drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color);

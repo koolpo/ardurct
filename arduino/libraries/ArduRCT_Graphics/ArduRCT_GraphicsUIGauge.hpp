@@ -34,7 +34,7 @@ class ArduRCT_GraphicsUIGauge : public ArduRCT_GraphicsUIElement {
 
         void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
             
-        ArduRCT_GraphicsUIElement *setValue(int16_t value);
+        virtual ArduRCT_GraphicsUIElement *setValue(int16_t value);
         
     protected:
         int16_t _min;

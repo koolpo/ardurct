@@ -96,13 +96,8 @@
 ArduRCT_ST7735::ArduRCT_ST7735(void) {
     _widthImpl = ST7735_WIDTH;
     _heightImpl = ST7735_HEIGHT;
-}
-
-ArduRCT_ST7735::ArduRCT_ST7735(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
-    _widthImpl = ST7735_WIDTH;
-    _heightImpl = ST7735_HEIGHT;
-    setupScreen(cd, cs, reset);
-    _backlightPin = backlightPin;
+    setupScreen(ST7735_CD_PIN, ST7735_CS_PIN, ST7735_RESET_PIN);
+    setupBacklight(ST7735_BACKLIGHT_PIN);
 }
 
 const unsigned char PROGMEM ArduRCT_ST7735_initialization_code[] = {
@@ -299,7 +294,7 @@ void ArduRCT_ST7735::_writeCommand(uint8_t cmd) {
     _spiWrite(cmd);
     // unselect the screen
     *_csPort |= _csBitMask;
-    // swtich to data mode
+    // switch to data mode
     *_cdPort |= _cdBitMask;  
 }
 

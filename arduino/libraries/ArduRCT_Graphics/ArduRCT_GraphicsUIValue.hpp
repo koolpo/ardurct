@@ -32,25 +32,25 @@ class ArduRCT_GraphicsUIValue : public ArduRCT_GraphicsUIElement {
     public:
         ArduRCT_GraphicsUIValue(uint8_t id, int16_t value, int16_t min, int16_t max, bool (*actionHandler)(uint8_t elementId, int16_t value) = 0, int16_t step = 1, uint8_t radix = 10);
 
-        void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
+        virtual void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
 
-        void autoSize(ArduRCT_Graphics *graphics);
+        virtual void autoSize(ArduRCT_Graphics *graphics);
 
-        ArduRCT_GraphicsUIElement *setValue(int16_t value) ;
+        virtual ArduRCT_GraphicsUIElement *setValue(int16_t value) ;
 
-        ArduRCT_GraphicsUIElement *enter();
+        virtual ArduRCT_GraphicsUIElement *enter();
 
-        bool release();
+        virtual bool release();
 
-        bool escape();
+        virtual bool escape();
 
-        bool increase();
+        virtual bool increase();
 
-        bool decrease();
+        virtual bool decrease();
 
-        void highlight();
+        virtual void highlight();
         
-        ArduRCT_GraphicsUIElement *touch(int16_t touchX, int16_t touchY);
+        virtual ArduRCT_GraphicsUIElement *touch(int16_t touchX, int16_t touchY);
         
     private:
         int16_t _max;

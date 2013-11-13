@@ -72,11 +72,13 @@ void ArduRCT_GraphicsUIButton::draw(ArduRCT_Graphics *graphics, int16_t uiX, int
     
 ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIButton::enter() {
     _value = GRAPHICS_UI_SELECTED;
+    _state = GRAPHICS_UI_SELECTED;
     return 0;
 }
 
 bool ArduRCT_GraphicsUIButton::release() {
     _value = GRAPHICS_UI_RELEASED;
+    _state = GRAPHICS_UI_RELEASED;
     return true;
 }
 

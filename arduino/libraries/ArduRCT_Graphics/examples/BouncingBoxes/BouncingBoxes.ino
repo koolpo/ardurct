@@ -24,8 +24,14 @@
  
 #include <SPI.h>
 
-#include <ArduRCT_S6D04H0.h>
-ArduRCT_S6D04H0 graphics(21, 0xFF, 0xFF, 5);   // graphics(CD, CS, RESET, BACKLIGHT)
+//#include <ArduRCT_S6D04H0.h>
+//ArduRCT_S6D04H0 graphics;
+
+#include <ArduRCT_SPFD5408.h>
+ArduRCT_SPFD5408 graphics;
+
+//#include <ArduRCT_ST7735.h>
+//ArduRCT_ST7735 graphics;
 
 #define BOX_SIZE 20
 #define BOX_SPEED_X 2
@@ -72,15 +78,15 @@ void loop() {
     }    
     // bounce the box off the walls if necessary.
     for (uint8_t i=0; i<NB_BOXES; i++) box[i].checkWallCollisions(maxX, maxY);
-	// leave time for other things to happen
-	delay(3);
+    // leave time for other things to happen
+    delay(3);
 
     // check if we have to refresh the screen
     if ((int32_t)(millis() - nextDraw) < 0) return;
     nextDraw = millis() + REFRESH_SCREEN_DELAY;
 
     // erase the boxes
-    for (uint8_t i=0; i<NB_BOXES; i++) box[i].erase(&tft);
+    for (uint8_t i=0; i<NB_BOXES; i++) box[i].erase(&graphics);
     // draw the boxes
-    for (uint8_t i=0; i<NB_BOXES; i++) box[i].draw(&tft);
+    for (uint8_t i=0; i<NB_BOXES; i++) box[i].draw(&graphics);
 }

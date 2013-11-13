@@ -37,16 +37,16 @@ class ArduRCT_GraphicsUIButton : public ArduRCT_GraphicsUIElement {
         ArduRCT_GraphicsUIButton(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
                 bool (*actionHandler)(uint8_t elementId, int16_t value));
 
-        void autoSize(ArduRCT_Graphics *graphics);
+        virtual void autoSize(ArduRCT_Graphics *graphics);
 
-        void placeLabel(ArduRCT_Graphics *graphics);
+        virtual void placeLabel(ArduRCT_Graphics *graphics);
 
-        void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
+        virtual void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
 
-        ArduRCT_GraphicsUIElement *enter();
+        virtual ArduRCT_GraphicsUIElement *enter();
 
-        bool release();
-
+        virtual bool release();
+        
     protected:
         char *_text;
         uint8_t _textX;
