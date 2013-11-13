@@ -22,35 +22,28 @@
  * THE SOFTWARE.
  */
  
-#ifndef ARDURCT_CONFIGURATION_HPP
-#define ARDURCT_CONFIGURATION_HPP
+#ifndef ARDURCT_TOUSCRUINO_CONFIGURATION_HPP
+#define ARDURCT_TOUSCRUINO_CONFIGURATION_HPP
 
 // Hardware
 // --------
 
 // V1
-#define CONFIGURATION_V1_CS     10
-#define CONFIGURATION_V1_CD     9
-#define CONFIGURATION_V1_RST    8 
-#define CONFIGURATION_V1_BL     5 
-#define CONFIGURATION_V1_UP     17
-#define CONFIGURATION_V1_DOWN   16
-#define CONFIGURATION_V1_LEFT   21
-#define CONFIGURATION_V1_CENTER 14
-#define CONFIGURATION_V1_RIGHT  15
+
+#define TOUSCRUINO_V1_UP     17         /* Up button pin */
+#define TOUSCRUINO_V1_DOWN   16         /* Down button pin */
+#define TOUSCRUINO_V1_LEFT   21         /* Left button pin */
+#define TOUSCRUINO_V1_CENTER 14         /* Center button pin */
+#define TOUSCRUINO_V1_RIGHT  15         /* Right button pin */
 
 // V2
-#define CONFIGURATION_V2_CS     0xFF
-#define CONFIGURATION_V2_CD     21 
-#define CONFIGURATION_V2_WR     22
-#define CONFIGURATION_V2_RD     23
-#define CONFIGURATION_V2_RST    0xFF
-#define CONFIGURATION_V2_PORT   2
-#define CONFIGURATION_V2_BL     5 
+#define TOUSCRUINO_V2_TP_INT        30   /* Interrupt pin for the TouchPanel */
+#define TOUSCRUINO_V2_WIDTH         240  /* Width of the screen */
+#define TOUSCRUINO_V2_HEIGHT        320  /* Height of the screen */
+#define TOUSCRUINO_V2_DRAG_TRIGGER  3    /* Touch points are considered equal if no more distant than */
 
 // Software
 // --------
-
 #define TOUSCRUINO_UP CONFIGURATION_V1_UP
 #define TOUSCRUINO_DOWN CONFIGURATION_V1_DOWN
 #define TOUSCRUINO_MENU CONFIGURATION_V1_LEFT
@@ -58,5 +51,10 @@
 #define TOUSCRUINO_ENTER CONFIGURATION_V1_CENTER
 #define TOUSCRUINO_CENTER CONFIGURATION_V1_CENTER
 #define TOUSCRUINO_RIGHT CONFIGURATION_V1_RIGHT
+
+// the address in the eeprom where the calibration matrix is stored 
+// 25 bytes are taken in descending order
+// set to 0xFFFF to prevent calibration and to E2END to calibrate
+#define TOUSCRUINO_EEPROM_TOUCHPANEL    0xFFFF
 
 #endif

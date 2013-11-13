@@ -12,15 +12,13 @@ ArduRCT_TouScruino	KEYWORD1
 # Methods and Functions	(KEYWORD2)
 #######################################
 
-update	KEYWORD2
-getRTC	KEYWORD2
-registerEventHandler	KEYWORD2
+enableGraphicsUI	KEYWORD2
 
 #######################################
 #	Instances	(KEYWORD2)
 #######################################
 
-touscruino	KEYWORD2
+Touscruino	KEYWORD2
 
 #######################################
 #	Constants	(LITERAL1)

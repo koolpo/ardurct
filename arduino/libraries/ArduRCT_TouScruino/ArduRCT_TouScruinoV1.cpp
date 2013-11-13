@@ -26,10 +26,10 @@
 #include <ArduRCT_EventManager.h>
 #include "ArduRCT_TouScruinoV1.hpp"
 
-ArduRCT_TouScruinoV1::ArduRCT_TouScruinoV1(uint8_t cd, uint8_t cs, uint8_t reset, uint8_t backlightPin, ArduRCT_RealTimeClock *rtc,
+ArduRCT_TouScruinoV1::ArduRCT_TouScruinoV1(ArduRCT_RealTimeClock *rtc,
             ArduRCT_Switch *up, ArduRCT_Switch *down, ArduRCT_Switch *left, ArduRCT_Switch *right, ArduRCT_Switch *center) {
-    setupScreen(cd, cs, reset);
-    _backlightPin = backlightPin;
+    setupScreen(ST7735_CD_PIN, ST7735_CS_PIN, ST7735_RESET_PIN);
+    setupBacklight(ST7735_BACKLIGHT_PIN);
     registerSwitch(up);
     registerSwitch(down);
     registerSwitch(right);

@@ -24,9 +24,14 @@
 
 #include "ArduRCT_TouScruinoV2.hpp"
 
-ArduRCT_TouScruinoV2::ArduRCT_TouScruinoV2(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, uint8_t backlightPin) {
-	setupScreen(port, cd, wr, rd, cs, reset, true);
-	_backlightPin = backlightPin;
+ArduRCT_TouScruinoV2::ArduRCT_TouScruinoV2(ArduRCT_RealTimeClock *rtc, ArduRCT_TouchPanel *tp) {
+    setupScreen(SPFD5408_CD_PIN, SPFD5408_WR_PIN, SPFD5408_RD_PIN, SPFD5408_CS_PIN, SPFD5408_RESET_PIN, SPFD5408_SPI_ON_BUS);
+    setupBacklight(SPFD5408_BACKLIGHT_PIN);
+    registerRTC(rtc);
+    if (tp != 0) registerTouchPanel(tp);
 }
 
-
+void ArduRCT_TouScruinoV2::setRotation(uint8_t rotation) {
+    ArduRCT_Graphics::setRotation(rotation);
+    if (getRegisteredTouchPanel() != 0) getRegisteredTouchPanel()->setRotation(rotation);
+}

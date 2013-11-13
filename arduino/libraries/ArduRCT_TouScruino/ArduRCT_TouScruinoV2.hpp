@@ -30,13 +30,20 @@
 #ifndef TOUSCRUINO_V2_H
 #define TOUSCRUINO_V2_H 1
 
-#include "../ArduRCT_Graphics/ArduRCT_S6D04H0.h"
+#include "../ArduRCT_Graphics/ArduRCT_Graphics.h"
+#include "../ArduRCT_Graphics/ArduRCT_SPFD5408.h"
+#include "../ArduRCT_EventManager/ArduRCT_EventManager.h"
+#include "ArduRCT_TouScruino_Configuration.hpp"
 
-class ArduRCT_TouScruinoV2: public ArduRCT_S6D04H0 {
+class ArduRCT_TouScruinoV2: public ArduRCT_SPFD5408, public ArduRCT_EventManager {
 
 	public:
-		ArduRCT_TouScruinoV2(uint8_t port, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, uint8_t backlightPin = 0xFF);
-				
+		ArduRCT_TouScruinoV2(ArduRCT_RealTimeClock *rtc, ArduRCT_TouchPanel *tp);
+        
+        void setRotation(uint8_t rotation);
+    
+    private:
+        ArduRCT_TouchPanel *_touchpanel;
 };
 
 #endif

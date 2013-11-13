@@ -1,5 +1,5 @@
 /*
- * FillScreen - Demonstration of colors
+ * TouchPanel - demonstrate the use of a Graphics object and a TouchPanel
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -22,37 +22,43 @@
  * THE SOFTWARE.
  */
 
-/**
- *  Touscruino buttons control the color of the screen
- *  MENU    black
- *  ENTER   red
- *  UP      green
- *  DOWN    blue
- */
-
-#include <SPI.h>
-#include <ArduRCT_Graphics.h>
+#include <Wire.h>
 #include <ArduRCT_EventManager.h>
+#include <ArduRCT_Graphics.h>
+#include <ArduRCT_SPFD5408.h>
+#include <ArduRCT_TouchPanel.h>
+#include <SPI.h>
 
-// Change to your version: the following include will automatically create the proper 'touscruino' object
-#define TOUSCRUINO_VERSION 1
-#include <ArduRCT_TouScruino.h>
+// define the graphics
+ArduRCT_SPFD5408 graphics;
+
+#define TP_INT_PIN 30
+#define TP_POINT_IS_SAME 2
+#define TP_WIDTH 240
+#define TP_HEIGHT 320
+
+// define the touchpanel
+ArduRCT_TouchPanel touchpanel(TP_INT_PIN, TP_POINT_IS_SAME, TP_WIDTH, TP_HEIGHT);
+
+int16_t x;
+int16_t y;
 
 void setup() {
-    // prepare the screen
-    touscruino.begin(BLACK, WHITE, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
-    // register an EventHandler for the switches
-    touscruino.registerEventHandler(new ArduRCT_EventHandler(EVENT_SWITCH, EVENT_ANY_VALUE, &buttonsHandler));
+    // setup the screen 
+    graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD);
 }
 
 void loop() {
-    touscruino.manageEvents();
-}
-
-int8_t handleButtons(uint8_t eventType, uint8_t buttonId) {
-    if (buttonId == TOUSCRUINO_MENU) touscruino.fillScreen(BLACK);
-    else if (buttonId == TOUSCRUINO_ENTER) touscruino.fillScreen(RED);
-    else if (buttonId == TOUSCRUINO_UP) touscruino.fillScreen(GREEN);
-    else if (buttonId == TOUSCRUINO_DOWN) touscruino.fillScreen(BLUE);
-    return EVENT_HANDLING_DONE;
+    // get the state of the touchpanel
+    uint8_t tpState = touchpanel.update();
+    if (tpState == EVENT_STATE_PRESSED) {
+        // if the pen is pressed on the screen, draw a big dot at the pen place
+        touchpanel.getPenXYZ(&x, &y);
+        graphics.fillRectangle(x-2, y-2, 4, 4, BLUE);
+    } else if (tpState == EVENT_STATE_DRAGGED) {
+        // if the pen is dragged on the screen, 
+        // draw a line connecting the last dot drawn and the current pen place
+        graphics.drawLine(x, y, touchpanel.getPenX(), touchpanel.getPenY(), BLUE, 4);
+        touchpanel.getPenXYZ(&x, &y);
+    }
 }
