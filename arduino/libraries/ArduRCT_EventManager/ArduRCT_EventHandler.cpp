@@ -41,7 +41,7 @@ ArduRCT_EventHandler::ArduRCT_EventHandler(uint8_t type, uint8_t value, int8_t (
 	_handlerL = 0;
 }
 
-ArduRCT_EventHandler::ArduRCT_EventHandler(uint8_t type, uint8_t value, int8_t (*handler)(uint8_t type, uint8_t value, int16_t x, int16_t y)) {
+ArduRCT_EventHandler::ArduRCT_EventHandler(uint8_t type, uint8_t value, int16_t x, int16_t y, int8_t (*handler)(uint8_t type, uint8_t value, int16_t x, int16_t y)) {
 	_type = type;
 	_value = value;
 	_handlerS = 0;

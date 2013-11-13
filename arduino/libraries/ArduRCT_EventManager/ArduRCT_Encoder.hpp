@@ -34,7 +34,7 @@
 
 #include <inttypes.h>
 
-#include "ArduRCT_Events.hpp"
+#include "ArduRCT_EventManager_Configuration.hpp"
 
 class ArduRCT_Encoder {
 

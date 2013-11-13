@@ -70,6 +70,10 @@ void ArduRCT_EventManager::registerTouchPanel(ArduRCT_TouchPanel *touchPanel) {
 	_touchPanel = touchPanel;
 }
 
+ArduRCT_TouchPanel *ArduRCT_EventManager::getRegisteredTouchPanel() {
+    return _touchPanel;
+}
+
 void ArduRCT_EventManager::registerEventHandler(ArduRCT_EventHandler *handler) {
 	if (_handler == 0) _handler = handler;
 	else {
@@ -109,13 +113,26 @@ void ArduRCT_EventManager::manageEvents() {
     // look after the touchPanel
     if (_touchPanel != 0) {
         _touchPanel->update();
-        uint16_t x = _touchPanel->getPenX();
-        uint16_t y = _touchPanel->getPenY();
-        uint8_t z = _touchPanel->getPenZ();
-        if (_touchPanel->isPenPressed()) {
-            if (_touchPanel->isPenDragged()) processEvent(EVENT_TOUCHPANEL_DRAGGED, z, x, y);
-            else if (!_touchPanel->isPenPressedMotionless())  processEvent(EVENT_TOUCHPANEL_PRESSED, z, x, y);
-        } else if (_touchPanel->isPenReleased()) processEvent(EVENT_TOUCHPANEL_RELEASED, 0, 0, 0);
+#ifdef TOUCHPANEL_MATRIX_CALIBRATION
+        if (_touchPanel->isCalibrating()) {
+            if (_touchPanel->getCalibrationCrossNumber()) {
+                uint8_t crossNumber = _touchPanel->getCalibrationCrossNumber();
+                uint16_t crossX, crossY;
+                _touchPanel->getCalibrationCrossXY(crossNumber, &crossX, &crossY);
+                processEvent(EVENT_TOUCHPANEL_CALIBRATION, crossNumber, crossX, crossY);
+            }
+        } else {
+#endif
+            uint16_t x = _touchPanel->getPenX();
+            uint16_t y = _touchPanel->getPenY();
+            uint8_t z = _touchPanel->getPenZ();
+            if (_touchPanel->isPenPressed()) {
+                if (_touchPanel->isPenDragged()) processEvent(EVENT_TOUCHPANEL_DRAGGED, z, x, y);
+                else if (!_touchPanel->isPenPressedMotionless()) processEvent(EVENT_TOUCHPANEL_PRESSED, z, x, y);
+            } else if (_touchPanel->isPenReleased()) processEvent(EVENT_TOUCHPANEL_RELEASED, 0, 0, 0);
+#ifdef TOUCHPANEL_MATRIX_CALIBRATION
+        }
+#endif
     }
     
     // look after the analogs

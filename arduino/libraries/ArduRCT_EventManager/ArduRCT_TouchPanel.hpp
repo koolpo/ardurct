@@ -33,14 +33,29 @@
 #endif
 
 #include <inttypes.h>
+#include "ArduRCT_EventManager_Configuration.hpp"
+
+#define TOUCHPANEL_ROTATION_0   0
+#define TOUCHPANEL_ROTATION_90  1
+#define TOUCHPANEL_ROTATION_180 2
+#define TOUCHPANEL_ROTATION_270 3
+
+typedef struct {
+	int32_t a;
+	int32_t b;
+	int32_t divider;
+} tsCalibrationEquation_t;
 
 class ArduRCT_TouchPanel {
 	
 	public:
 	
-		ArduRCT_TouchPanel();
-		
-		uint8_t getPenXYZ(uint16_t *x, uint16_t *y, uint8_t *z);
+#ifdef TOUCHPANEL_MATRIX_CALIBRATION
+		ArduRCT_TouchPanel(uint8_t interruptPin, uint8_t dragTrigger = 2, uint16_t width = 0, uint16_t height = 0, uint16_t calibrationMatrixEepromAddress = 0xFFFF);
+#else
+		ArduRCT_TouchPanel(uint8_t interruptPin, uint8_t dragTrigger = 2, uint16_t width = 0, uint16_t height = 0);
+#endif
+		int8_t getPenXYZ(uint16_t *x = 0, uint16_t *y = 0, int8_t *z = 0);
 		
 		uint8_t update();
 		
@@ -52,24 +67,55 @@ class ArduRCT_TouchPanel {
 		
 		bool isPenDragged();
 		
-		uint16_t getPenX();
+		int16_t getPenX();
 		
-		uint16_t getPenY();
+		int16_t getPenY();
 		
-		uint8_t getPenZ();
-		
-	private: 
-		uint8_t _state;
-		uint16_t _penX;
-		uint16_t _penY;
-		uint8_t _penZ;
-		
-		uint16_t _getTouchX();
-		
-		uint16_t _getTouchY();
-		
-		uint16_t _getTouchZ();
+		int8_t getPenZ();
 
+        void setRotation(uint8_t rotation);
+
+#ifdef TOUCHPANEL_MATRIX_CALIBRATION
+        uint8_t getCalibrationCrossNumber();
+
+        bool isCalibrating();
+        
+        void getCalibrationCrossXY(uint8_t number, uint16_t *x, uint16_t *y);
+        
+        void deleteCalibration();
+#endif
+
+    private:
+		uint8_t _state;
+        uint8_t _rotation;
+		int16_t _penX;
+		int16_t _penY;
+		int8_t _penZ;
+        int16_t _touchX;
+        int16_t _touchY;
+        int8_t _touchZ;
+        uint8_t _calibrationStatus;
+        uint8_t _interruptPin;
+        uint8_t _dragTrigger;
+        uint16_t _width;
+        uint16_t _height;
+        void (*_graphicsRotationHandler)(int16_t *x, int16_t *y);
+#ifdef TOUCHPANEL_MATRIX_CALIBRATION
+        uint16_t _calibrationMatrixEepromAddress;
+        tsCalibrationEquation_t _xCalibrationEquation;
+        tsCalibrationEquation_t _yCalibrationEquation;
+        uint16_t _calibrationX[3];
+        uint16_t _calibrationY[3];
+#endif
+		int16_t _getTouchX();
+		
+		int16_t _getTouchY();
+		
+		int8_t _getTouchZ();
+        
+        void _adjustTouchWithCalibration();
+
+        uint8_t _calibrate();
 };
 
 #endif

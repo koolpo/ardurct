@@ -1,5 +1,5 @@
 /*
- * ArduRCT_EventHandler - Handles an event
+ * ArduRCT_EventManager_Configuration - Manages events in a coordinated way
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -22,42 +22,29 @@
  * THE SOFTWARE.
  */
 
-#ifndef ARDURCT_EVENT_HANDLER
-#define ARDURCT_EVENT_HANDLER 1
+#ifndef ARDURCT_EVENT_MANAGER_CONFIGURATION
+#define ARDURCT_EVENT_MANAGER_CONFIGURATION 1
 
-#include <inttypes.h>
+// the lower the value, the better the reaction to switches and encoders
+// a value betweeen 20 and 50 is recommended
+#define EVENT_MANAGER_CYCLE 25
 
-#define EVENT_HANDLING_VOID 0
-#define EVENT_HANDLING_EXIT -1
-#define EVENT_HANDLING_DONE 1
+// number of samples to average while reading analog values
+// the higher the value, the higher the dampening of change,
+// value should be between 1 and 6
+#define ANALOG_AVERAGING 2
 
-class ArduRCT_EventHandler {
+// distance between 2 points to consider them equal
+#define TOUCHPANEL_TOLERANCE 2
+// touchpanel driver chip
+#if !defined(TOUCHPANEL_AR1021) && !defined(TOUCHPANEL_AD7348)
+#define TOUCHPANEL_AR1021 1
+#endif
+// comment out the following to disable matrix calibration
+//#define TOUCHPANEL_MATRIX_CALIBRATION 1
 
-	public:	
-		ArduRCT_EventHandler(uint8_t type, int8_t (*handler)(uint8_t type));
-		
-		ArduRCT_EventHandler(uint8_t type, uint8_t value, int8_t (*handler)(uint8_t type, uint8_t value));
-
-        ArduRCT_EventHandler(uint8_t type, uint8_t value, int16_t x, int16_t y, int8_t (*handler)(uint8_t type, uint8_t value, int16_t x, int16_t y));
-		        
-		int8_t handle(uint8_t type);
-
-		int8_t handle(uint8_t type, uint8_t value);
-
-		int8_t handle(uint8_t type, uint8_t value, int16_t x, int16_t y);
-				
-		ArduRCT_EventHandler *getNext();
-		
-		void setNext(ArduRCT_EventHandler *next);
-		
-	private:
-		uint8_t _type;
-		uint8_t _value;
-		int8_t (*_handlerL)(uint8_t type, uint8_t value, int16_t x, int16_t y);
-		int8_t (*_handlerM)(uint8_t type, uint8_t value);
-		int8_t (*_handlerS)(uint8_t type);
-		ArduRCT_EventHandler *_next;
-
-};
+// number of steps in one rotation of the encoder
+// this is function of your hardware
+#define ENCODER_STEPS 24
 
 #endif

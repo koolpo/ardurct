@@ -34,6 +34,7 @@
 
 #include <inttypes.h>
 
+#include "ArduRCT_EventManager_Configuration.hpp"
 #include "ArduRCT_Events.hpp"
 
 class ArduRCT_Analog {

@@ -41,6 +41,7 @@
 #include "ArduRCT_Encoder.hpp"
 #include "ArduRCT_EventHandler.hpp"
 #include "ArduRCT_TouchPanel.hpp"
+#include "ArduRCT_EventManager_Configuration.hpp"
 
 class ArduRCT_EventManager {
     
@@ -60,6 +61,8 @@ class ArduRCT_EventManager {
         void registerAnalog(ArduRCT_Analog *anAnalog);
         
         void registerTouchPanel(ArduRCT_TouchPanel *touchPanel);
+        
+        ArduRCT_TouchPanel *getRegisteredTouchPanel();
         
         void registerEventHandler(ArduRCT_EventHandler *handler);
         
