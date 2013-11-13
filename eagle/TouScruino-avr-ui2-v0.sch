@@ -9560,7 +9560,7 @@ D1 and R4 don't have to be soldered</text>
 <instance part="JP3" gate="G$1" x="226.06" y="-116.84" rot="R180"/>
 <instance part="U$5" gate="G$1" x="231.14" y="-165.1"/>
 <instance part="JP4" gate="G$1" x="226.06" y="-96.52" rot="R180"/>
-<instance part="D1" gate="G$1" x="147.32" y="83.82" rot="MR180"/>
+<instance part="D1" gate="G$1" x="147.32" y="83.82" rot="R180"/>
 <instance part="R4" gate="G$1" x="147.32" y="66.04" rot="MR90"/>
 <instance part="GND18" gate="1" x="147.32" y="55.88"/>
 <instance part="SJ3" gate="1" x="203.2" y="-96.52"/>
@@ -10545,8 +10545,8 @@ D1 and R4 don't have to be soldered</text>
 <segment>
 <label x="111.76" y="83.82" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="(PCINT23/TOSC2)PC7"/>
-<pinref part="D1" gate="G$1" pin="A2"/>
 <wire x1="109.22" y1="83.82" x2="139.7" y2="83.82" width="0.1524" layer="91"/>
+<pinref part="D1" gate="G$1" pin="A1"/>
 </segment>
 <segment>
 <wire x1="132.08" y1="-104.14" x2="152.4" y2="-104.14" width="0.1524" layer="91"/>
@@ -10561,14 +10561,9 @@ D1 and R4 don't have to be soldered</text>
 </net>
 <net name="D22" class="0">
 <segment>
-<wire x1="109.22" y1="86.36" x2="134.62" y2="86.36" width="0.1524" layer="91"/>
-<wire x1="134.62" y1="86.36" x2="134.62" y2="93.98" width="0.1524" layer="91"/>
+<wire x1="109.22" y1="86.36" x2="124.46" y2="86.36" width="0.1524" layer="91"/>
 <label x="111.76" y="86.36" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="(PCINT22/TOSC1)PC6"/>
-<pinref part="D1" gate="G$1" pin="A1"/>
-<wire x1="134.62" y1="93.98" x2="157.48" y2="93.98" width="0.1524" layer="91"/>
-<wire x1="157.48" y1="93.98" x2="157.48" y2="83.82" width="0.1524" layer="91"/>
-<wire x1="157.48" y1="83.82" x2="154.94" y2="83.82" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <wire x1="132.08" y1="-101.6" x2="152.4" y2="-101.6" width="0.1524" layer="91"/>
@@ -10583,9 +10578,14 @@ D1 and R4 don't have to be soldered</text>
 </net>
 <net name="D21" class="0">
 <segment>
-<wire x1="109.22" y1="88.9" x2="124.46" y2="88.9" width="0.1524" layer="91"/>
 <label x="111.76" y="88.9" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="(PCINT21/TDI)PC5"/>
+<wire x1="109.22" y1="88.9" x2="132.08" y2="88.9" width="0.1524" layer="91"/>
+<wire x1="132.08" y1="88.9" x2="134.62" y2="88.9" width="0.1524" layer="91"/>
+<wire x1="134.62" y1="88.9" x2="157.48" y2="88.9" width="0.1524" layer="91"/>
+<wire x1="157.48" y1="88.9" x2="157.48" y2="83.82" width="0.1524" layer="91"/>
+<pinref part="D1" gate="G$1" pin="A2"/>
+<wire x1="154.94" y1="83.82" x2="157.48" y2="83.82" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <wire x1="132.08" y1="-106.68" x2="152.4" y2="-106.68" width="0.1524" layer="91"/>
