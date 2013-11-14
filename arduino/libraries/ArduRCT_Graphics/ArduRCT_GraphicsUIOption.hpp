@@ -44,7 +44,7 @@ class ArduRCT_GraphicsUIOption : public ArduRCT_GraphicsUIButton {
         virtual bool release();
         
     protected:
-        uint16_t _drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color);
+        virtual uint16_t _drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color);
 
 }; 
 

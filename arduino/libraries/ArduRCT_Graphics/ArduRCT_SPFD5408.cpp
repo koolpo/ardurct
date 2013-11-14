@@ -143,15 +143,33 @@ void ArduRCT_SPFD5408::initScreenImpl(void) {
 void ArduRCT_SPFD5408::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
     _prepareWR();
     if (_clipped) {
-        // restore the full window
-        if (_rotation == GRAPHICS_ROTATION_0 || _rotation == GRAPHICS_ROTATION_180) _setClippingRectangle(0, 0, SPFD5408_WIDTH-1, SPFD5408_HEIGHT-1);
-        else _setClippingRectangle(0, 0, SPFD5408_HEIGHT-1, SPFD5408_WIDTH-1);
-    } else {
-        _write16bCommand(SPFD5408_H_AD_SET);
-        _write16bData(x);
-        _write16bCommand(SPFD5408_V_AD_SET);
-        _write16bData(y);
-     }
+        // restore the full window to prepare for other pixels
+        _setClippingRectangle(0, 0, SPFD5408_WIDTH-1, SPFD5408_HEIGHT-1);
+        _clipped = false;
+    } 
+    int16_t t;
+    switch (_rotation) {
+        case GRAPHICS_ROTATION_90:
+            t = y;
+            y = x;
+            x = SPFD5408_WIDTH-1-t;
+            break;
+        case GRAPHICS_ROTATION_180:
+            x = SPFD5408_WIDTH-1-x;
+            y = SPFD5408_HEIGHT-1-y;
+            break;
+        case GRAPHICS_ROTATION_270:
+            t = x;
+            x = y;
+            y = SPFD5408_HEIGHT-1-t;
+            break;
+        default:
+            break;
+    }
+    _write16bCommand(SPFD5408_H_AD_SET);
+    _write16bData(x);
+    _write16bCommand(SPFD5408_V_AD_SET);
+    _write16bData(y);
     _write16bCommand(SPFD5408_RAM);
     _write16bData(color);
 }
@@ -393,7 +411,7 @@ void ArduRCT_SPFD5408::_writeRegister(uint8_t reg, uint16_t data) {
 // define the zone we are going to write to
 void ArduRCT_SPFD5408::_setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy) {
     uint16_t x, y, t;
-
+    
     _clipped = true;
     switch (_rotation) {
         default:
@@ -422,12 +440,12 @@ void ArduRCT_SPFD5408::_setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t 
         case GRAPHICS_ROTATION_270:
             t  = lx;
             lx = ly;
-            ly = SPFD5408_HEIGHT - 1 - hx;
+            ly = SPFD5408_HEIGHT-1-hx;
             hx = hy;
-            hy = SPFD5408_HEIGHT - 1 - t;
+            hy = SPFD5408_HEIGHT-1-t;
             x  = lx;
             y  = hy;
-        break;
+            break;
     }
     _write16bCommand(SPFD5408_H_AD_START);
     _write16bData(lx);

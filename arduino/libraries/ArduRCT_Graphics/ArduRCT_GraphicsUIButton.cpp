@@ -95,8 +95,8 @@ void ArduRCT_GraphicsUIButton::_init(uint8_t id, uint8_t group, char *label, voi
 }
 
 uint16_t ArduRCT_GraphicsUIButton::_drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color) {
-    graphics->fillRoundedRectangle(uiX+x, uiY+y, width, height, GRAPHICS_UI_ELEMENT_TOP_MARGIN*75/100, color);
-    graphics->drawRoundedRectangle(uiX+x, uiY+y, width, height, GRAPHICS_UI_ELEMENT_TOP_MARGIN*75/100, 
+    graphics->fillRoundedRectangle(uiX+x, uiY+y, width, height, GRAPHICS_UI_ELEMENT_TOP_MARGIN, color);
+    graphics->drawRoundedRectangle(uiX+x, uiY+y, width, height, GRAPHICS_UI_ELEMENT_TOP_MARGIN, 
             _state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK, 1);	
     return color;
 }

@@ -175,7 +175,6 @@ bool ArduRCT_GraphicsUIScreen::process(uint8_t actionId, int16_t x, int16_t y) {
         ArduRCT_GraphicsUIElement *modifiedElement = _selectedElement->touch(touchX, touchY);
         if (modifiedElement != 0) _drawElement(modifiedElement);
         _drawElement(_selectedElement);
-
         return true;
     } else if (actionId == GRAPHICS_UI_ACTION_UNTOUCH) {
         // release the item

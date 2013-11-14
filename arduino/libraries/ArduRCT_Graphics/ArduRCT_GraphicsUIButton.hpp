@@ -55,7 +55,7 @@ class ArduRCT_GraphicsUIButton : public ArduRCT_GraphicsUIElement {
         void _init(uint8_t id, uint8_t group, char *label, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
             bool (*actionHandler)(uint8_t elementId, int16_t value));
 
-        uint16_t _drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color);
+        virtual uint16_t _drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color);
 }; 
 
 #endif
