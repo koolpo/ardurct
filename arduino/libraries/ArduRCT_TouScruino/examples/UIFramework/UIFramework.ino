@@ -1,5 +1,5 @@
 /*
- * TouchScreen - Demonstration of use of the touchscreen
+ * UIFramework - Demonstration of use of the touchscreen for a User Interface
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -23,10 +23,7 @@
  */
 
 /**
- *  Demonstrates the use of the EventManager included in the Touscruino
- *  to manage the touchpanel and the graphics
- *  This is a variation of the Simple sketch using Touscruino instead of its components
- *      with this, you don't have to deal with any hardware
+ *  Demonstrates the use of the UI manager included in the Touscruino
  **/
   
 #include <Wire.h>
@@ -38,34 +35,31 @@
 #define TOUSCRUINO_VERSION 2
 #include <ArduRCT_TouScruino.h>
 
-int16_t penX;
-int16_t penY;
-
-// Define the function to call when there is an EVENT_TOUCHPANEL
-ArduRCT_EventHandler touchpanelHandler(EVENT_TOUCHPANEL, EVENT_ANY_VALUE, 0, 0, &handleTouchPanel);
+// define a screen
+ArduRCT_GraphicsUIScreen screen;
+// define a button which will call uiHandler for every action on it
+ArduRCT_GraphicsUIButton button(0, "Toggle RED", &uiHandler);
 
 void setup() {
     // prepare the screen
     Touscruino.begin(BLACK, WHITE, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
-    // register the EventHandler
-    Touscruino.registerEventHandler(&touchpanelHandler);
+    // enable the GraphicsUI
+    Touscruino.enableGraphicsUI();
+    // add the screen
+    Touscruino.addScreen(&screen);
+    // add a button on the screen
+    screen.addElement(&button, 40, 20, 160, 40);
+    // start the UI by showing screen
+    Touscruino.setGraphicsUIScreen(&screen);
 }
 
 void loop() {
     Touscruino.manageEvents();
 }
 
-int8_t handleTouchPanel(uint8_t eventType, uint8_t z, int16_t x, int16_t y) {
-    if (eventType == EVENT_TOUCHPANEL_PRESSED) {
-        // if the pen is pressed on the screen, draw a big dot at the pen place
-        Touscruino.fillRectangle(x-2, y-2, 4, 4, BLUE);
-    } else if (eventType == EVENT_TOUCHPANEL_DRAGGED) {
-        // if the pen is dragged on the screen, 
-        // draw a line connecting the last dot drawn and the current pen place
-        Touscruino.drawLine(penX, penY, x, y, BLUE, 4);
-    } else return EVENT_HANDLING_EXIT;
-    penX = x;
-    penY = y;
-    // return EVENT_HANDLING_EXIT to indicate that the EVENT has been dealt with
-    return EVENT_HANDLING_EXIT;
+bool isRed = false;
+bool uiHandler(uint8_t elementId, int16_t value) {
+    if (isRed) Touscruino.fillRectangle(80, 200, 80, 80, WHITE);
+    else Touscruino.fillRectangle(80, 200, 80, 80, RED);
+    isRed = !isRed;
 }

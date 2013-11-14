@@ -29,7 +29,7 @@
 
 // Change to your version: the following include will automatically create the proper 'Touscruino' object
 #define TOUSCRUINO_VERSION 2
-#include <ArduRCT_Touscruino.h>
+#include <ArduRCT_TouScruino.h>
 
 #define PEN_1 1
 #define PEN_2 2
@@ -71,16 +71,16 @@ void setup() {
     // add a screen
     Touscruino.addScreen(&screen);
     // add the screen elements
-    screen.addElement(&pen1, 0, 0, 28, 30);
+    screen.addElement(&pen1, 0, 0, 30, 30);
     screen.addElement(&pen2, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
     screen.addElement(&pen3, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
     screen.setElementValue(PEN_1, GRAPHICS_UI_SELECTED);
-    screen.addElement(&color1, GUI_ROPWM, GUI_SAP, GUI_SAP, GUI_SAP);
+    screen.addElement(&color1, GUI_ROPWM, GUI_SAP, 28, GUI_SAP);
     screen.addElement(&color2, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
     screen.addElement(&color3, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
     screen.addElement(&color4, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
     screen.setElementValue(COLOR_1, GRAPHICS_UI_SELECTED);
-    screen.addElement(&blank, GUI_ROPWM, GUI_SAP, GUI_SAP, GUI_SAP);
+    screen.addElement(&blank, GUI_ROPWM, GUI_SAP, 31, GUI_SAP);
     
     // draw the screen
     Touscruino.setGraphicsUIScreen(&screen);
@@ -108,13 +108,10 @@ int8_t handleTouchPanel(uint8_t eventType, uint8_t z, int16_t x, int16_t y) {
 }
 
 void uiDrawer(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height) {
-    uint16_t color = VLIGHT_GREY;
-    if ((value == GRAPHICS_UI_SELECTED) || (state == GRAPHICS_UI_SELECTED)) color = LIGHT_GREY;
-    Touscruino.fillRectangle(x, y, width, height, color);
     if (id < COLOR_1) {
-        Touscruino.drawLine(x+5+(id-1)*3, y+5+(id-1)*3, x+width-10, y+height-10, BLACK, id*3); 
-    } else if (id < BLANK) {
-        color = RED;
+        Touscruino.drawLine(x+8+id-1, y+8+id-1, x+width-8-id+1, y+height-8-id+1, BLACK, id*3); 
+    } else if (id < BLANK) {        
+        uint16_t color = RED;
         if (id == COLOR_2) color = BLUE;
         else if (id == COLOR_3) color = GREEN;
         else if (id == COLOR_4) color = BLACK;

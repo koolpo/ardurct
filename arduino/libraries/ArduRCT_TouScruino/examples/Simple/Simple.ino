@@ -22,6 +22,11 @@
  * THE SOFTWARE.
  */
 
+/**
+ *  See TouchScreen for a proper use of TouScruino
+ *  This sketch requires an understanding of the hardware
+ */
+ 
 #include <Wire.h>
 #include <ArduRCT_EventManager.h>
 #include <ArduRCT_Graphics.h>
