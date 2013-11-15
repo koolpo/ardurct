@@ -108,7 +108,7 @@ bool ArduRCT_GraphicsUIValue::decrease() {
 }
 
 void ArduRCT_GraphicsUIValue::highlight() {
-    _state = GRAPHICS_UI_HIGHLIGHTED;				
+    _state = GRAPHICS_UI_HIGHLIGHTED;
 }
 
 // called when the item is touched with a pen

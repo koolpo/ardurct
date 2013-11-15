@@ -176,7 +176,7 @@ class ArduRCT_Graphics: public Print {
 
 		uint16_t getHeight();
 		
-		void setRotation(uint8_t rotation, bool selectAndUnselectScreen = true);
+		virtual void setRotation(uint8_t rotation, bool selectAndUnselectScreen = true);
 		
 		uint8_t getRotation();
 		
