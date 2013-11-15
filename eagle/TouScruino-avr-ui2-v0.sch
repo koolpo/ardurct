@@ -8001,9 +8001,9 @@ Source: http://ww1.microchip.com/downloads/en/devicedoc/39632c.pdf</description>
 <pad name="1" x="0" y="0" drill="1.016" diameter="1.2446" shape="long" rot="R270"/>
 <pad name="2" x="-2.54" y="0" drill="1.016" diameter="1.2446" shape="long" rot="R270"/>
 <pad name="3" x="-5.08" y="0" drill="1.016" diameter="1.2446" shape="long" rot="R270"/>
-<smd name="2A" x="-2.54" y="1.65" dx="2" dy="1" layer="1" rot="R90"/>
-<smd name="3A" x="-5.08" y="-1.65" dx="2" dy="1" layer="1" rot="R90"/>
-<smd name="1A" x="0" y="-1.65" dx="2" dy="1" layer="1" rot="R90"/>
+<smd name="2A" x="-2.54" y="-1.651" dx="2" dy="1" layer="1" rot="R90"/>
+<smd name="3A" x="-5.08" y="1.651" dx="2" dy="1" layer="1" rot="R90"/>
+<smd name="1A" x="0" y="1.651" dx="2" dy="1" layer="1" rot="R90"/>
 </package>
 <package name="SOT23-3">
 <wire x1="1.4224" y1="0.6604" x2="1.4224" y2="-0.6604" width="0.1524" layer="51"/>

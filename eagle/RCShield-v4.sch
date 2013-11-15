@@ -6116,10 +6116,10 @@ Standard 1-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 <wire x1="0" y1="27.94" x2="0" y2="-44.45" width="0.127" layer="51" style="shortdash"/>
 <wire x1="-38.1" y1="27.94" x2="-38.1" y2="-44.45" width="0.127" layer="51" style="longdash"/>
 <wire x1="66.04" y1="27.94" x2="66.04" y2="-44.45" width="0.127" layer="51" style="longdash"/>
-<wire x1="-29.21" y1="-19.05" x2="-26.67" y2="-19.05" width="0.127" layer="21"/>
-<wire x1="-29.21" y1="-26.67" x2="-26.67" y2="-26.67" width="0.127" layer="21"/>
-<wire x1="-29.21" y1="-26.67" x2="-29.21" y2="-19.05" width="0.127" layer="21"/>
-<wire x1="-26.67" y1="-26.67" x2="-26.67" y2="-19.05" width="0.127" layer="21"/>
+<wire x1="-29.21" y1="-20.32" x2="-26.67" y2="-20.32" width="0.127" layer="21"/>
+<wire x1="-29.21" y1="-27.94" x2="-26.67" y2="-27.94" width="0.127" layer="21"/>
+<wire x1="-29.21" y1="-27.94" x2="-29.21" y2="-20.32" width="0.127" layer="21"/>
+<wire x1="-26.67" y1="-27.94" x2="-26.67" y2="-20.32" width="0.127" layer="21"/>
 <pad name="RES" x="-27.94" y="-11.43" drill="1.016" diameter="1.8796" rot="R90"/>
 <pad name="3.3V" x="-27.94" y="-8.89" drill="1.016" diameter="1.8796" rot="R90"/>
 <pad name="5V@0" x="-27.94" y="-6.35" drill="1.016" diameter="1.8796" rot="R90"/>
@@ -6152,10 +6152,10 @@ Standard 1-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 <pad name="IOREF" x="-27.94" y="-13.97" drill="1.016" diameter="1.8796" rot="R180"/>
 <pad name="SCL" x="27.94" y="-25.4" drill="1.016" diameter="1.8796" rot="R180"/>
 <pad name="SDA" x="27.94" y="-22.86" drill="1.016" diameter="1.8796" rot="R180"/>
-<pad name="BAT" x="-27.94" y="-25.4" drill="1.016" diameter="1.8796" rot="R180"/>
-<pad name="V+" x="-27.94" y="-22.86" drill="1.016" diameter="1.8796" rot="R180"/>
+<pad name="BAT" x="-27.94" y="-26.67" drill="1.016" diameter="1.8796" rot="R180"/>
+<pad name="V+" x="-27.94" y="-24.13" drill="1.016" diameter="1.8796" rot="R180"/>
 <text x="29.21" y="-33.02" size="1.27" layer="25" rot="R90">&gt;NAME</text>
-<text x="-27.94" y="-27.94" size="1.27" layer="27" rot="R270">&gt;VALUE</text>
+<text x="-27.94" y="-30.48" size="1.27" layer="27" rot="R270">&gt;VALUE</text>
 <rectangle x1="-28.194" y1="18.796" x2="-27.686" y2="19.304" layer="51" rot="R270"/>
 <rectangle x1="-28.194" y1="16.256" x2="-27.686" y2="16.764" layer="51" rot="R270"/>
 <rectangle x1="-28.194" y1="13.716" x2="-27.686" y2="14.224" layer="51" rot="R270"/>
@@ -6188,10 +6188,10 @@ Standard 1-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 <rectangle x1="-28.194" y1="-14.224" x2="-27.686" y2="-13.716" layer="51"/>
 <rectangle x1="27.686" y1="-25.654" x2="28.194" y2="-25.146" layer="51"/>
 <rectangle x1="27.686" y1="-23.114" x2="28.194" y2="-22.606" layer="51"/>
-<rectangle x1="-28.194" y1="-25.654" x2="-27.686" y2="-25.146" layer="51"/>
-<rectangle x1="-28.194" y1="-23.114" x2="-27.686" y2="-22.606" layer="51"/>
-<pad name="5V@1" x="-27.94" y="-20.32" drill="1.016" diameter="1.8796" rot="R90"/>
-<rectangle x1="-28.194" y1="-20.574" x2="-27.686" y2="-20.066" layer="51"/>
+<rectangle x1="-28.194" y1="-26.924" x2="-27.686" y2="-26.416" layer="51"/>
+<rectangle x1="-28.194" y1="-24.384" x2="-27.686" y2="-23.876" layer="51"/>
+<pad name="5V@1" x="-27.94" y="-21.59" drill="1.016" diameter="1.8796" rot="R90"/>
+<rectangle x1="-28.194" y1="-21.844" x2="-27.686" y2="-21.336" layer="51"/>
 <wire x1="25.4" y1="-44.45" x2="66.04" y2="-44.45" width="0.127" layer="51"/>
 <wire x1="25.4" y1="27.94" x2="66.04" y2="27.94" width="0.127" layer="51"/>
 <wire x1="-25.4" y1="27.94" x2="-38.1" y2="27.94" width="0.127" layer="51"/>
