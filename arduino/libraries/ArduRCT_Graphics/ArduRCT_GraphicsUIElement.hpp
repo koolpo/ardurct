@@ -54,7 +54,9 @@ class ArduRCT_GraphicsUIElement {
         
         uint8_t getGroup();
         
-        bool run();
+        uint8_t getId();
+        
+        virtual bool run();
         
         uint8_t getFontSize(char *text);
         
@@ -69,9 +71,7 @@ class ArduRCT_GraphicsUIElement {
         
         virtual void setState(uint8_t state);
 
-        int16_t getValue();
-        
-        uint8_t getId();
+        virtual int16_t getValue();
         
         // called when the item is selected (enter is pressed, or item is touched)
         // returns another element which changed if any
