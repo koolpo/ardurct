@@ -32,9 +32,6 @@
  
 #include <SPI.h>
 
-//#include <ArduRCT_S6D04H0.h>
-//ArduRCT_S6D04H0 graphics;
-
 #include <ArduRCT_SPFD5408.h>
 ArduRCT_SPFD5408 graphics;
 
@@ -61,17 +58,15 @@ ArduRCT_GraphicsUIOption option2(2, "O2", &handleActions, 1);
 ArduRCT_GraphicsUIOption option3(3, "O3", &handleActions, 1);
 ArduRCT_GraphicsUIButton button1(4, "Menu", &handleActions);
 ArduRCT_GraphicsUIButton button2(5, "Popup", &handleActions);
-ArduRCT_GraphicsUIElement element1(6);
-ArduRCT_GraphicsUISlider slider1(7, 50, 0, 100, &handleActions, 5);
-ArduRCT_GraphicsUISlider slider2(8, 70, 0, 100, &handleActions, 5);
-ArduRCT_GraphicsUISlider slider3(9, 10, 0, 100, &handleActions, 5);
-ArduRCT_GraphicsUITab tab1(TAB1, "T1", &handleActions, 1);
-ArduRCT_GraphicsUITab tab2(TAB2, "T2", &handleActions, 1);
-ArduRCT_GraphicsUIElement element2(FOOTER, &drawFooter);
-ArduRCT_GraphicsUISlider slider4(40, 10, 0, 20, &handleActions, 1);
+ArduRCT_GraphicsUISlider slider1(7, 50, 0, 100, &handleActions, 2);
+ArduRCT_GraphicsUISlider slider2(8, 70, 0, 100, &handleActions, 10);
+ArduRCT_GraphicsUITab tab1(TAB1, "Tab 1", &handleActions, 2);
+ArduRCT_GraphicsUITab tab2(TAB2, "Tab 2", &handleActions, 2);
+ArduRCT_GraphicsUIElement footer(FOOTER, &drawFooter);
+ArduRCT_GraphicsUISlider slider3(40, 10, 0, 20, &handleActions, 1);
 ArduRCT_GraphicsUIGauge gauge1(41, 10, 0, 20);
 ArduRCT_GraphicsUILabel label2(42, "Test", FONT_SMALL);
-ArduRCT_GraphicsUILabel label3("Are you really sure you want to exit ?", FONT_SMALL);
+ArduRCT_GraphicsUILabel label3("Are you really sure you\nwant to exit ?", FONT_MEDIUM);
 ArduRCT_GraphicsUIButton button3(50, "Yes", &handleActions);
 ArduRCT_GraphicsUIButton button4(51, "No", &handleActions);
 ArduRCT_GraphicsUIListItem listItem1(60, "Item 01", &handleActions);
@@ -93,10 +88,9 @@ void setup() {
     screen1.addElement(&option2, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
     screen1.addElement(&option3, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
     screen1.setElementValue(1, GRAPHICS_UI_SELECTED);
-    screen1.getElement(2)->editable = false;
+    option2.editable = false;
     screen1.addElement(&button1, 5, GUI_BOPWM, GUI_AS, GUI_AS);
     screen1.addElement(&button2, GUI_ROPWM, GUI_SAP, GUI_AS, GUI_AS);
-    screen1.addElement(&element1, 5, GUI_BOPWM, 118, GUI_SAP);
     screen1.addElement(&slider1, GUI_SAP, GUI_BOPWM, 118, 20);
     screen1.addElement(&slider2, GUI_SAP, GUI_BOPWM, GUI_SAP, GUI_SAP);
     screen1.addElement(&slider3, GUI_SAP, GUI_BOPWM, GUI_SAP, GUI_SAP);
@@ -105,20 +99,18 @@ void setup() {
     screen1.setElementValue(TAB1, GRAPHICS_UI_SELECTED);
     screen1.addElement(&tab2, GUI_ROP, 0, GUI_AS, GUI_AS, GRAPHICS_UI_SECTION_HEADER);
     // set a footer
-    screen1.addElement(&element2, 0, 0, GUI_W, 14, GRAPHICS_UI_SECTION_FOOTER);
-    screen1.getElement(FOOTER)->editable = false;
+    screen1.addElement(&footer, 0, 0, GUI_W, 14, GRAPHICS_UI_SECTION_FOOTER);
+    footer.editable = false;
     
     graphics.addScreen(&screen2);
     // reuse the tabs for another screen: screen2
-    screen2.addElement(screen1.getElement(TAB1));
+    screen2.addElement(&tab1);
     // reuse the footer for another screen:tab2
-    screen2.addElement(screen1.getElement(FOOTER));
+    screen2.addElement(&footer);
     // check other UI elements
     screen2.addElement(&slider4, 10, 5, 20, 90);
-    screen2.addElement(&gauge1, GUI_ROPWM, GUI_SAP, GUI_SAP, GUI_SAP);
+    screen2.addElement(&gauge1, GUI_ROPWM, GUI_SAP, 35, GUI_SAP);
     screen2.addElement(&label2, GUI_SAP, GUI_BOP, GUI_AS, GUI_AS);
-    screen2.getElement(42)->y ++; 
-    screen2.getElement(42)->x -= 4;
     
     // define a popup
     graphics.addScreen(&popup);
@@ -173,7 +165,7 @@ bool handleActions(uint8_t elementId, int16_t value) {
     else if (elementId == MENU) graphics.setGraphicsUIScreen(&menu);
     else if (elementId == POPUP) graphics.setGraphicsUIScreen(&popup);
     else if ((elementId >= 50) && (elementId <= 63)) graphics.setGraphicsUIScreen(&screen1);
-    else if (elementId == 40) screen2.setElementValue(41, screen2.getElementValue(40));
+    else if (elementId == 40) screen2.setElementValue(41, value);
     return false;
 }
 

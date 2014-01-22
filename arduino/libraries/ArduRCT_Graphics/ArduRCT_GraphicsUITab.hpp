@@ -38,10 +38,10 @@ class ArduRCT_GraphicsUITab : public ArduRCT_GraphicsUIOption {
         virtual void autoSize(ArduRCT_Graphics *graphics);
 
         virtual void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
-        
+/*        
     protected:
         uint16_t _drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color);
-
+*/
 }; 
 
 #endif

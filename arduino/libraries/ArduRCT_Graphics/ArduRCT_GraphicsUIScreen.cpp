@@ -185,6 +185,26 @@ bool ArduRCT_GraphicsUIScreen::process(uint8_t actionId, int16_t x, int16_t y) {
         if (runOnEscape) _selectedElement->run();
         _selectedElement = 0;
         return true;
+    } else if (actionId == GRAPHICS_UI_ACTION_DRAG) {
+        ArduRCT_GraphicsUIElement *draggedElement = _findElementAt(x, y);
+        if ((_selectedElement != 0) && ((draggedElement == 0) || (draggedElement != _selectedElement))) {
+            _selectedElement->release();
+            _selectedElement->escape();
+            _drawElement(_selectedElement);
+        }
+        _selectedElement = draggedElement;
+        if (_selectedElement == 0) return false;
+        int touchX = x-_selectedElement->x;
+        int touchY = y-_selectedElement->y;
+        if (_selectedElement->section == GRAPHICS_UI_SECTION_MAIN) {
+            touchX -= _topX;
+            touchY -= _topY;
+        } else if (_selectedElement->section == GRAPHICS_UI_SECTION_FOOTER) {
+            touchY -= _height - _firstFooterElement->height;
+        }
+        _selectedElement->touch(touchX, touchY);
+        _drawElement(_selectedElement);
+        return true;
     } else if ((actionId == GRAPHICS_UI_ACTION_UP) || (actionId == GRAPHICS_UI_ACTION_DOWN)) {
         if (_currentElement == 0) {
             _currentElement = _findNextElement(false);

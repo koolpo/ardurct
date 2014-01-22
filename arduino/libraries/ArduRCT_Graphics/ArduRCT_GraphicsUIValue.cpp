@@ -36,6 +36,7 @@ ArduRCT_GraphicsUIValue::ArduRCT_GraphicsUIValue(uint8_t id, int16_t value, int1
     _max = max;
     _step = step;
     _radix = radix;
+    editable = true;
     if (_step == 0) _step = 1;
 }
 
@@ -44,7 +45,7 @@ void ArduRCT_GraphicsUIValue::draw(ArduRCT_Graphics *graphics, int16_t uiX, int1
     uint16_t color = (_state == GRAPHICS_UI_SELECTED ? GRAPHICS_UI_COLOR_SELECTED : GRAPHICS_UI_COLOR_RELEASED);
     graphics->setBackgroundColor(color);
     graphics->fillRectangle(x+uiX, y+uiY, width, height, color);
-    uint16_t hColor = (_state == GRAPHICS_UI_RELEASED ? BLACK : GRAPHICS_UI_COLOR_HIGHLIGHTED);
+    uint16_t hColor = (_state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK);
     graphics->drawRectangle(x+uiX, y+uiY, width, height, hColor, 1);
     if (_value < _max) graphics->fillCorner(uiX+x+width-2, uiY+y+1, 5, GRAPHICS_POSITION_SW, BLACK);
     if (_value > _min) graphics->fillCorner(uiX+x+1, uiY+y+height-2, 5, GRAPHICS_POSITION_NE, BLACK);
@@ -56,8 +57,8 @@ void ArduRCT_GraphicsUIValue::draw(ArduRCT_Graphics *graphics, int16_t uiX, int1
 }
 
 void ArduRCT_GraphicsUIValue::autoSize(ArduRCT_Graphics *graphics) {
-    uint8_t len2 = _intToString(_max);
     uint8_t len = _intToString(_min);
+    uint8_t len2 = _intToString(_max);
     if (len2 > len) len = len2;
     height = graphics->getFontHeight(GRAPHICS_UI_ELEMENT_FONT) + GRAPHICS_UI_ELEMENT_TOP_MARGIN * 2;
     width =  len*graphics->getFontCharWidth(GRAPHICS_UI_ELEMENT_FONT) + GRAPHICS_UI_ELEMENT_LEFT_MARGIN * 2;
@@ -125,6 +126,7 @@ ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIValue::touch(int16_t touchX, int16_
         else _value -= (_max-_min)/10;
         if (_value < _min) _value = _min;
     }
+    run();
     return 0;
 }
     
@@ -135,7 +137,7 @@ uint8_t ArduRCT_GraphicsUIValue::_intToString(int16_t value) {
         _display[1] = 0;
         return 1;
     }
-    uint8_t i = 0;
+    int8_t i = 0;
     uint8_t temp[6];
     bool neg = false;		
     if (value < 0) {
@@ -150,7 +152,7 @@ uint8_t ArduRCT_GraphicsUIValue::_intToString(int16_t value) {
     i--;
     uint8_t j = 0;
     if (neg) _display[j++] = '-';
-    while (i >= 0) _display[j++] = temp[i--]; 
+    while (i >= 0) _display[j++] = temp[i--];
     _display[j] = 0;
     return j;
 }

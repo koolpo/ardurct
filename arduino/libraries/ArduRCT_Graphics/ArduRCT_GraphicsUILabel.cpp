@@ -57,8 +57,6 @@ void ArduRCT_GraphicsUILabel::draw(ArduRCT_Graphics *graphics, int16_t uiX, int1
 
 void ArduRCT_GraphicsUILabel::autoSize(ArduRCT_Graphics *graphics) {
     if (_text == 0) return;
-    uint16_t *tW;
-    uint16_t *tH;
     graphics->getStringBoundingBox(_text, _fontSize, _fontSize == FONT_SMALL ? false : GRAPHICS_UI_ELEMENT_FONT_IS_BOLD, GRAPHICS_UI_ELEMENT_LEFT_MARGIN, &width, &height);
     height += GRAPHICS_UI_ELEMENT_TOP_MARGIN * 2;
 }

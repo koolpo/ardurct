@@ -87,12 +87,14 @@ uint8_t ArduRCT_GraphicsUIElement::getFontSize(char *text) {
     
 void ArduRCT_GraphicsUIElement::draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth) {
     if (_drawHandler) (*_drawHandler)(_id, _state, _value, x+uiX, y+uiY, width, height);
-    else graphics->fillRectangle(x+uiX, y+uiY, width, height, GRAPHICS_UI_COLOR_RELEASED);
-    if (editable) {
-        int color = GRAPHICS_UI_COLOR_RELEASED;
-        if (_state == GRAPHICS_UI_HIGHLIGHTED) color = GRAPHICS_UI_COLOR_HIGHLIGHTED;
-        else if (_state == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_PRESSED;
-        graphics->drawRectangle(x+uiX, y+uiY, width, height, color, 1);
+    else {
+        graphics->fillRectangle(x+uiX, y+uiY, width, height, GRAPHICS_UI_COLOR_RELEASED);
+        if (editable) {
+            int color = GRAPHICS_UI_COLOR_RELEASED;
+            if (_state == GRAPHICS_UI_HIGHLIGHTED) color = GRAPHICS_UI_COLOR_HIGHLIGHTED;
+            else if (_state == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_PRESSED;
+            graphics->drawRectangle(x+uiX, y+uiY, width, height, color, 1);
+        }
     }
 }
 
@@ -121,7 +123,7 @@ ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIElement::enter() {
 
 // called when the item is touched with a pen
 // returns another element changed if any
-ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIElement::touch(int16_t x, int16_t y) {
+ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIElement::touch(int16_t touchX, int16_t touchY) {
     return enter();
 }
 
@@ -151,7 +153,7 @@ bool ArduRCT_GraphicsUIElement::decrease() {
 }
 
 void ArduRCT_GraphicsUIElement::highlight() {
-    _state = GRAPHICS_UI_HIGHLIGHTED;				
+    _state = GRAPHICS_UI_HIGHLIGHTED;
 }
 
 #endif

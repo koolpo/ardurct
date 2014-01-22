@@ -44,6 +44,8 @@ class ArduRCT_GraphicsUISlider : public ArduRCT_GraphicsUIElement {
         
         virtual bool decrease();
         
+        virtual ArduRCT_GraphicsUIElement *touch(int16_t touchX, int16_t touchY);
+
     protected:
         int16_t _min;
         int16_t _max;

@@ -35,25 +35,28 @@ ArduRCT_GraphicsUISlider::ArduRCT_GraphicsUISlider(uint8_t id, int16_t value, in
     _min = min;
     _max = max;
     _step = step;
+    editable = true;
     if (_step == 0) _step = 1;
 }
 
 void ArduRCT_GraphicsUISlider::draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth) {
     graphics->fillRectangle(x+uiX, y+uiY, width, height, GRAPHICS_UI_COLOR_BACKGROUND);
     uint16_t color = (_state == GRAPHICS_UI_SELECTED ? GRAPHICS_UI_COLOR_SELECTED : GRAPHICS_UI_COLOR_RELEASED);
-    uint16_t hColor = (_state == GRAPHICS_UI_RELEASED ? BLACK : GRAPHICS_UI_COLOR_HIGHLIGHTED);
+    uint16_t hColor = (_state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK);
     if (width > height) {
         // horizontal slider
         graphics->fillRectangle(uiX+x, uiY+y+height/2-height/8, width, 2*height/8, BLACK);
-        int16_t knobX = x+uiX + _value*(width-GRAPHICS_UI_SLIDER_KNOB_SIZE)/(_max-_min);
-        graphics->fillRectangle(knobX, y+uiY, GRAPHICS_UI_SLIDER_KNOB_SIZE, height, color);
-        graphics->drawRectangle(knobX, y+uiY, GRAPHICS_UI_SLIDER_KNOB_SIZE, height, hColor, 1);
+        int32_t knobX = _value;
+        knobX = x+uiX + knobX*(width-GRAPHICS_UI_SLIDER_KNOB_SIZE)/(_max-_min);
+        graphics->fillRectangle((int16_t)knobX, y+uiY, GRAPHICS_UI_SLIDER_KNOB_SIZE, height, color);
+        graphics->drawRectangle((int16_t)knobX, y+uiY, GRAPHICS_UI_SLIDER_KNOB_SIZE, height, hColor, 1);
     } else {
         // vertical slider
         graphics->fillRectangle(uiX+x+width/2-width/8, uiY+y, 2*width/8, height, BLACK);
-        int16_t knobY = y+uiY + (_max-_value)*(height-GRAPHICS_UI_SLIDER_KNOB_SIZE)/(_max-_min);
-        graphics->fillRectangle(x+uiX, knobY, width, GRAPHICS_UI_SLIDER_KNOB_SIZE, color);
-        graphics->drawRectangle(x+uiX, knobY, width, GRAPHICS_UI_SLIDER_KNOB_SIZE, hColor, 1);
+        int32_t knobY = (_max-_value);
+        knobY = y+uiY + knobY*(height-GRAPHICS_UI_SLIDER_KNOB_SIZE)/(_max-_min);
+        graphics->fillRectangle(x+uiX, (int16_t)knobY, width, GRAPHICS_UI_SLIDER_KNOB_SIZE, color);
+        graphics->drawRectangle(x+uiX, (int16_t)knobY, width, GRAPHICS_UI_SLIDER_KNOB_SIZE, hColor, 1);
     }
 }
 
@@ -94,6 +97,28 @@ bool ArduRCT_GraphicsUISlider::decrease() {
     _value -= _step;
     if (_value < _min) _value = _min;
     return true;
+}
+
+// called when the item is touched with a pen
+// returns another element changed if any
+ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUISlider::touch(int16_t touchX, int16_t touchY) {
+    if (width > height) {
+        int32_t value = touchX;
+        value = value * (_max-_min) / (width-GRAPHICS_UI_SLIDER_KNOB_SIZE) + _min;
+        _value = value; 
+    } else {
+        int32_t value = height - touchY;
+        value = value * (_max-_min) / (height-GRAPHICS_UI_SLIDER_KNOB_SIZE) + _min;
+        _value = value; 
+    }
+    if (_value < _min) _value = _min;
+    else if (_value > _max) _value = _max;
+    else if (_step != 1) {
+        if (_value >= _max-_step/2) _value = _max;
+        else _value = _value - (_value % _step);
+    }
+    run();
+    return 0;
 }
 
 #endif

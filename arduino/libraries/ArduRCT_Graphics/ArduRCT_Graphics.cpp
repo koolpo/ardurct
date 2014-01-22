@@ -281,8 +281,10 @@ void ArduRCT_Graphics::getStringBoundingBox(char *s, uint8_t fontSize, bool isBo
     int16_t x = 0;
     uint8_t i = 0;
     while (s[i] != 0) {
-        if (s[i] == '\n') *height += lineHeight;
-        else x += chrWidth;
+        if (s[i] == '\n') {
+            *height += lineHeight;
+            x = 0;
+        } else x += chrWidth;
         if (x > *width) *width = x;
         if (x > getWidth()-2*marginX-chrWidth) {
             x = 0;
