@@ -73,7 +73,7 @@ class ArduRCT_GraphicsUIElement {
 
         virtual int16_t getValue();
         
-        // called when the item is selected (enter is pressed, or item is touched)
+        // called when the item is selected (enter is pressed)
         // returns another element which changed if any
         virtual ArduRCT_GraphicsUIElement *enter();
 
@@ -89,6 +89,8 @@ class ArduRCT_GraphicsUIElement {
         // return true if the element needs to be run after escape
         virtual bool escape();
         
+        virtual bool run();
+
         // called when the item is selected and Up is pressed
         // return true if the value was increased
         virtual bool increase();
@@ -97,6 +99,9 @@ class ArduRCT_GraphicsUIElement {
         // return true if the value was decreased
         virtual bool decrease();
 
+        // called when the element is entered or touched
+        // release will keep the highlight
+        // escape will release the highlight
         virtual void highlight();
                 
     protected:
