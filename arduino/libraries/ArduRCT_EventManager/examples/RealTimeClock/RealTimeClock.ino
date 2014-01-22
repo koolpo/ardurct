@@ -22,28 +22,29 @@
  * THE SOFTWARE.
  */
 
+#include <Wire.h>
 #include <ArduRCT_EventManager.h>
 
-// create a soft RealTimeClock
-ArduRCT_RealTimeClock rtc(2012, DECEMBER, 17, 12, 18, 0);
-
+// create a RealTimeClock
+ArduRCT_RealTimeClock rtc(RTC_EXTERNAL_MCP7941X);
 // create an eventManager with a RTC
 ArduRCT_EventManager eventManager(&rtc);
+// define a time handler
+ArduRCT_EventHandler timeHandler(EVENT_TIME_SECOND, &outputTime);
 
 void setup() {
     Serial.begin(57600);
-    
     // register the timeHandler with the eventManager
-    eventManager.registerEventHandler(new ArduRCT_EventHandler(EVENT_TIME_SECOND, &outputTime));
+    eventManager.registerEventHandler(&timeHandler);
 }
 
 void loop() {
-    eventManager.update();
+    eventManager.manageEvents();
 }
 
 int8_t outputTime(uint8_t eventType) {
-    Serial.print((char *)(eventManager.getRTC()->getDateAsString(RTC_WITH_DAY_OF_WEEK)));
+    Serial.print(eventManager.getRTC()->getDateAsString(RTC_WITH_DAY_OF_WEEK));
     Serial.print(" ");
-    Serial.println((char *)(eventManager.getRTC()->getTimeAsString(RTC_WITH_SECONDS)));
+    Serial.println(eventManager.getRTC()->getTimeAsString(RTC_WITH_SECONDS));
     return EVENT_HANDLING_DONE;
 }

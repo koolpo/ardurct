@@ -34,6 +34,13 @@
 
 #include <inttypes.h>
 
+// comment this line if your setup never has a MCP7941X
+#define RTC_MCP7941X   1
+
+#define RTC_MCP7941X_YEAR_OFFSET    2000
+#define RTC_EXTERNAL_MCP7941X       true
+#define RTC_INTERNAL                false
+
 #define RTC_HOUR10     0
 #define RTC_HOUR1      1
 #define RTC_MINUTE10   2
@@ -78,8 +85,8 @@ typedef struct {
 class ArduRCT_RealTimeClock {
 
     public:
-        ArduRCT_RealTimeClock();
-        ArduRCT_RealTimeClock(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+        ArduRCT_RealTimeClock(bool hasMCP7941x = false);
+        ArduRCT_RealTimeClock(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, bool hasMCP7941x = false);
         
         void setDate(uint16_t year, uint8_t month, uint8_t day);
         
@@ -141,6 +148,14 @@ class ArduRCT_RealTimeClock {
         
         uint8_t getSecond();
         
+#ifdef RTC_MCP7941X
+        uint8_t decToBcd(uint8_t val);
+        
+        uint8_t bcdToDec(uint8_t val);
+        
+        void setHasMCP7941x(bool hasMCP7941x = false);
+#endif
+        
     private:
         uint16_t _year;
         uint8_t _month;
@@ -151,10 +166,13 @@ class ArduRCT_RealTimeClock {
         uint8_t _second;
         uint32_t _nextSecond;
         int8_t _alarmStatus;
-        uint8_t _timeDigit[6];
         rtcAlarm_t _alarm[7];
         char _buffer[18];
+#ifdef RTC_MCP7941X
+        uint8_t _mcp7941xStatus;
 
+        bool _getMCP7941xTime();
+#endif
         void _checkAlarms();
 };
 

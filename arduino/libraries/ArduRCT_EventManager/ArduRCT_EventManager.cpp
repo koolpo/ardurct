@@ -75,6 +75,7 @@ ArduRCT_TouchPanel *ArduRCT_EventManager::getRegisteredTouchPanel() {
 }
 
 void ArduRCT_EventManager::registerEventHandler(ArduRCT_EventHandler *handler) {
+    handler->setNext(0);
 	if (_handler == 0) _handler = handler;
 	else {
 		ArduRCT_EventHandler *nHandler = _handler;
@@ -95,9 +96,11 @@ void ArduRCT_EventManager::manageEvents() {
     while (handler != 0) {
         handler->handle(EVENT_SYSTEM_TICK, _tick);
         handler = handler->getNext();
+        delay(1);
     }
 
     // update the time and generate corresponding events
+    delay(5);
     if (_rtc != 0) _updateTime();
 
     // look after the switches

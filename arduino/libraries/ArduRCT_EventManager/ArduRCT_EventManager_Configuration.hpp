@@ -42,6 +42,11 @@
 #endif
 // comment out the following to disable matrix calibration
 //#define TOUCHPANEL_MATRIX_CALIBRATION 1
+// define a default hardware
+#define TOUCHPANEL_WIDTH 240
+#define TOUCHPANEL_HEIGHT 320
+#define TOUCHPANEL_DRAG_TRIGGER 2
+#define TOUCHPANEL_EVENT_PIN 30
 
 // number of steps in one rotation of the encoder
 // this is function of your hardware

@@ -11,6 +11,7 @@ ArduRCT_EventManager	KEYWORD1
 ArduRCT_EventHandler	KEYWORD1
 ArduRCT_TouchPanel	KEYWORD1
 ArduRCT_Switch	KEYWORD1
+ArduRCT_Analog	KEYWORD1
 
 #######################################
 # Methods and Functions	(KEYWORD2)
@@ -24,6 +25,7 @@ getRTC	KEYWORD2
 registerSwitch	KEYWORD2
 registerTouchPanel	KEYWORD2
 registerEncoder	KEYWORD2
+registerAnalog	KEYWORD2
 registerEventHandler	KEYWORD2
 manageEvents	KEYWORD2
 addEvent	KEYWORD2
@@ -33,6 +35,7 @@ getDayOfWeek	KEYWORD2
 setDateTime	KEYWORD2
 updateTime	KEYWORD2
 getMonthLastDay	KEYWORD2
+setHasMCP7941x	KEYWORD2
 setAlarmTime	KEYWORD2
 getAlarmTime	KEYWORD2
 setAlarmOn	KEYWORD2

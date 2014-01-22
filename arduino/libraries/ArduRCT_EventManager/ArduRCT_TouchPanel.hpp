@@ -51,9 +51,11 @@ class ArduRCT_TouchPanel {
 	public:
 	
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
-		ArduRCT_TouchPanel(uint8_t interruptPin, uint8_t dragTrigger = 2, uint16_t width = 0, uint16_t height = 0, uint16_t calibrationMatrixEepromAddress = 0xFFFF);
+		ArduRCT_TouchPanel(uint8_t interruptPin = TOUCHPANEL_EVENT_PIN, uint8_t dragTrigger = TOUCHPANEL_DRAG_TRIGGER, 
+                uint16_t width = TOUCHPANEL_WIDTH, uint16_t height = TOUCHPANEL_HEIGHT, uint16_t calibrationMatrixEepromAddress = 0xFFFF);
 #else
-		ArduRCT_TouchPanel(uint8_t interruptPin, uint8_t dragTrigger = 2, uint16_t width = 0, uint16_t height = 0);
+		ArduRCT_TouchPanel(uint8_t interruptPin = TOUCHPANEL_EVENT_PIN, uint8_t dragTrigger = TOUCHPANEL_DRAG_TRIGGER, 
+                uint16_t width = TOUCHPANEL_WIDTH, uint16_t height = TOUCHPANEL_HEIGHT);
 #endif
 		int8_t getPenXYZ(uint16_t *x = 0, uint16_t *y = 0, int8_t *z = 0);
 		

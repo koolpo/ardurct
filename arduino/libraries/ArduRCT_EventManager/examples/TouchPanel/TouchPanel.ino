@@ -31,6 +31,10 @@
 
 // define the eventManager
 ArduRCT_EventManager eventManager;
+// define the touchpanel
+ArduRCT_TouchPanel touchpanel;
+// define an event handler for the touch panel
+ArduRCT_EventHandler touchpanelHandler(EVENT_TOUCHPANEL, EVENT_ANY_VALUE, 0, 0, &handleTouchPanel)
 
 void setup() {
     Serial.begin(57600);
@@ -40,10 +44,10 @@ void setup() {
     digitalWrite(LED_PIN, LOW);
 
     // register a TouchPanel
-    eventManager.registerTouchPanel(new ArduRCT_TouchPanel(TP_INT_PIN, TP_DRAG_TRIGGER));
+    eventManager.registerTouchPanel(&touchpanel);
     
     // register an EventHandler for the panel: handleTouchPanel will be called for every EVENT_TOUCHPANEL
-    eventManager.registerEventHandler(new ArduRCT_EventHandler(EVENT_TOUCHPANEL, EVENT_ANY_VALUE, &handleTouchPanel));
+    eventManager.registerEventHandler(&touchpanelHandler);
 }
 
 void loop() {
