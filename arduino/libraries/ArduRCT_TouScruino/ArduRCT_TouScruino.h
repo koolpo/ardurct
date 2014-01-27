@@ -111,6 +111,7 @@ int8_t ArduRCT_TouscruinoV2HandleGraphicsUI(uint8_t type, uint8_t value, int16_t
 #endif
     if (type == EVENT_TOUCHPANEL_PRESSED) actionId = GRAPHICS_UI_ACTION_TOUCH;
     else if (type == EVENT_TOUCHPANEL_RELEASED) actionId = GRAPHICS_UI_ACTION_UNTOUCH;
+    else if (type == EVENT_TOUCHPANEL_DRAGGED) actionId = GRAPHICS_UI_ACTION_DRAG;
     if (actionId == 0) return EVENT_HANDLING_DONE;
     if (Touscruino.handleGraphicsUI(actionId, x, y)) return EVENT_HANDLING_EXIT;
     return EVENT_HANDLING_DONE;

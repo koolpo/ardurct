@@ -1,5 +1,5 @@
 /*
- * UIFramework - Demonstration of use of the touchscreen for a User Interface
+ * Insider - demonstrate the use of a Graphics object and a TouchPanel
  *
  * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -23,42 +23,41 @@
  */
 
 /**
- *  Demonstrates the use of the UI manager included in the Touscruino
- **/
-  
+ *  See TouchScreen for a proper use of TouScruino
+ *  This sketch shows how the hardware inside TouScruino works
+ */
+ 
 #include <Wire.h>
-#include <SPI.h>
-#include <ArduRCT_Graphics.h>
 #include <ArduRCT_EventManager.h>
+#include <ArduRCT_Graphics.h>
+#include <ArduRCT_SPFD5408.h>
+#include <ArduRCT_TouchPanel.h>
+#include <SPI.h>
 
-// Change to your version: the following include will automatically create the proper 'Touscruino' object
-#define TOUSCRUINO_VERSION 2
-#include <ArduRCT_TouScruino.h>
+// define the graphics
+ArduRCT_SPFD5408 graphics;
+// define the touchpanel
+ArduRCT_TouchPanel touchpanel;
 
-// define a screen
-ArduRCT_GraphicsUIScreen screen;
-// define a button which will call uiHandler for every action on it
-ArduRCT_GraphicsUIButton button(0, "Toggle RED", &uiHandler);
+int16_t x;
+int16_t y;
 
 void setup() {
-    // prepare the screen
-    Touscruino.begin(BLACK, WHITE, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
-    // enable the GraphicsUI
-    Touscruino.enableGraphicsUI();
-    // add the screen
-    Touscruino.addScreen(&screen);
-    // add a button on the screen
-    screen.addElement(&button, 40, 20, 160, 40);
-    // start the UI by showing screen
-    Touscruino.setGraphicsUIScreen(&screen);
+    // setup the screen 
+    graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD);
 }
 
 void loop() {
-    Touscruino.manageEvents();
-}
-
-boolean isRed = false;
-boolean uiHandler(uint8_t elementId, int16_t value) {
-    isRed = !isRed;
-    Touscruino.fillRectangle(80, 200, 80, 80, isRed ? RED : WHITE);
+    // get the state of the touchpanel
+    uint8_t tpState = touchpanel.update();
+    if (tpState == EVENT_STATE_PRESSED) {
+        // if the pen is pressed on the screen, draw a big dot at the pen place
+        touchpanel.getPenXYZ(&x, &y);
+        graphics.fillRectangle(x-2, y-2, 4, 4, BLUE);
+    } else if (tpState == EVENT_STATE_DRAGGED) {
+        // if the pen is dragged on the screen, 
+        // draw a line connecting the last dot drawn and the current pen place
+        graphics.drawLine(x, y, touchpanel.getPenX(), touchpanel.getPenY(), BLUE, 4);
+        touchpanel.getPenXYZ(&x, &y);
+    }
 }
