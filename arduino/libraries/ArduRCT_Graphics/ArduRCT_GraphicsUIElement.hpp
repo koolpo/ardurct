@@ -55,9 +55,7 @@ class ArduRCT_GraphicsUIElement {
         uint8_t getGroup();
         
         uint8_t getId();
-        
-        virtual bool run();
-        
+               
         uint8_t getFontSize(char *text);
         
         virtual void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
