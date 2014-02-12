@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="com/google/code/ardurct/libraries/graphics/TouchScreen_UserInterface.java|com/google/code/ardurct/libraries/graphics/examples/UITests.java|com/google/code/ardurct/libraries/touchscreen/TouchScreen_UserInterface.java|com/google/code/ardurct/libraries/touchscreen/examples/UITests.java|com/google/code/ardurct/libraries/touscruino/TouchScreen_UserInterface.java|com/google/code/ardurct/libraries/touscruino/examples/UITests.java|com/google/code/ardurct/local/ArduRCT_Local.java|com/google/code/ardurct/local/Options.java|com/google/code/ardurct/local/Radio.java|com/google/code/ardurct/local/Telemetry.java" kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
