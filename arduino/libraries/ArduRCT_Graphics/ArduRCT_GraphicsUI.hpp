@@ -106,4 +106,8 @@
 #define GRAPHICS_UI_SECTION_MAIN  2
 #define GRAPHICS_UI_SECTION_FOOTER  3
 
+#define GUI_HEADER  1
+#define GUI_MAIN  2
+#define GUI_FOOTER  3
+
 #endif
