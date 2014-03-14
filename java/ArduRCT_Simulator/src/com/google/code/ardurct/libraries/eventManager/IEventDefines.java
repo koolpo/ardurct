@@ -28,8 +28,9 @@ public interface IEventDefines {
 
 	public final static int EVENT_TOUCHPANEL = 0x40;	
 	public final static int EVENT_TOUCHPANEL_PRESSED = 0x41;	
-	public final static int EVENT_TOUCHPANEL_DRAGGED = 0x42;	
-	public final static int EVENT_TOUCHPANEL_RELEASED = 0x43;	
+	public final static int EVENT_TOUCHPANEL_REPEAT_PRESSED = 0x42;
+	public final static int EVENT_TOUCHPANEL_DRAGGED = 0x43;	
+	public final static int EVENT_TOUCHPANEL_RELEASED = 0x44;	
 
 	public final static int EVENT_ANALOG = 0x50;	
 	public final static int EVENT_ANALOG_DECREASE = 0x51;	

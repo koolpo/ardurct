@@ -50,11 +50,11 @@ public class ArduRCT_JAVA extends ArduRCT_GraphicsUI {
 	}
 
 	public int getWidthImpl() {
-		return TFTTouchPanel.PHYSICAL_WIDTH;
+		return TFTTouchPanel.HARDWARE_WIDTH;
 	}
 
 	public int getHeightImpl() {
-		return TFTTouchPanel.PHYSICAL_HEIGHT;
+		return TFTTouchPanel.HARDWARE_HEIGHT;
 	}
 		
 	public int getARGBColor(int color565) {

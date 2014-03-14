@@ -87,6 +87,7 @@ implements ITouscruinoDefines, IEventDefines {
 		public int handle(int eventId, int value, int x, int y) { 
 			int actionId = 0;
 			if (eventId == EVENT_TOUCHPANEL_PRESSED) actionId = GRAPHICS_UI_ACTION_TOUCH;
+			else if (eventId == EVENT_TOUCHPANEL_REPEAT_PRESSED) actionId = GRAPHICS_UI_ACTION_REPEAT_TOUCH;
 			else if (eventId == EVENT_TOUCHPANEL_RELEASED) actionId = GRAPHICS_UI_ACTION_UNTOUCH;
 			else if (eventId == EVENT_TOUCHPANEL_DRAGGED) actionId = GRAPHICS_UI_ACTION_DRAG;
 			if (actionId == 0) return EVENT_HANDLING_DONE;

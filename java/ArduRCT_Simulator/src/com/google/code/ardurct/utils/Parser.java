@@ -39,6 +39,9 @@ implements IGraphicsDefines {
 	private Hashtable<String, ArduRCT_GraphicsUIScreen> screens;
 	private Vector<String> uiElementNames;
 	private Vector<String> sequence;
+	private Vector<String> lines;
+	private Vector<CodeLine> codeLines;
+	private int index = 0;
 	
 	public Parser(Designer designer) {
 		this.designer = designer;
@@ -53,45 +56,84 @@ implements IGraphicsDefines {
 		return textArea.getText();
 	}
 	
-	public String getCurrentMnemonic() {
-		// find the current mnemonic
-		try {
-			int caret = textArea.getCaretPosition();
-			int caretLine = textArea.getLineOfOffset(caret);
-			int caretLineStart = textArea.getLineStartOffset(caretLine);
-			int caretLineEnd = textArea.getLineEndOffset(caretLine);
-			String mnemonic = textArea.getText().substring(caretLineStart, caretLineEnd);
-			if (mnemonic.indexOf(' ') != -1) mnemonic = mnemonic.substring(0, mnemonic.indexOf(' '));
-			return mnemonic;
-		} catch (Exception e) {
-			return null;
-		}	
+	public void setText(String text) {
+		textArea.setText(text);
 	}
 	
-	public void addLine(String line) {
+	public int getCaretLineNumber() {
 		try {
 			int caret = textArea.getCaretPosition();
 			int caretLine = textArea.getLineOfOffset(caret);
-			int caretLineStart = textArea.getLineStartOffset(caretLine);
-			int caretLineEnd = textArea.getLineEndOffset(caretLine);
-			if (caret == caretLineStart) {
-				textArea.insert(line + (caretLineEnd != caretLineStart ? "\n" : ""), caret);
-				caret += (caretLineEnd != caretLineStart ? 1 : 0);
-			} else if (caret == caretLineEnd) {
-				textArea.insert("\n" + line, caret);
-				caret ++;
-			} else textArea.insert(line, caretLineEnd);
-			caret += line.length();
-			textArea.setCaretPosition(caret);
+			return caretLine;
 		} catch (Exception e) {
-			return;
+			return 0;
+		}	
+	}
+
+	public String getCaretLine() {
+		if (lines == null) return null;
+		int caretLine = getCaretLineNumber();
+		if (caretLine >= lines.size()) return null;
+		return lines.elementAt(caretLine);
+	}
+	
+	public String getCaretLineMnemonic() {
+		String mnemonic = getCaretLine();
+		if (mnemonic == null) return null;
+		if (mnemonic.indexOf(' ') != -1) mnemonic = mnemonic.substring(0, mnemonic.indexOf(' '));
+		return mnemonic;
+	}
+	
+	public CodeLine getCodeLineAtCaret() {
+		if (codeLines == null || codeLines.size() == 0) return null;
+		int caretLine = getCaretLineNumber();
+		if (caretLine >= codeLines.size()) return null;
+		CodeLine codeLine = codeLines.elementAt(caretLine);
+		if (codeLine.param == null) return null;
+		return codeLine;
+	}
+	
+	public void setLineAtCaret(String lineToSet) {
+		int caretLine = getCaretLineNumber();
+		if (lines == null) lines = new Vector<String>();
+		if (caretLine >= lines.size()) lines.add(lineToSet);
+		else {
+			String oldLine[] = lines.elementAt(caretLine).split(" ");
+			String newLine[] = lineToSet.split(" ");
+			if (oldLine.length > newLine.length) {
+				for (int i=newLine.length; i<oldLine.length; i++) lineToSet += " " + oldLine[i];
+			}
+			lines.setElementAt(lineToSet, caretLine);
+		}
+		rebuildText(caretLine);
+	}
+	
+	private void rebuildText(int caretLine) {
+		String text = null;
+		int caretPosition = 0;
+		int lineNb = 0;
+		for (String line : lines) {
+			text = (text == null ? "" : text + "\n") + line;
+			if (lineNb <= caretLine) {
+				lineNb ++;
+				caretPosition += line.length() + 1;
+			}
+		}
+		textArea.setText(text);
+		try {
+			textArea.setCaretPosition(caretPosition-1);
+		} catch (Exception e) {
+			System.out.println(text.length() + " " + caretPosition);
 		}
 	}
 	
-	public void addText(String text) {
-		int caret = textArea.getCaretPosition();
-		textArea.insert(text, caret);
-		textArea.setCaretPosition(caret + text.length());
+	public void insertLineAtCaret() {
+		int caretLine = getCaretLineNumber();
+		if (lines == null) lines = new Vector<String>();
+		if (caretLine == lines.size()) lines.add("");
+		else lines.insertElementAt("", caretLine + 1);
+		caretLine += 1;
+		rebuildText(caretLine);
 	}
 	
 	public String parse() {
@@ -105,7 +147,7 @@ implements IGraphicsDefines {
 		text = text.replaceAll("§§", "§");
 		String textLines[] = text.split("§");
 		// rebuild correct text
-		Vector<String> lines = new Vector<String>();
+		lines = new Vector<String>();
 		for (String line : textLines) {
 			line = line.trim();
 			if (line.startsWith("/*")) continue;
@@ -115,6 +157,7 @@ implements IGraphicsDefines {
 			if (line.startsWith("//")) continue;
 			if (line.startsWith("}")) continue; 
 			if (line.endsWith("{")) continue;
+			if (line.endsWith(";")) continue;
 			int indOf = line.indexOf('(');
 			if (indOf != -1 && indOf > 0 && line.charAt(indOf-1) != '\\') continue;
 			while (line.startsWith("*")) line = line.substring(1).trim();
@@ -122,10 +165,7 @@ implements IGraphicsDefines {
 		}
 		String correctText = null;
 		for (String line : lines) correctText = (correctText == null ? "" : correctText + "\n") + line;
-		if (Math.abs(text.length()-correctText.length()) > 5) {
-			textArea.setText(correctText);
-			if (correctText != null) textArea.setCaretPosition(correctText.length());
-		}
+		if (Math.abs(text.length()-correctText.length()) > 5) textArea.setText(correctText);
 		
 		String code = "<html><span style=\"font: " + FONT_SIZE + "pt '" + FONT_NAME + "'\">"; 
 		code += color(COMMENT_BLOCK_COLOR) + "/** ---- " + Designer.MARKER + " ---- **" + NL;
@@ -147,13 +187,17 @@ implements IGraphicsDefines {
 		
 		currentSection = setup;
 		sequence = new Vector<String>();
+		index = 0;
 		
 		screenLines = new Hashtable<String, CodeLine>(); 
 		screenNames = new Vector<String>(); 
 		uiElementNames = new Vector<String>();
+		codeLines = new Vector<CodeLine>();
 		// parse the lines
 		for (String line : lines) {
-			if (line.length() > 0 && line.charAt(0) != '-') parseLine(line);
+			CodeLine codeLine = new CodeLine(null);
+			if (line.length() > 0) codeLine = parseLine(line);
+			codeLines.add(codeLine);
 		}
 		// build the sections
 		Vector<String> sectionNames = new Vector<String>();
@@ -170,9 +214,9 @@ implements IGraphicsDefines {
 				"#include &lt;" + keyword("ArduRCT_Graphics") + ".h&gt;" + NL;
 		if (designer.target.equals("Touscruino")) {
 			includes += "#include &lt;" + keyword("ArduRCT_EventManager") + ".h&gt;" + NL + NL +
-					"#define TOUSCRUINO_VERSION " + TFTTouchPanel.VERSION + NL + 
+					"#define TOUSCRUINO_VERSION " + TFTTouchPanel.HARDWARE_SIZE + NL + 
 					"#include &lt;" + keyword("ArduRCT_TouScruino") + ".h&gt;";
-		} else if (TFTTouchPanel.VERSION == 2) includes += "#include &lt;" + keyword("ArduRCT_SPFD5408") + ".h&gt;";
+		} else if (TFTTouchPanel.HARDWARE_SIZE == 2) includes += "#include &lt;" + keyword("ArduRCT_SPFD5408") + ".h&gt;";
 		else includes += "#include &lt;" + keyword("ArduRCT_ST7735") + ".h&gt;";
 		includes += NL + NL;
 		
@@ -181,7 +225,7 @@ implements IGraphicsDefines {
 			loop.addLine(new CodeLine(designer.target, "manageEvents", null));
 			if (setup.touscruinoHasUI) setup.addLine(new CodeLine(designer.target, "enableGraphicsUI", null), 0);
 		} else {
-			declarations.addLine(new CodeLine(designer.target, TFTTouchPanel.VERSION == 2 ? "ArduRCT_SPFD5408" : "ArduRCT_ST7735", designer.target));
+			declarations.addLine(new CodeLine(designer.target, TFTTouchPanel.HARDWARE_SIZE == 2 ? "ArduRCT_SPFD5408" : "ArduRCT_ST7735", designer.target));
 		}
 		for (String sectionName : sectionNames) {
 			if (sectionName.charAt(0) != '-') code += sections.get(sectionName).toString();
@@ -217,7 +261,7 @@ implements IGraphicsDefines {
 		return code;
 	}
 	
-	private void parseLine(String line) {
+	private CodeLine parseLine(String line) {
 		// isolate quoted strings
 		String sline = line;
 		if (line.indexOf('"') != -1) {
@@ -234,19 +278,21 @@ implements IGraphicsDefines {
 		String linePart[] = sline.split(" ");
 		String part[] = new String[20];
 		for (int i=0; i<part.length; i++) part[i] = "?";
-		for (int i=0; i<linePart.length; i++) part[i] = linePart[i].replace('¤', ' ');				
-		if (part[0].startsWith("!")) {
+		for (int i=0; i<linePart.length; i++) part[i] = linePart[i].replace('¤', ' ');		
+		CodeLine codeLine = new CodeLine(null);
+		if (part[0].startsWith("!") || part[0].startsWith("-!")) {
 			String sectionName = part[0].substring(1);
+			if (part[0].startsWith("-!")) sectionName = "-" + part[0].substring(2);
 			if (sectionName.length() == 0) sectionName = color("red", "function");
 			currentSection = sections.get(sectionName);
 			if (currentSection == null) {
 				currentSection = new CodeSection(sectionName);
 				sections.put(sectionName, currentSection);
 			}
-			if (part.length > 1 && sections.containsKey(part[1])) 
+			if (part.length > 1 && sections.containsKey(part[1]) && !sectionName.startsWith("-")) 
 				sections.get(part[1]).addLine(new CodeLine(null, sectionName, null));
-		} else {
-			CodeLine codeLine = new CodeLine(part);
+		} else if (part[0].charAt(0) != '-') {
+			codeLine = new CodeLine(part);
 			currentSection.addLine(codeLine);
 			if (codeLine.declaration != null) declarations.addLine(codeLine);
 			if (codeLine.define != null) defines.addLine(codeLine);
@@ -257,6 +303,7 @@ implements IGraphicsDefines {
 			}
 			if (!codeLine.error && codeLine.declaration != null) uiElementNames.add(codeLine.nparam("name").n);
 		}
+		return codeLine;
 	}
 	
 	public static String color(String color) {
@@ -313,7 +360,7 @@ implements IGraphicsDefines {
 
 		
 		public String toString() {
-			if (lines.size() == 0 && type != '$') return "";
+			if (lines.size() == 0 && type != '$' && type != 'v' && type != 's') return "";
 			String section = prototype;
 			boolean firstAction = true;
 			for (CodeLine line : lines) {
@@ -361,6 +408,10 @@ implements IGraphicsDefines {
 					if (elt != null && screen != null) {
 						screen.addElement(elt, line.param[0].u, line.param[1].u, line.param[2].u, line.param[3].u, line.nparam("section").u);
 						if (line.nparam("selected") != null && line.nparam("selected").b) elt.setValue(GRAPHICS_UI_SELECTED);
+						line.param[0].i = elt.x;
+						line.param[1].i = elt.y;
+						line.param[2].i = elt.width;
+						line.param[3].i = elt.height;
 					}
 				}
 			}
@@ -369,7 +420,7 @@ implements IGraphicsDefines {
 	}
 
 	class CodeLine {
-		CodeParameter param[];
+		CodeParameter param[] = null;
 		String function = null;
 		String define = null;
 		String declaration = null;
@@ -381,6 +432,7 @@ implements IGraphicsDefines {
 		
 		public CodeLine(String part[]) {
 			error = true;
+			if (part == null) return;
 			part[0] = part[0].toLowerCase();
 			// find the function
 			function = designer.parserFunctions.get(part[0]);
@@ -542,11 +594,14 @@ implements IGraphicsDefines {
 				}
 				if (name.indexOf(']') != -1) name = name.substring(0, name.indexOf(']'));
 				type = name.charAt(0);
-				if (t.equals("*") && type == 'c') t = "0x" + Integer.toHexString(TFTTouchPanel.getRGB565()).toUpperCase();
-				else if (t.equals("+")) {
-					int i = sequence.size() + 1;
-					while (sequence.contains("" + i)) i = sequence.size() + 1;
-					t = "" + i;
+				if (t.equals("+")) {
+					if (type == 'c') t = colors[index++];
+					else if (type == 'n') t = "uie" + (index++);
+					else {
+						int i = sequence.size() + 1;
+						while (sequence.contains("" + i)) i = sequence.size() + 1;
+						t = "" + i;
+					}
 				}
 				n = t;
 				name = name.substring(1);
@@ -692,7 +747,9 @@ implements IGraphicsDefines {
 			if (value.equals("ALL")) return GRAPHICS_ARC_ALL;
 			if (value.startsWith("C")) return GRAPHICS_ARC_ALL;
 			if (value.startsWith("NO")) return GRAPHICS_POSITION_NONE;
-			throw new Exception();
+			int angle = Integer.parseInt(value, 16);
+			if (angle < 0 || angle > 0xFF) throw new Exception();
+			return angle;
 		}
 		
 		private boolean parseBoolean() throws Exception {
@@ -706,6 +763,10 @@ implements IGraphicsDefines {
 			return Integer.parseInt(t);
 		}
 		
+		private String colors[] = { "BLUE", "CYAN", "MAGENTA", "GREY", "ORANGE", "GREEN", 
+				"FUSCHIA", "VIOLET", "BROWN", "BLACK", "YELLOW",
+				"DARK_GREEN", "DARK_BLUE", "DARK_RED", "DARK_CYAN", "LIGHT_BLUE", "DARK_GREY" };
+
 		private int parseColor() throws Exception {
 			String value = t.toUpperCase();
 			if (value.equals("WHITE")) return WHITE;

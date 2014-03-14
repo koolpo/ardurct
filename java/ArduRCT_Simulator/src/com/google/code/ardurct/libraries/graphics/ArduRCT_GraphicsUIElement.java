@@ -9,6 +9,7 @@ implements IGraphicsDefines {
 	public int height;
 	public boolean editable;
 	public int section;
+	public boolean repeatable;
 
 	int _value;
 	int _state;
@@ -37,7 +38,7 @@ implements IGraphicsDefines {
 		_id = id;
 		_group = -1;
 		_value = GRAPHICS_UI_RELEASED;
-		_state = GRAPHICS_UI_RELEASED;
+		_state = GRAPHICS_UI_UNSELECTED;
 		editable = true;
 		_actionHandler = actionHandler;
 		_drawHandler = drawHandler;
@@ -73,11 +74,6 @@ implements IGraphicsDefines {
 		return _group;
 	}
 	
-	public boolean run() {
-		if (_actionHandler != null) return _actionHandler.run(_id, _value);
-		return false;
-	}
-			
 	protected int getFontSize(int text[]) {
 		if (text != null) {
 			if (((text[0] == '+') || (text[0] == '-')) && (text[1] == 0)) return GRAPHICS_UI_ELEMENT_FONT+1;			
@@ -91,8 +87,8 @@ implements IGraphicsDefines {
 			graphics.fillRectangle(x+uiX, y+uiY, width, height, GRAPHICS_UI_COLOR_RELEASED);
 			if (editable) {
 				int color = GRAPHICS_UI_COLOR_RELEASED;
-				if (_state == GRAPHICS_UI_HIGHLIGHTED) color = GRAPHICS_UI_COLOR_HIGHLIGHTED;
-				else if (_state == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_PRESSED;
+				if (_state == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_HIGHLIGHTED;
+				else if (_state == GRAPHICS_UI_PRESSED) color = GRAPHICS_UI_COLOR_PRESSED;
 				graphics.drawRectangle(x+uiX, y+uiY, width, height, color, 1);
 			}
 		}
@@ -115,22 +111,29 @@ implements IGraphicsDefines {
 	}
 
 	// called when the item is selected (enter is pressed, or item is touched)
-	public ArduRCT_GraphicsUIElement enter() {
+	public void select() {
 		_state = GRAPHICS_UI_SELECTED;
+	}
+
+	// called when the item is pressed
+	// return the element that was modified if any
+	public ArduRCT_GraphicsUIElement press() {
+		if (_state < GRAPHICS_UI_PRESSED) _state = GRAPHICS_UI_PRESSED;
+		else _state ++;
+		if (_state > GRAPHICS_UI_REPEATED) _state = GRAPHICS_UI_REPEATED;
 		return null;
 	}
 	
-	// called when the touch is released
-	// return true if the element needs to be escaped after release
+	// called when the item is released
+	// return true if the element can be released
 	public boolean release() {
+		_state = GRAPHICS_UI_RELEASED;
 		return true;
 	}
 
-	// called when the item is escaped
-	// return true if the element needs to be run after escape
-	public boolean escape() {
-		_state = GRAPHICS_UI_RELEASED;
-		return true;
+	// called when the item is unselected
+	public void unselect() {
+		_state = GRAPHICS_UI_UNSELECTED;
 	}
 	
 	// called when the item is selected and Up is pressed
@@ -145,13 +148,25 @@ implements IGraphicsDefines {
 		return false;
 	}
 	
-	public void highlight() {
-		_state = GRAPHICS_UI_HIGHLIGHTED;				
+	// called when the item is touched with a pen
+	// return the element that was modified if any
+	public ArduRCT_GraphicsUIElement touch(int touchX, int touchY) {
+		return press();
 	}
 
-	// called when the item is touched with a pen
-	public ArduRCT_GraphicsUIElement touch(int touchX, int touchY) {
-		return enter();
+	public void setRepeatable(boolean repeatable) {
+		this.repeatable = repeatable;
 	}
+
+	// whether a motionless touch can repeat the touch
+	public boolean isRepeatable() {
+		return repeatable;
+	}
+	
+	public boolean run() {
+		if (_actionHandler != null) return _actionHandler.run(_id, _state <= GRAPHICS_UI_SELECTED ? GRAPHICS_UI_RELEASED : _state, _value);
+		return false;
+	}
+			
 
 }

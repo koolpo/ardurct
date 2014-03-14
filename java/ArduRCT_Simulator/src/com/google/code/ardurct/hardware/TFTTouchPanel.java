@@ -4,12 +4,15 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 
+import javax.swing.AbstractAction;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 import com.google.code.ardurct.libraries.eventManager.IEventDefines;
 import com.google.code.ardurct.libraries.graphics.IGraphicsDefines;
@@ -22,17 +25,19 @@ implements Runnable, MouseListener, MouseMotionListener, IEventDefines, IGraphic
 	public static final boolean LANDSCAPE = true;
 	public static final boolean PORTRAIT = false;
 
-	public static final int PHYSICAL_WIDTH_V1 = 128;
-	public static final int PHYSICAL_HEIGHT_V1 = 160;
+	public static final int SIZE_128x160 = 1;
+	public static final int SIZE_240x320 = 2;
 
-	public static final int PHYSICAL_WIDTH_V2 = 240;
-	public static final int PHYSICAL_HEIGHT_V2 = 320;
-
-	public static int VERSION = 2;
-	public static int PHYSICAL_WIDTH = PHYSICAL_WIDTH_V2;
-	public static int PHYSICAL_HEIGHT = PHYSICAL_HEIGHT_V2;
-	public static int WIDTH = PHYSICAL_WIDTH;
-	public static int HEIGHT = PHYSICAL_HEIGHT;
+	private static final int SIZE_128x160_WIDTH = 128;
+	private static final int SIZE_128x160_HEIGHT = 160;
+	private static final int SIZE_240x320_WIDTH = 240;
+	private static final int SIZE_240x320_HEIGHT = 320;
+	
+	public static int HARDWARE_SIZE = SIZE_240x320;
+	public static int HARDWARE_WIDTH = SIZE_240x320_WIDTH;
+	public static int HARDWARE_HEIGHT = SIZE_240x320_HEIGHT;
+	public static int WIDTH = HARDWARE_WIDTH;
+	public static int HEIGHT = HARDWARE_HEIGHT;
 	
 	public static boolean isLandscapeOrientation = false;
 	
@@ -43,10 +48,11 @@ implements Runnable, MouseListener, MouseMotionListener, IEventDefines, IGraphic
 	private static int touchX = TOUCHPANEL_NO_TOUCH;
 	private static int touchY = TOUCHPANEL_NO_TOUCH;
 	private static int touchZ = TOUCHPANEL_NO_TOUCH;
-
+	public static boolean dragged = false;
+	
 	private boolean running;
 	private Thread t = null;	
-	
+	private static boolean enterPressed = false;
 	
 	public static void initPanel() {
 		img = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
@@ -59,22 +65,23 @@ implements Runnable, MouseListener, MouseMotionListener, IEventDefines, IGraphic
 	public static void setOrientation(boolean isLandscape) {
 		isLandscapeOrientation = isLandscape;
 		if (isLandscape) {
-			WIDTH = PHYSICAL_HEIGHT;
-			HEIGHT = PHYSICAL_WIDTH;
+			WIDTH = HARDWARE_HEIGHT;
+			HEIGHT = HARDWARE_WIDTH;
 		} else {
-			WIDTH = PHYSICAL_WIDTH;
-			HEIGHT = PHYSICAL_HEIGHT;				
+			WIDTH = HARDWARE_WIDTH;
+			HEIGHT = HARDWARE_HEIGHT;				
 		}
+		cancelHighlight();
 	}
 	
-	public static void setVersion(int version) {
-		VERSION = version;
-		if (version == 1) {
-			PHYSICAL_WIDTH = PHYSICAL_WIDTH_V1;
-			PHYSICAL_HEIGHT = PHYSICAL_HEIGHT_V1;			
+	public static void setHardwareSize(int hardwareSize) {
+		HARDWARE_SIZE = hardwareSize;
+		if (hardwareSize == 1) {
+			HARDWARE_WIDTH = SIZE_128x160_WIDTH;
+			HARDWARE_HEIGHT = SIZE_128x160_HEIGHT;			
 		} else {
-			PHYSICAL_WIDTH = PHYSICAL_WIDTH_V2;
-			PHYSICAL_HEIGHT = PHYSICAL_HEIGHT_V2;
+			HARDWARE_WIDTH = SIZE_240x320_WIDTH;
+			HARDWARE_HEIGHT = SIZE_240x320_HEIGHT;
 		}
 		setOrientation(isLandscapeOrientation);
 	}
@@ -96,7 +103,7 @@ implements Runnable, MouseListener, MouseMotionListener, IEventDefines, IGraphic
 	}
 
 	public static void setRotation(int aRotation) {
-		rotation = aRotation - (WIDTH != PHYSICAL_WIDTH ? 1 : 0);
+		rotation = aRotation - (WIDTH != HARDWARE_WIDTH ? 1 : 0);
 		if (rotation < 0) rotation = GRAPHICS_ROTATION_270;
 	}
 	
@@ -115,6 +122,19 @@ implements Runnable, MouseListener, MouseMotionListener, IEventDefines, IGraphic
 	public TFTTouchPanel() {
 		addMouseListener(this);
 		addMouseMotionListener(this);
+		getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "pressEnter");
+		getActionMap().put("pressEnter", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+			public void actionPerformed(ActionEvent e) {
+				enterPressed = true;
+			}
+		});
+	}
+	
+	public static boolean getEnterPressed() {
+		boolean pressed = enterPressed;
+		enterPressed = false;
+		return pressed;
 	}
 	
 	public void start() {
@@ -154,10 +174,28 @@ implements Runnable, MouseListener, MouseMotionListener, IEventDefines, IGraphic
 		g2d.setColor(Color.BLACK);
 		if (img != null) g2d.drawImage(img, (getWidth()-WIDTH)/2, (getHeight()-HEIGHT)/2, this);
 		else g2d.fillRect((getWidth()-WIDTH)/2, (getHeight()-HEIGHT)/2, WIDTH, HEIGHT);
+		if (hasHighlight) {
+			g2d.setColor(Color.RED);
+			g2d.drawRect(hX + (getWidth()-WIDTH)/2, hY + (getHeight()-HEIGHT)/2, hWidth, hHeight);
+		}
 	}
 
+	private static int hX, hY, hWidth, hHeight;
+	private static boolean hasHighlight = false;
+	public static void setHighlight(int x, int y, int width, int height) {
+		hX = x;
+		hY = y;
+		hWidth = width;
+		hHeight = height;
+		hasHighlight = true;
+	}
+	
+	public static void cancelHighlight() {
+		hasHighlight = false;
+	}
+	
 	public Dimension getPreferredSize() {
-		return new Dimension(Math.max(PHYSICAL_WIDTH, PHYSICAL_HEIGHT) + 20, Math.max(PHYSICAL_WIDTH, PHYSICAL_HEIGHT) + 20);
+		return new Dimension(Math.max(HARDWARE_WIDTH, HARDWARE_HEIGHT) + 20, Math.max(HARDWARE_WIDTH, HARDWARE_HEIGHT) + 20);
 	}
 
 	public void mouseExited(MouseEvent me) { 
@@ -191,11 +229,13 @@ implements Runnable, MouseListener, MouseMotionListener, IEventDefines, IGraphic
 		touchX = X[0];
 		touchY = Y[0];
 		touchZ = 10;
+		dragged = false;
 	}
 
 
 	public void mouseDragged(MouseEvent me) {
 		mousePressed(me);
+		dragged = true;
 	}
 
 	public void mouseMoved(MouseEvent arg0) { }

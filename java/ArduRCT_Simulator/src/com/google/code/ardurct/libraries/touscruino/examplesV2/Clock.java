@@ -39,6 +39,67 @@ fr 232 214 4 2 white
 fr 233 213 2 4 white
 vl 235 214 204 white
 hl 235 205 238 white
+
+r 2 2 65 36 white 2
+s 5 10 Jan white h t
+s 75 10 Feb white h t
+s 5 50 Mar white h t
+s 75 50 Apr white h t
+s 5 90 May white h t
+s 75 90 Jun white h t
+s 5 130 Jul white h t
+s 75 130 Aug white h t
+s 5 170 Sep white h t
+s 75 170 Oct white h t
+s 5 210 Nov white h t
+s 75 210 Dec white h t
+bd 160 120 66 88 15 2 white
+bd 240 120 66 88 15 8 white
+bd 160 10 32 50 8 2 white
+bd 200 10 32 50 8 0 white
+bd 240 10 32 50 8 1 white
+bd 280 100 32 50 8 4 white
+rr 251 188 63 48 12 white 2
+l 279 221 271 206 green 8
+l 280 221 297 199 green 8
+rr 185 188 60 47 11 white 2
+l 228 196 200 222 red 8
+l 202 195 227 224 red 8
+
+beg white black
+rot 90
+s 10 8 "Mon 20:20" white h t
+s 10 41 "Tue 20:20" white h t
+s 10 74 "Wed 20:20" white h t
+s 10 107 "Thu 20:20" white h t
+s 10 140 "Fri 20:20" white h t
+s 10 173 "Sat 20:20" white h t
+s 10 206 "Sun 20:20" white h t
+r 204 205 10 16 white 2
+l 213 205 219 199 white 2
+l 213 220 220 227 white 2
+l 225 199 225 227 white 2
+l 221 199 224 199 white 2
+l 219 225 225 226 white 2
+!drawNote
+fr 232 214 4 2 white
+fr 233 213 2 4 white
+vl 235 214 204 white
+hl 235 205 238 white
+
+beg white black
+rot 90
+s 36 8 "Set alarm Mon" white h t
+bd 5 55 64 120 14 0 white
+bd 80 55 64 120 14 6 white
+bd 175 55 64 120 14 2 white
+bd 250 55 64 120 14 0 white
+fr 154 90 12 12 white
+fr 154 125 12 12 white
+fr 5 189 57 43 white 2
+s 16 200 On black h t
+r 62 189 68 42 white 2
+s 72 200 Off white h t
 **/
 	
 	static final int RETURN_TO_TIME_TRIGGER = 30;

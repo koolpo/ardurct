@@ -166,76 +166,58 @@ public class ArduRCT_GraphicsUIScreen implements IGraphicsDefines {
 		if (actionId == GRAPHICS_UI_ACTION_TOUCH) {
 			if (_selectedElement != null) {
 				_selectedElement.release();
-				_selectedElement.escape();
+				_selectedElement.unselect();
 				_drawElement(_selectedElement);
 			}
 			// find an item at these coordinates
 			_selectedElement = _findElementAt(x, y);
 			if (_selectedElement == null) return _processOutOfScreenTouch(x, y);
-			int touchX = x-_selectedElement.x;
-			int touchY = y-_selectedElement.y;
-			if (_selectedElement.section == GUI_MAIN) {
-				touchX -= _topX;
-				touchY -= _topY;
-			} else if (_selectedElement.section == GUI_FOOTER) {
-				touchY -= _height - _firstFooterElement.height;
-			}
-			ArduRCT_GraphicsUIElement modifiedElement = _selectedElement.touch(touchX, touchY);
-			if (modifiedElement != null) _drawElement(modifiedElement);
-			_drawElement(_selectedElement);
-			return true;
+	        return processTouchOnSelected(x, y, true);
+		} else if (actionId == GRAPHICS_UI_ACTION_REPEAT_TOUCH) {
+			if (_selectedElement == null) return false;
+			if (!_selectedElement.isRepeatable()) return false;
+	        return processTouchOnSelected(x, y, false);
 		} else if (actionId == GRAPHICS_UI_ACTION_UNTOUCH) {
 			// release the item
 			if (_selectedElement == null) return false;
 			_selectedElement.release();
-			boolean runOnEscape = _selectedElement.escape();
+			_selectedElement.unselect();
 			_drawElement(_selectedElement);
-			if (runOnEscape) _selectedElement.run();
+			_selectedElement.run();
 			_selectedElement = null;
 			return true;
 		} else if (actionId == GRAPHICS_UI_ACTION_DRAG) {
 	        ArduRCT_GraphicsUIElement draggedElement = _findElementAt(x, y);
 	        if ((_selectedElement != null) && ((draggedElement == null) || (draggedElement != _selectedElement))) {
 	            _selectedElement.release();
-	            _selectedElement.escape();
+	            _selectedElement.unselect();
 	            _drawElement(_selectedElement);
 	        }
 	        _selectedElement = draggedElement;
 	        if (_selectedElement == null) return false;
-	        int touchX = x-_selectedElement.x;
-	        int touchY = y-_selectedElement.y;
-	        if (_selectedElement.section == GUI_MAIN) {
-	            touchX -= _topX;
-	            touchY -= _topY;
-	        } else if (_selectedElement.section == GUI_FOOTER) {
-	            touchY -= _height - _firstFooterElement.height;
-	        }
-	        _selectedElement.touch(touchX, touchY);
-	        _drawElement(_selectedElement);
-	        return true;
-			
+	        return processTouchOnSelected(x, y, true);
 		} else if ((actionId == GRAPHICS_UI_ACTION_UP) || (actionId == GRAPHICS_UI_ACTION_DOWN)) {
 			if (_currentElement == null) {
 				_currentElement = _findNextElement(false);
 				if (_currentElement == null) return false;
-				_currentElement.highlight();
+				_currentElement.select();
 				if (_adjustTopToDisplayCurrentElement()) _draw();
 				else _drawElement(_currentElement);
 			} else if (_selectedElement != null) {
 				// we are inside a selected element
-				boolean runOnIncreaseOrDecrease = false;
+				boolean needToRun = false;
 				int value = _selectedElement.getValue();
-				if (actionId == GRAPHICS_UI_ACTION_UP) runOnIncreaseOrDecrease = _selectedElement.increase();
-				else runOnIncreaseOrDecrease = _selectedElement.decrease();
+				if (actionId == GRAPHICS_UI_ACTION_UP) needToRun = _selectedElement.increase();
+				else needToRun = _selectedElement.decrease();
 				if (_selectedElement.getValue() != value) _drawElement(_selectedElement);
-				if (runOnIncreaseOrDecrease) _selectedElement.run();
+				if (needToRun) _selectedElement.run();
 			} else {
 				ArduRCT_GraphicsUIElement nextElement = _findNextElement(actionId == GRAPHICS_UI_ACTION_UP);
 				if (nextElement != null) {
-					_currentElement.escape();
+					_currentElement.unselect();
 					_drawElement(_currentElement);
 					_currentElement = nextElement;
-					_currentElement.highlight();
+					_currentElement.select();
 					if (_adjustTopToDisplayCurrentElement()) _draw();
 					else _drawElement(_currentElement);
 				}
@@ -244,34 +226,42 @@ public class ArduRCT_GraphicsUIScreen implements IGraphicsDefines {
 		} else if (actionId == GRAPHICS_UI_ACTION_ENTER) {
 			if (_currentElement == null) return false;
 			_selectedElement = _currentElement;
-			ArduRCT_GraphicsUIElement modifiedElement = _selectedElement.enter();
+			ArduRCT_GraphicsUIElement modifiedElement = _selectedElement.press();
 			if (modifiedElement != null) _drawElement(modifiedElement);
 			_drawElement(_selectedElement);
+			_selectedElement.run();
 			return true;
 		} else if (actionId == GRAPHICS_UI_ACTION_MENU) {
 			if (_selectedElement == null) return false;
-			boolean runOnEscape = _selectedElement.escape();
-			_selectedElement.highlight();
+			_selectedElement.unselect();
 			_drawElement(_selectedElement);
-			if (runOnEscape) _selectedElement.run();
 			_selectedElement = null;
 			return true;
 		} else if (actionId == GRAPHICS_UI_ACTION_RELEASE) {
 			if (_selectedElement == null) return false;
-			boolean escapeAfterRelease = _selectedElement.release();
-			boolean runOnEscape = false;
-			if (escapeAfterRelease) {
-				runOnEscape = _selectedElement.escape();
-				_selectedElement.highlight();				
-			}
+			boolean canFreeSelected = _selectedElement.release();
 			_drawElement(_selectedElement);
-			if (escapeAfterRelease) {
-				if (runOnEscape) _selectedElement.run();
-				_selectedElement = null;
-			}
+			_selectedElement.run();
+			if (canFreeSelected) _selectedElement = null;
 			return true;
 		}
 		return false;
+	}
+	
+	public boolean processTouchOnSelected(int x, int y, boolean drawModified) {
+        int touchX = x-_selectedElement.x;
+        int touchY = y-_selectedElement.y;
+        if (_selectedElement.section == GUI_MAIN) {
+            touchX -= _topX;
+            touchY -= _topY;
+        } else if (_selectedElement.section == GUI_FOOTER) {
+            touchY -= _height - _firstFooterElement.height;
+        }
+		ArduRCT_GraphicsUIElement modifiedElement = _selectedElement.touch(touchX, touchY);
+		if (drawModified && modifiedElement != null) _drawElement(modifiedElement);
+        _drawElement(_selectedElement);
+        _selectedElement.run();
+        return true;
 	}
 	
 	public ArduRCT_GraphicsUIElement getElement(int id) {
@@ -310,17 +300,17 @@ public class ArduRCT_GraphicsUIScreen implements IGraphicsDefines {
 	private void _reset() {
 		ArduRCT_GraphicsUIElement elt = _firstElement;
 		while (elt != null) {
-			elt.setState(GRAPHICS_UI_RELEASED);
+			elt.setState(GRAPHICS_UI_UNSELECTED);
 			elt = elt.getNext();
 		}
 		elt = _firstHeaderElement;
 		while (elt != null) {
-			elt.setState(GRAPHICS_UI_RELEASED);
+			elt.setState(GRAPHICS_UI_UNSELECTED);
 			elt = elt.getNext();
 		}
 		elt = _firstFooterElement;
 		while (elt != null) {
-			elt.setState(GRAPHICS_UI_RELEASED);
+			elt.setState(GRAPHICS_UI_UNSELECTED);
 			elt = elt.getNext();
 		}
 		if (_firstHeaderElement != null) {

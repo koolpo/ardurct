@@ -33,6 +33,7 @@ import com.google.code.ardurct.libraries.graphics.ArduRCT_GraphicsUIValue;
 import com.google.code.ardurct.libraries.graphics.ArduRCT_JAVA;
 import com.google.code.ardurct.libraries.graphics.IGraphicsDefines;
 import com.google.code.ardurct.libraries.graphics.IUIDrawCallback;
+import com.google.code.ardurct.utils.Parser.CodeLine;
 import com.google.code.ardurct.utils.Parser.CodeParameter;
 
 public class Designer extends JFrame 
@@ -65,6 +66,8 @@ fr 59 6 33 14 blue
 	 * 	r	radius (distance from last point)
 	 * 	x	x of new point
 	 * 	y	y of new point
+	 *  c	corner (half the smallest of heigth and width
+	 *  a	NW, NE, SW, SE according to the direction of the drag
 	 * 
 	 * parameters
 	 * ----------
@@ -87,63 +90,62 @@ fr 59 6 33 14 blue
 	 * 		&	action handler
 	 * 		$	drawing handler
 	 * [Xoptional_parameter]default_value
-	 * Xparameter]default_value
-	 * 	]*	random_value
-	 * 	]+	sequential_value
+	 * 	Xparameter]default_value
+	 * 	Xparameter]+	sequential_value
 	 */
 	public static final String[] DESIGNER_ELEMENTS = {
-		// name in list,			placer	mnemonic	parameters																		declaration, function		code generation
-		"Delay,						-,		d,		ims,																				delay,						- a ims",	
-		"Begin,						-,		beg,	cforeground cbackground ffont]m bfont_bold]T [boverlay]T,							begin,						- g =",
-		"Rotate screen,				-,		rot,	aangle,																				setRotation,				- g =",
-		"Fill screen,				-,		fs,		ccolor,																				fillScreen,					- g =",
-		"Draw pixel,				p,		p,		ix iy ccolor]*,																		drawPixel,					- g =",
-		"Draw circle,				pr,		c, 		ix0 iy0 iradius ccolor]* [ithickness]1,												drawCircle,					- g =",
-		"Fill circle,				pr,		fc,		ix0 iy0 iradius ccolor]*,															fillCircle,					- g =",
-		"Draw string,				p,		s,		ix iy ttext ccolor ffont]m [bfont_bold]F [boverlay]T,								drawString,					- g ttext ix iy ccolor ffont bfont_bold boverlay",
-		"Draw rectangle,			pd,		r,		ix iy iwidth iheight ccolor]* [ithickness]1,										drawRectangle,				- g =",
-		"Fill rectangle,			pd,		fr,		ix iy iwidth iheight ccolor]*,														fillRectangle,				- g =",
-		"Draw rounded_rectangle,	pdr,	rr,		ix iy iwidth iheight iradius ccolor]* [ithickness]1,								drawRoundedRectangle,		- g =",
-		"Fill rounded_rectangle, 	pdr,	frr,	ix iy iwidth iheight iradius ccolor]*,												fillRoundedRectangle,		- g =",
-		"Draw arc,					pr,		a,		ix0 iy0 iradius aoctant ccolor]* [ithickness]1,										drawArc,					- g =",
-		"Fill arc,					pr,		fa,		ix0 iy0 iradius aoctant]nw ccolor]*,												fillArc,					- g =",
-		"Draw triangle, 			ppp,	t,		ix1 iy1 ix2 iy2 ix3 iy3 ccolor]* [ithickness]1,										drawTriangle,				- g =",
-		"Fill triangle, 			ppp,	ft,		ix1 iy1 ix2 iy2 ix3 iy3 ccolor]*,													fillTriangle,				- g =",
-		"Draw line, 				pp,		l,		ix1 iy1 ix2 iy2 ccolor]* [ithickness]1,												drawLine,					- g =",
-		"Draw horizontal line, 		px,		hl,		ix1 iy ix2 ccolor]* [ithickness]1,													drawHorizontalLine,			- g ix1 ix2 iy ccolor ithickness",
-		"Draw vertical line, 		py,		vl,		ix iy1 iy2 ccolor]* [ithickness]1,													drawVerticalLine,			- g =",
-		"Fill corner,				pr,		fco,	ix iy isize adirection]ne ccolor]*,													fillCorner,					- g =",
-		"Draw big digit,			pdr,	bd,		ix iy iwidth iheight ithickness idigit]8 ccolor]* [gstyle]A,						drawBigDigit,				- g idigit ix iy iwidth iheight ccolor ithickness gstyle",
-		"UI Screen, 				-,		uis, 	nname [bselected]F [aposition]0 [cbackground]WHITE,									ArduRCT_GraphicsUIScreen, 	- s",
-		"UI Text button,			pd,		uib,	ux uy uwidth uheight sscreen nname ttext [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUIButton,	# e Nname ttext paction",
-		"UI Icon button,			pd,		uibi,	ux uy uwidth uheight sscreen nname $draw [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUIButton,	# e Nname pdraw paction",
-		"UI Element,				pd,		uie,	ux uy uwidth uheight sscreen nname $draw [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUIElement,	# e Nname pdraw paction",
-		"UI Label,					pd,		uil,	ux uy uwidth uheight sscreen nname ttext ffont]m [usection]MA did]+,				ArduRCT_GraphicsUILabel,	# e Nname ttext ffont",
-		"UI Gauge,					pd,		uig,	ux uy uwidth uheight sscreen nname ivalue imin imax [usection]MA did]+,				ArduRCT_GraphicsUIGauge,	# e Nname ivalue imin imax",
-		"UI List item,				pd,		uili,	ux uy uwidth uheight sscreen nname ttext [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUIListItem,	# e Nname ttext paction",
-		"UI Icon list item,			pd,		uilii,	ux uy uwidth uheight sscreen nname $draw [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUIListItem,	# e Nname pdraw paction",
-		"UI Option,					pd,		uio,	ux uy uwidth uheight sscreen nname ttext igroup bselected]F [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUIOption,	# e Nname ttext paction igroup",
-		"UI Icon option,			pd,		uioi,	ux uy uwidth uheight sscreen nname $draw igroup bselected]F [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUIOption,	# e Nname pdraw paction igroup",
-		"UI Slider,					pd,		uisl,	ux uy uwidth uheight sscreen nname ivalue imin imax istep]1 [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUISlider,	# e Nname ivalue imin imax paction istep",
-		"UI Tab,					pd,		uit,	ux uy uwidth uheight sscreen nname ttext igroup [bselected]F [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUITab,	# e Nname ttext paction igroup",
-		"UI Icon tab,				pd,		uiti,	ux uy uwidth uheight sscreen nname $draw igroup [bselected]F [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUITab,	# e Nname pdraw paction igroup",
-		"UI Value,					pd,		uiv,	ux uy uwidth uheight sscreen nname ivalue imin imax istep]1 iradix]10 [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUIValue,	# e Nname ivalue imin imax paction istep iradix",
+		// name in list,			placer	mnemonic	parameters																													declaration, function		code generation
+		"Delay,						-,		d,		ims,																															delay,						- a ims",	
+		"Begin,						-,		beg,	cforeground cbackground ffont]m bfont_bold]T [boverlay]T,																		begin,						- g =",
+		"Rotate screen,				-,		rot,	aangle,																															setRotation,				- g =",
+		"Fill screen,				-,		fs,		ccolor,																															fillScreen,					- g =",
+		"Draw pixel,				p,		p,		ix iy ccolor]+,																													drawPixel,					- g =",
+		"Draw circle,				pr,		c, 		ix0 iy0 iradius ccolor]+ [ithickness]2,																							drawCircle,					- g =",
+		"Fill circle,				pr,		fc,		ix0 iy0 iradius ccolor]+,																										fillCircle,					- g =",
+		"Draw string,				p,		s,		ix iy ttext]Text ccolor]+ ffont]m [bfont_bold]F [boverlay]T,																	drawString,					- g ttext ix iy ccolor ffont bfont_bold boverlay",
+		"Draw rectangle,			pd,		r,		ix iy iwidth iheight ccolor]+ [ithickness]1,																					drawRectangle,				- g =",
+		"Fill rectangle,			pd,		fr,		ix iy iwidth iheight ccolor]+,																									fillRectangle,				- g =",
+		"Draw rounded rectangle,	pdc,	rr,		ix iy iwidth iheight iradius ccolor]+ [ithickness]1,																			drawRoundedRectangle,		- g =",
+		"Fill rounded rectangle, 	pdc,	frr,	ix iy iwidth iheight iradius ccolor]+,																							fillRoundedRectangle,		- g =",
+		"Draw arc,					pra,	a,		ix0 iy0 iradius aoctant ccolor]+ [ithickness]1,																					drawArc,					- g =",
+		"Fill arc,					pra,	fa,		ix0 iy0 iradius aoctant ccolor]+,																								fillArc,					- g =",
+		"Draw triangle, 			ppt,	t,		ix1 iy1 ix2 iy2 ix3 iy3 ccolor]+ [ithickness]1,																					drawTriangle,				- g =",
+		"Fill triangle, 			ppt,	ft,		ix1 iy1 ix2 iy2 ix3 iy3 ccolor]+,																								fillTriangle,				- g =",
+		"Draw line, 				pp,		l,		ix1 iy1 ix2 iy2 ccolor]+ [ithickness]1,																							drawLine,					- g =",
+		"Draw horizontal line, 		px,		hl,		ix1 iy ix2 ccolor]+ [ithickness]1,																								drawHorizontalLine,			- g ix1 ix2 iy ccolor ithickness",
+		"Draw vertical line, 		py,		vl,		ix iy1 iy2 ccolor]+ [ithickness]1,																								drawVerticalLine,			- g =",
+		"Fill corner,				pra,	fco,	ix iy isize adirection ccolor]+,																								fillCorner,					- g =",
+		"Draw big digit,			pdc,	bd,		ix iy iwidth iheight ithickness idigit]8 ccolor]+ [gstyle]A,																	drawBigDigit,				- g idigit ix iy iwidth iheight ccolor ithickness gstyle",
+		"UI Screen, 				-,		uis, 	nname]home [bselected]T [aposition]0 [cbackground]WHITE,																		ArduRCT_GraphicsUIScreen, 	- s",
+		"UI Text button,			pd,		uib,	ux uy uwidth uheight ttext]Text sscreen]home nname]+ [usection]MA did]+ &action]handleAction,									ArduRCT_GraphicsUIButton,	# e Nname ttext paction",
+		"UI Icon button,			pd,		uibi,	ux uy uwidth uheight $draw]draw sscreen]home nname]+ [usection]MA did]+ &action]handleAction,									ArduRCT_GraphicsUIButton,	# e Nname pdraw paction",
+		"UI Element,				pd,		uie,	ux uy uwidth uheight $draw]draw sscreen]home nname]+ [usection]MA did]+ &action]handleAction,									ArduRCT_GraphicsUIElement,	# e Nname pdraw paction",
+		"UI Label,					pd,		uil,	ux uy uwidth uheight ttext]Text ffont]m sscreen]home nname]+ [usection]MA did]+,												ArduRCT_GraphicsUILabel,	# e Nname ttext ffont",
+		"UI Gauge,					pd,		uig,	ux uy uwidth uheight ivalue]2 imin]0 imax]10 sscreen]home nname]+ [usection]MA did]+,											ArduRCT_GraphicsUIGauge,	# e Nname ivalue imin imax",
+		"UI List item,				pd,		uili,	ux uy uwidth uheight ttext]Text sscreen]home nname]+ [usection]MA did]+ &action]handleAction,									ArduRCT_GraphicsUIListItem,	# e Nname ttext paction",
+		"UI Icon list item,			pd,		uilii,	ux uy uwidth uheight $draw]draw sscreen]home nname]+ [usection]MA did]+ &action]handleAction,									ArduRCT_GraphicsUIListItem,	# e Nname pdraw paction",
+		"UI Option,					pd,		uio,	ux uy uwidth uheight ttext]Text igroup]-1 bselected]F sscreen]home nname]+ [usection]MA did]+ &action]handleAction,				ArduRCT_GraphicsUIOption,	# e Nname ttext paction igroup",
+		"UI Icon option,			pd,		uioi,	ux uy uwidth uheight $draw]draw igroup]-1 bselected]F sscreen]home nname]+ [usection]MA did]+ &action]handleAction,				ArduRCT_GraphicsUIOption,	# e Nname pdraw paction igroup",
+		"UI Slider,					pd,		uisl,	ux uy uwidth uheight ivalue]2 imin]0 imax]10 istep]1 sscreen]home nname]+ [usection]MA did]+ &action]handleAction,				ArduRCT_GraphicsUISlider,	# e Nname ivalue imin imax paction istep",
+		"UI Tab,					pd,		uit,	ux uy uwidth uheight ttext]Text igroup]-1 [bselected]F sscreen]home nname]+ [usection]MA did]+ &action]handleAction,			ArduRCT_GraphicsUITab,		# e Nname ttext paction igroup",
+		"UI Icon tab,				pd,		uiti,	ux uy uwidth uheight $draw]draw igroup]-1 [bselected]F sscreen]home nname]+ [usection]MA did]+ &action]handleAction,			ArduRCT_GraphicsUITab,		# e Nname pdraw paction igroup",
+		"UI Value,					pd,		uiv,	ux uy uwidth uheight ivalue]2 imin]0 imax]10 istep]1 iradix]10 sscreen]home nname]+ [usection]MA did]+ &action]handleAction,	ArduRCT_GraphicsUIValue,	# e Nname ivalue imin imax paction istep iradix",
 	};
 	
 	public ArduRCT_GraphicsUIElement getUIElement(String mnemonic, CodeParameter p[]) {
-		if (mnemonic.equals("uib")) return new ArduRCT_GraphicsUIButton(p[8].d, p[6].ta, null);
+		if (mnemonic.equals("uib")) return new ArduRCT_GraphicsUIButton(p[8].d, p[4].ta, null);
 		if (mnemonic.equals("uibi")) return new ArduRCT_GraphicsUIButton(p[8].d, (IUIDrawCallback)null, null);
-		if (mnemonic.equals("uil")) return new ArduRCT_GraphicsUILabel(p[9].d, p[6].ta, p[7].f);
+		if (mnemonic.equals("uil")) return new ArduRCT_GraphicsUILabel(p[9].d, p[4].ta, p[5].f);
 		if (mnemonic.equals("uie")) return new ArduRCT_GraphicsUIElement(p[8].d, null, null);
-		if (mnemonic.equals("uig")) return new ArduRCT_GraphicsUIGauge(p[10].d, p[6].i, p[7].i, p[8].i);
-		if (mnemonic.equals("uili")) return new ArduRCT_GraphicsUIListItem(p[8].d, p[6].ta, null);
+		if (mnemonic.equals("uig")) return new ArduRCT_GraphicsUIGauge(p[10].d, p[4].i, p[5].i, p[6].i);
+		if (mnemonic.equals("uili")) return new ArduRCT_GraphicsUIListItem(p[8].d, p[4].ta, null);
 		if (mnemonic.equals("uilii")) return new ArduRCT_GraphicsUIListItem(p[8].d, (IUIDrawCallback)null, null);
-		if (mnemonic.equals("uio")) return new ArduRCT_GraphicsUIOption(p[10].d, p[6].ta, null, p[7].i);
-		if (mnemonic.equals("uioi")) return new ArduRCT_GraphicsUIOption(p[10].d, (IUIDrawCallback)null, null, p[7].i);
-		if (mnemonic.equals("uisl")) return new ArduRCT_GraphicsUISlider(p[11].d, p[6].i, p[7].i, p[8].i, null, p[9].i);
-		if (mnemonic.equals("uit")) return new ArduRCT_GraphicsUITab(p[10].d, p[6].ta, null, p[7].i);
-		if (mnemonic.equals("uiti")) return new ArduRCT_GraphicsUITab(p[10].d, (IUIDrawCallback)null, null, p[7].i);
-		if (mnemonic.equals("uiv")) return new ArduRCT_GraphicsUIValue(p[12].d, p[6].i, p[7].i, p[8].i, null, p[9].i, p[10].i);
+		if (mnemonic.equals("uio")) return new ArduRCT_GraphicsUIOption(p[10].d, p[4].ta, null, p[5].i);
+		if (mnemonic.equals("uioi")) return new ArduRCT_GraphicsUIOption(p[10].d, (IUIDrawCallback)null, null, p[5].i);
+		if (mnemonic.equals("uisl")) return new ArduRCT_GraphicsUISlider(p[11].d, p[4].i, p[5].i, p[6].i, null, p[7].i);
+		if (mnemonic.equals("uit")) return new ArduRCT_GraphicsUITab(p[10].d, p[4].ta, null, p[5].i);
+		if (mnemonic.equals("uiti")) return new ArduRCT_GraphicsUITab(p[10].d, (IUIDrawCallback)null, null, p[5].i);
+		if (mnemonic.equals("uiv")) return new ArduRCT_GraphicsUIValue(p[12].d, p[4].i, p[5].i, p[6].i, null, p[7].i, p[8].i);
 		return null;
 	}
 
@@ -176,10 +178,10 @@ fr 59 6 33 14 blue
 	public Hashtable<String, String> parserFunctions;
 	public Hashtable<String, String> parserCode;
 	public Hashtable<String, String> placer;
+	public Parser parser;
 
 	private Thread t = null;
 	private boolean running = false;
-	private Parser parser;
 	private JEditorPane codeArea;
 	private JLabel help;
 	private JComboBox<String> functionList;
@@ -190,6 +192,8 @@ fr 59 6 33 14 blue
 	private String parserText = "";
 	private int waiter = 0;
 	private int placerIndex = 0;
+	private int lastX;
+	private int lastY;
 	
 	public Designer(String target) {
 		this.target = target;
@@ -256,7 +260,7 @@ fr 59 6 33 14 blue
 		this.add(splitPane, BorderLayout.CENTER);
 	}
 
-	public static Designer createAndShowInstance(String title, TFTTouchPanel touchpanel) {
+	public static Designer createInstance(String title, TFTTouchPanel touchpanel) {
 		// Adapt to the local look and feel
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -292,56 +296,122 @@ fr 59 6 33 14 blue
 			} else {
 				parserText = parser.getText();
 				waiter = 0;
-				String mnemonic = parser.getCurrentMnemonic();
-				if (mnemonic != null) {
-					int index = mnemonics.indexOf(mnemonic);
-					if (index != -1) functionList.setSelectedIndex(index);
-				}
 			}
-			if (waiter == 50) {
+			String mnemonic = parser.getCaretLineMnemonic();
+			if (mnemonic != null) {
+				int index = mnemonics.indexOf(mnemonic);
+				if (index != -1) functionList.setSelectedIndex(index);
+			}
+			try { Thread.sleep(5); } catch (Exception e) { }
+			if (waiter == 50 || place()) {
 				String code = parser.parse();
 				if (code == null) codeArea.setText(null);
 				else if (!code.equals("")) codeArea.setText(code);
 			}
-			place();
-			try { Thread.sleep(10); } catch (Exception e) { }
+			if (TFTTouchPanel.getEnterPressed()) parser.insertLineAtCaret();
+			highlightCurrentLineObject();
 		}
 	}
 
-	int lastX;
-	int lastY;
-	public void place() {
-		byte placerParam[] = placer.get(listFunction).getBytes();
+	public boolean place() {
 		if (TFTTouchPanel.getTouchZ() == TOUCHPANEL_NO_TOUCH) {
-			// if pressed and now released, advance placer
-			if ((placerIndex % 2) == 1) placerIndex ++;
-			// if we have finished to insert the params, restart the function
-			if (placerParam.length == placerIndex/2) placerIndex = 0;
-			return;
+			placerIndex = 0;
+			return false;
 		}
-		String shortFunction = hints.get(listFunction).split(" ")[0];
+		byte placerParam[] = placer.get(listFunction).getBytes();
 		int touchX = TFTTouchPanel.getTouchX();
 		int touchY = TFTTouchPanel.getTouchY();
 		if (placerIndex == 0) {
-			String insert = shortFunction + " ";
-			if (placerParam[0] != '-') insert += touchX + " " + touchY;
-			parser.addLine(insert);
-			lastX = TFTTouchPanel.getTouchX();
-			lastY = TFTTouchPanel.getTouchY();
-			placerIndex ++;
-		} else if ((placerIndex % 2) == 0) {
-			if (placerParam[placerIndex/2] == 'p') 
-				parser.addText(" " + touchX + " " + touchY + " ");
-			else if (placerParam[placerIndex/2] == 'd') 
-				parser.addText(" " + Math.abs(touchX-lastX) + " " + Math.abs(touchY-lastY) + " ");
-			else if (placerParam[placerIndex/2] == 'x') 
-				parser.addText(" " + touchX + " ");
-			else if (placerParam[placerIndex/2] == 'y') 
-				parser.addText(" " + touchY + " ");
-			else if (placerParam[placerIndex/2] == 'r') 
-				parser.addText(" " + (int)Math.sqrt((touchX-lastX)*(touchX-lastX)+(touchY-lastY)*(touchY-lastY)) + " ");
-			placerIndex ++;
+			lastX = touchX;
+			lastY = touchY;
+			placerIndex = 1;
+		} else if (lastX == touchX && lastY == touchY) {
+			return false;
 		}
+		String shortFunction = hints.get(listFunction).split(" ")[0];
+		String line = shortFunction + " " + lastX + " " + lastY;
+		if (placerParam[0] == '-') {
+			parser.setLineAtCaret(shortFunction);
+			return true;
+		} else if (placerParam.length == 1) {
+			parser.setLineAtCaret(line);
+			return true;
+		} else if (!TFTTouchPanel.dragged) return false;
+		if (placerParam[1] == 'p') line += " " + touchX + " " + touchY;
+		else if (placerParam[1] == 'd') line += " " + Math.abs(touchX-lastX) + " " + Math.abs(touchY-lastY);
+		else if (placerParam[1] == 'x') line += " " + touchX;
+		else if (placerParam[1] == 'y') line += " " + touchY;
+		else if (placerParam[1] == 'r') line += " " + (int)Math.sqrt((touchX-lastX)*(touchX-lastX)+(touchY-lastY)*(touchY-lastY));
+		if (placerParam.length > 2) {
+			if (placerParam[2] == 'c') line += " " + Math.min(Math.abs(touchX-lastX), Math.abs(touchY-lastY))/4;
+			else if (placerParam[2] == 't') line += " " + lastX + " " + touchY;
+			else if (placerParam[2] == 'a') line += " " + getAngle(lastX, lastY, touchX, touchY);
+		}
+		parser.setLineAtCaret(line);
+		return true;
+	}
+	
+	private String getAngle(int x1, int y1, int x2, int y2) {
+		if (x2 < x1 && y2 < y1) return "NW";
+		if (x2 >= x1 && y2 < y1) return "NE";
+		if (x2 < x1 && y2 >= y1) return "SW";
+		return "SE";
+	}
+	
+	private void highlightCurrentLineObject() {
+		TFTTouchPanel.cancelHighlight();
+		CodeLine codeLine = parser.getCodeLineAtCaret();
+		if (codeLine == null) return;
+		String mnemonic = parser.getCaretLineMnemonic();
+		if (mnemonic == null) return;
+		int indOf = mnemonics.indexOf(mnemonic);
+		if (indOf == -1) return;
+		String listItem = listItems.elementAt(indOf);
+		byte placerParam[] = placer.get(listItem).getBytes();
+		if (placerParam[0] == '-') return;
+		int x = codeLine.param[0].i;
+		int y = codeLine.param[1].i;
+		int width = 3;
+		int height = 3;
+		if (placerParam.length == 1) {
+			if (mnemonic.equals("s")) {
+				x -= 2;
+				y -= 2;
+				width = graphics.getStringWidth(codeLine.param[2].ta, codeLine.param[4].f) + 4;
+				height = graphics.getFontHeight(codeLine.param[4].f) + 4;
+			} else {
+				x -= 1;
+				y -= 1;
+			}
+			TFTTouchPanel.setHighlight(x, y, width, height);
+			return;
+		}
+		width = codeLine.param[2].i;
+		if (placerParam[1] == 'd' || placerParam[1] == 'p') {
+			height = codeLine.param[3].i;
+			if (placerParam[1] == 'p') {
+				width = Math.abs(width - x);
+				height = Math.abs(height - y);
+				x = Math.min(codeLine.param[0].i, codeLine.param[2].i);
+				y = Math.min(codeLine.param[1].i, codeLine.param[3].i);
+			}
+		} else if (placerParam[1] == 'r') {
+			x -= width;
+			y -= width;
+			width = 2 * width;
+			height = width;
+		} else if (placerParam[1] == 'x') {
+			x = Math.min(codeLine.param[0].i, codeLine.param[2].i);
+			width = Math.abs(codeLine.param[2].i - codeLine.param[0].i);
+			y -= 1;
+			height = 2;
+		} else if (placerParam[1] == 'y') {
+			height = Math.abs(codeLine.param[2].i - codeLine.param[1].i);
+			y = Math.min(codeLine.param[1].i, codeLine.param[2].i);
+			x -= 1;
+			width = 2;
+		}
+		TFTTouchPanel.setHighlight(x-2, y-2, width+4, height+4);
 	}
 	
 	public void windowClosing(WindowEvent arg0) {

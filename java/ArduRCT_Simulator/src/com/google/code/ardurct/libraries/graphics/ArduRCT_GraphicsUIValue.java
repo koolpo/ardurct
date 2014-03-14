@@ -32,15 +32,17 @@ public class ArduRCT_GraphicsUIValue extends ArduRCT_GraphicsUIElement {
 		_max = max;
 		_step = step;
 		_radix = radix;
+		repeatable = true;
 		if (_step == 0) _step = 1;
 	}
 	
 	public void draw(ArduRCT_Graphics graphics, int uiX, int uiY, int uiWidth) {
 		int bgColor = graphics.getBackgroundColor();
-		int color = (_state == GRAPHICS_UI_SELECTED ? GRAPHICS_UI_COLOR_SELECTED : GRAPHICS_UI_COLOR_RELEASED);
+		int color = (_state == GRAPHICS_UI_PRESSED ? GRAPHICS_UI_COLOR_SELECTED : GRAPHICS_UI_COLOR_RELEASED);
 		graphics.setBackgroundColor(color);
 		graphics.fillRectangle(x+uiX, y+uiY, width, height, color);
-		int hColor = (_state == GRAPHICS_UI_RELEASED ? BLACK : GRAPHICS_UI_COLOR_HIGHLIGHTED);
+		int hColor = (_state == GRAPHICS_UI_RELEASED || _state == GRAPHICS_UI_SELECTED || _state == GRAPHICS_UI_PRESSED ? 
+				GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK);
 		graphics.drawRectangle(x+uiX, y+uiY, width, height, hColor, 1);
 		if (_value < _max) graphics.fillCorner(uiX+x+width-2, uiY+y+1, 5, GRAPHICS_POSITION_SW, BLACK);
 		if (_value > _min) graphics.fillCorner(uiX+x+1, uiY+y+height-2, 5, GRAPHICS_POSITION_NE, BLACK);
@@ -92,26 +94,7 @@ public class ArduRCT_GraphicsUIValue extends ArduRCT_GraphicsUIElement {
 		if (_value < _min) _value = _min;
 		return null;	
 	}
-	
-	// called when the item is selected (enter is pressed, or item is touched)
-	public ArduRCT_GraphicsUIElement enter() {
-		_state = GRAPHICS_UI_SELECTED;
-		return null;
-	}
-	
-	// called when the touch is released
-	// return true if the element needs to be escaped after release
-	public boolean release() {
-		return false;
-	}
-
-	// called when the item is escaped
-	// return true if the element needs to be run after escape
-	public boolean escape() {
-		_state = GRAPHICS_UI_RELEASED;
-		return false;
-	}
-	
+		
 	// called when the item is selected and Up is pressed
 	// return true if the value was increased
 	public boolean increase() {
@@ -130,13 +113,8 @@ public class ArduRCT_GraphicsUIValue extends ArduRCT_GraphicsUIElement {
 		return true;
 	}
 	
-	public void highlight() {
-		_state = GRAPHICS_UI_HIGHLIGHTED;				
-	}
-
 	// called when the item is touched with a pen
 	public ArduRCT_GraphicsUIElement touch(int touchX, int touchY) {
-System.out.println(touchX + " " + touchY);
 		_state = GRAPHICS_UI_SELECTED;
 		if (touchY < height/2) {
 			if (_value == _max) return null;
@@ -150,5 +128,20 @@ System.out.println(touchX + " " + touchY);
 			if (_value < _min) _value = _min;			
 		}
 		return null;
+	}
+	
+	// called when the item is pressed
+	// return the element that was modified if any
+	// we toggle the state on press
+	public ArduRCT_GraphicsUIElement press() {
+		if (_state == GRAPHICS_UI_PRESSED) _state = GRAPHICS_UI_RELEASED;
+		else _state = GRAPHICS_UI_PRESSED;
+		return null;
+	}
+
+	// called when the item is released
+	// return true if the element can be released
+	public boolean release() {
+		return (_state == GRAPHICS_UI_RELEASED);
 	}
 }

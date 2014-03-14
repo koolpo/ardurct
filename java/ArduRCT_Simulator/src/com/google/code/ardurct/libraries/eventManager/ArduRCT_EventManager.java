@@ -104,7 +104,9 @@ implements IEventDefines {
 	    	int z = _touchPanel.getPenZ();
 	    	if (_touchPanel.isPenPressed()) {
 	    		if (_touchPanel.isPenDragged()) processEvent(EVENT_TOUCHPANEL_DRAGGED, z, x, y);
-	    		else if (!_touchPanel.isPenPressedMotionless())  processEvent(EVENT_TOUCHPANEL_PRESSED, z, x, y);
+	    		else if (_touchPanel.isPenPressedMotionless()) {
+	    			if ((_tick % EVENT_REPEATING_CYLES) == 0) processEvent(EVENT_TOUCHPANEL_REPEAT_PRESSED, z, x, y);
+	    		} else processEvent(EVENT_TOUCHPANEL_PRESSED, z, x, y);
 	    	} else if (_touchPanel.isPenReleased()) processEvent(EVENT_TOUCHPANEL_RELEASED, 0, 0, 0);
 	    }
 	    

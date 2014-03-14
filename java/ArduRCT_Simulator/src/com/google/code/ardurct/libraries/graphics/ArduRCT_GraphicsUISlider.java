@@ -22,8 +22,9 @@ public class ArduRCT_GraphicsUISlider extends ArduRCT_GraphicsUIElement {
 	
 	public void draw(ArduRCT_Graphics graphics, int uiX, int uiY, int uiWidth) {
 		graphics.fillRectangle(x+uiX, y+uiY, width, height, GRAPHICS_UI_COLOR_BACKGROUND);
-		int color = (_state == GRAPHICS_UI_SELECTED ? GRAPHICS_UI_COLOR_SELECTED : GRAPHICS_UI_COLOR_RELEASED);
-		int hColor = (_state == GRAPHICS_UI_RELEASED ? BLACK : GRAPHICS_UI_COLOR_HIGHLIGHTED);
+		int color = (_state == GRAPHICS_UI_PRESSED ? GRAPHICS_UI_COLOR_SELECTED : GRAPHICS_UI_COLOR_RELEASED);
+		int hColor = (_state == GRAPHICS_UI_RELEASED || _state == GRAPHICS_UI_SELECTED  || _state == GRAPHICS_UI_PRESSED ? 
+				GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK);
 		if (width > height) {
 			// horizontal slider
 			graphics.fillRectangle(uiX+x, uiY+y+height/2-height/8, width, 2*height/8, BLACK);
@@ -46,25 +47,6 @@ public class ArduRCT_GraphicsUISlider extends ArduRCT_GraphicsUIElement {
 		return null;	
 	}
 	
-	// called when the item is selected (enter is pressed, or item is touched)
-	public ArduRCT_GraphicsUIElement enter() {
-		_state = GRAPHICS_UI_SELECTED;
-		return null;
-	}
-	
-	// called when the touch is released
-	// return true if the element needs to be escaped after release
-	public boolean release() {
-		return false;
-	}
-
-	// called when the item is escaped
-	// return true if the element needs to be run after escape
-	public boolean escape() {
-		_state = GRAPHICS_UI_RELEASED;
-		return false;
-	}
-	
 	// called when the item is selected and Up is pressed
 	// return true if the value was increased
 	public boolean increase() {
@@ -83,10 +65,6 @@ public class ArduRCT_GraphicsUISlider extends ArduRCT_GraphicsUIElement {
 		return true;
 	}
 	
-	public void highlight() {
-		_state = GRAPHICS_UI_HIGHLIGHTED;				
-	}
-
 	// called when the item is touched with a pen
 	public ArduRCT_GraphicsUIElement touch(int touchX, int touchY) {
 		_state = GRAPHICS_UI_SELECTED;
@@ -101,4 +79,20 @@ public class ArduRCT_GraphicsUISlider extends ArduRCT_GraphicsUIElement {
 		}
 		return null;
 	}
+	
+	// called when the item is pressed
+	// return the element that was modified if any
+	// we toggle the state on press
+	public ArduRCT_GraphicsUIElement press() {
+		if (_state == GRAPHICS_UI_PRESSED) _state = GRAPHICS_UI_RELEASED;
+		else _state = GRAPHICS_UI_PRESSED;
+		return null;
+	}
+
+	// called when the item is released
+	// return true if the element can be released
+	public boolean release() {
+		return (_state == GRAPHICS_UI_RELEASED);
+	}
+
 }

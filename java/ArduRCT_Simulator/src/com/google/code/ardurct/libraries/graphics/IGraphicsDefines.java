@@ -89,12 +89,15 @@ public interface IGraphicsDefines {
 	public static final int GRAPHICS_UI_ACTION_ENTER = 6;
 	public static final int GRAPHICS_UI_ACTION_RELEASE = 7;
 	public static final int GRAPHICS_UI_ACTION_TOUCH = 8;
-	public static final int GRAPHICS_UI_ACTION_UNTOUCH = 9;
+	public static final int GRAPHICS_UI_ACTION_REPEAT_TOUCH = 9;
 	public static final int GRAPHICS_UI_ACTION_DRAG = 10;
+	public static final int GRAPHICS_UI_ACTION_UNTOUCH = 11;
 	
-	public static final int GRAPHICS_UI_RELEASED = 0;
-	public static final int GRAPHICS_UI_SELECTED = 1;
-	public static final int GRAPHICS_UI_HIGHLIGHTED = 2;
+	public static final int GRAPHICS_UI_UNSELECTED = 0;
+	public static final int GRAPHICS_UI_RELEASED = 1;
+	public static final int GRAPHICS_UI_SELECTED = 2;
+	public static final int GRAPHICS_UI_PRESSED = 6;
+	public static final int GRAPHICS_UI_REPEATED = 20;
 
 	public static final int GRAPHICS_UI_AUTO_SIZE = 0;
 	public static final int GRAPHICS_UI_SAME_AS_PREVIOUS = 0x8000;

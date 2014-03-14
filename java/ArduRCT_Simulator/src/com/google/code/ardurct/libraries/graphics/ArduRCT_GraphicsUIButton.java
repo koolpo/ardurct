@@ -22,7 +22,7 @@ implements IGraphicsDefines {
 		_id = id;
 		_group = group;
 		_text = label;
-		_state = GRAPHICS_UI_RELEASED;
+		_state = GRAPHICS_UI_UNSELECTED;
 		_value = GRAPHICS_UI_RELEASED;
 		editable = true;
 		_actionHandler = actionHandler;
@@ -46,7 +46,7 @@ implements IGraphicsDefines {
 	public void draw(ArduRCT_Graphics graphics, int uiX, int uiY, int uiWidth) {
 		int bgColor = graphics.getBackgroundColor();
 		int color = GRAPHICS_UI_COLOR_RELEASED;
-		if (_value == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_PRESSED;
+		if (_value == GRAPHICS_UI_PRESSED) color = GRAPHICS_UI_COLOR_PRESSED;
 		color = _drawBorder(graphics, uiX, uiY, color);
 		graphics.setBackgroundColor(color);
 		if (_text != null) {
@@ -60,18 +60,21 @@ implements IGraphicsDefines {
 	
 	protected int _drawBorder(ArduRCT_Graphics graphics, int uiX, int uiY, int color) {
 		graphics.fillRoundedRectangle(uiX+x, uiY+y, width, height, GRAPHICS_UI_ELEMENT_TOP_MARGIN*75/100, color);
-		graphics.drawRoundedRectangle(uiX+x, uiY+y, width, height, GRAPHICS_UI_ELEMENT_TOP_MARGIN*75/100, 
-				_state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK, 1);	
+		int bColor = BLACK;
+		if (_state == GRAPHICS_UI_SELECTED || _state == GRAPHICS_UI_RELEASED) bColor = GRAPHICS_UI_COLOR_HIGHLIGHTED;
+		graphics.drawRoundedRectangle(uiX+x, uiY+y, width, height, GRAPHICS_UI_ELEMENT_TOP_MARGIN*75/100, bColor, 1);	
 		return color;
 	}
 		
-	public ArduRCT_GraphicsUIElement enter() {
-		_value = GRAPHICS_UI_SELECTED;
+	public ArduRCT_GraphicsUIElement press() {
+		_value = GRAPHICS_UI_PRESSED;
+		_state = GRAPHICS_UI_PRESSED;
 		return null;
 	}
 
 	public boolean release() {
 		_value = GRAPHICS_UI_RELEASED;
+		_state = GRAPHICS_UI_RELEASED;
 		return true;
 	}
 }

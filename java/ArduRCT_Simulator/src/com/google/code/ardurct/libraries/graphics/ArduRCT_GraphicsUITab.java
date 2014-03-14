@@ -22,20 +22,21 @@ implements IGraphicsDefines {
 	public void draw(ArduRCT_Graphics graphics, int uiX, int uiY, int uiWidth) {
 		int bgColor = graphics.getBackgroundColor();
 		int color = GRAPHICS_UI_COLOR_RELEASED;
-		if (_value == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_BACKGROUND;
-		if (_state == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_PRESSED;
+		if (_value == GRAPHICS_UI_PRESSED) color = GRAPHICS_UI_COLOR_BACKGROUND;
+		if (_state == GRAPHICS_UI_PRESSED) color = GRAPHICS_UI_COLOR_PRESSED;
 		graphics.setBackgroundColor(color);
 		int xStart = 0;
 		if ((getPrevious() == null) || (getPrevious().getGroup() != _group)) xStart = GRAPHICS_UI_TAB_LEFT_MARGIN;
 		graphics.fillRectangle(xStart+uiX+x, uiY+y+1, width-xStart, height-1, color);
-		graphics.drawRectangle(xStart+uiX+x, uiY+y+1, width-xStart, height-1, 
-				_state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK, 1);	
+		int bColor = BLACK;
+		if (_state == GRAPHICS_UI_SELECTED || _state == GRAPHICS_UI_RELEASED) bColor = GRAPHICS_UI_COLOR_HIGHLIGHTED;
+		graphics.drawRectangle(xStart+uiX+x, uiY+y+1, width-xStart, height-1, bColor, 1);	
 		int lineY = uiY+y+height-1;
 		if (xStart != 0) graphics.drawLine(uiX+x, lineY, uiX+x+xStart, lineY, BLACK, 1);
 		// for the last tab, go to the end of the ui
 		if ((getNext() == null) || (getNext().getGroup() != _group)) 
 			graphics.drawLine(uiX+x+width, lineY, uiX+x+width+uiWidth, lineY, BLACK, 1);
-		if (_value == GRAPHICS_UI_SELECTED) 
+		if (_value == GRAPHICS_UI_PRESSED) 
 			graphics.drawLine(uiX+x+xStart+1, lineY, uiX+x+width-2, lineY, WHITE, 1);
 		if (_text != null) {
 			int fontSize = getFontSize(_text);

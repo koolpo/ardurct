@@ -12,9 +12,11 @@ implements IGraphicsDefines {
 	}
 
 	protected int _drawBorder(ArduRCT_Graphics graphics, int uiX, int uiY, int color) {
-		if (_state == GRAPHICS_UI_HIGHLIGHTED) color = LIGHT_GREY;
+		if (_state == GRAPHICS_UI_SELECTED || _state == GRAPHICS_UI_RELEASED) color = LIGHT_GREY;
 		graphics.fillRectangle(uiX+x, uiY+y, width, height, color);
-		graphics.drawRectangle(uiX+x, uiY+y, width, height, _state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK, 1);
+		int bColor = BLACK;
+		if (_state == GRAPHICS_UI_SELECTED || _state == GRAPHICS_UI_RELEASED) bColor = GRAPHICS_UI_COLOR_HIGHLIGHTED;
+		graphics.drawRectangle(uiX+x, uiY+y, width, height, bColor, 1);
 		return color;
 	}
 	
@@ -24,4 +26,11 @@ implements IGraphicsDefines {
 		_textX = GRAPHICS_UI_ELEMENT_LEFT_MARGIN;
 		_textY = (height-graphics.getFontHeight(fontSize))/2;
 	}	
+	
+	// called when the item is selected (enter is pressed, or item is touched)
+	public ArduRCT_GraphicsUIElement press() {
+		_state = GRAPHICS_UI_SELECTED;
+		return null;
+	}
+
 }

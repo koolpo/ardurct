@@ -108,7 +108,7 @@ public class UITest extends GraphicsFirmware {
 	}
 
 	class buttonsCB implements IUIActionCallback {
-		public boolean run(int elementId, int value) {
+		public boolean run(int elementId, int state, int value) {
 			if (elementId == 43) graphics.setGraphicsUIScreen(screen);
 			else if (elementId == 42) graphics.setGraphicsUIScreen(home);
 			else if (elementId == 20) graphics.setGraphicsUIScreen(menu);

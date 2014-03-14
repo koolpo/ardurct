@@ -43,7 +43,7 @@ public class UITest extends TouscruinoFirmware {
 		home.addElement(new ArduRCT_GraphicsUILabel(array("Label")), 5, 0, GUI_AS, GUI_AS);	
 		home.addElement(new ArduRCT_GraphicsUIValue(70, 3, 0, 255, handleButtons, 1, 16), GUI_ROPWM, GUI_SAP, GUI_AS, GUI_AS);
 		home.addElement(new ArduRCT_GraphicsUIOption(1, array("O1"), handleButtons, 1), 5, GUI_BOPWM, GUI_AS, GUI_AS);
-		home.setElementValue(1, GRAPHICS_UI_SELECTED);
+		home.setElementValue(1, GRAPHICS_UI_PRESSED);
 		home.addElement(new ArduRCT_GraphicsUIOption(2, array("O2"), handleButtons, 1), GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
 		home.getElement(2).editable = false;
 		for (int i=3; i<4; i++) 
@@ -57,7 +57,7 @@ public class UITest extends TouscruinoFirmware {
 
 		// set up a header with tabs
 		home.addElement(new ArduRCT_GraphicsUITab(42, array("T1"), handleButtons, 1), 0, 0, GUI_AS, GUI_AS, GUI_HEADER);
-		home.getElement(42).setValue(GRAPHICS_UI_SELECTED);
+		home.getElement(42).setValue(GRAPHICS_UI_PRESSED);
 		home.addElement(new ArduRCT_GraphicsUITab(43, array("T2"), handleButtons, 1), GUI_ROP, 0, GUI_AS, GUI_AS, GUI_HEADER);
 		// set a footer
 		home.addElement(new ArduRCT_GraphicsUIElement(90, footerDrawer), 0, 0, GUI_W, 14, GUI_FOOTER);
@@ -105,14 +105,16 @@ public class UITest extends TouscruinoFirmware {
 	}
 
 	class buttonsCB implements IUIActionCallback {
-		public boolean run(int elementId, int value) {
-			if (elementId == 43) Touscruino.setGraphicsUIScreen(screen);
-			else if (elementId == 42) Touscruino.setGraphicsUIScreen(home);
-			else if (elementId == 20) Touscruino.setGraphicsUIScreen(menu);
-			else if (elementId == 21) Touscruino.setGraphicsUIScreen(popup);
-			else if ((elementId >= 70) && (elementId <= 71)) Touscruino.setGraphicsUIScreen(home);
-			else if ((elementId >= 51) && (elementId <= 63)) Touscruino.setGraphicsUIScreen(home);
-			else if (elementId == 105) screen.setElementValue(106, screen.getElementValue(105));
+		public boolean run(int elementId, int state, int value) {
+			if (state == GRAPHICS_UI_RELEASED) {
+				if (elementId == 43) Touscruino.setGraphicsUIScreen(screen);
+				else if (elementId == 42) Touscruino.setGraphicsUIScreen(home);
+				else if (elementId == 20) Touscruino.setGraphicsUIScreen(menu);
+				else if (elementId == 21) Touscruino.setGraphicsUIScreen(popup);
+				else if ((elementId >= 70) && (elementId <= 71)) Touscruino.setGraphicsUIScreen(home);
+				else if ((elementId >= 51) && (elementId <= 63)) Touscruino.setGraphicsUIScreen(home);
+			} 
+			if (elementId == 105) screen.setElementValue(106, screen.getElementValue(105));
 			return false;
 		}
 	}

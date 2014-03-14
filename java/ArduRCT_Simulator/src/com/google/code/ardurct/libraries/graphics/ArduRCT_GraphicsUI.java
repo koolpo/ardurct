@@ -32,9 +32,9 @@ public class ArduRCT_GraphicsUI extends ArduRCT_GraphicsMacros {
 		if (_screen.process(actionId, x, y)) return true;	
 		if (actionId == GRAPHICS_UI_ACTION_MENU) {
 			if (_homeElement != null) {
-				_homeElement.enter();
+				_homeElement.press();
 				_homeElement.release();
-				_homeElement.escape();
+				_homeElement.unselect();
 			}
 			setGraphicsUIScreen(_screen.getPreviousScreen());
 			return true;
