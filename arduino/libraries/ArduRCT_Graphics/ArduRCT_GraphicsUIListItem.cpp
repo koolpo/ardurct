@@ -28,26 +28,28 @@
 
 #include "ArduRCT_GraphicsUI.hpp"
 
-ArduRCT_GraphicsUIListItem::ArduRCT_GraphicsUIListItem(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, int16_t value)) {
+ArduRCT_GraphicsUIListItem::ArduRCT_GraphicsUIListItem(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value)) {
     _init(id, GRAPHICS_UI_NO_GROUP, label, 0, actionHandler);
 }
 
 ArduRCT_GraphicsUIListItem::ArduRCT_GraphicsUIListItem(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-        bool (*actionHandler)(uint8_t elementId, int16_t value)) {
+        bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value)) {
     _init(id, GRAPHICS_UI_NO_GROUP, 0, drawHandler, actionHandler);
 }
 
 void ArduRCT_GraphicsUIListItem::placeLabel(ArduRCT_Graphics *graphics) {
     if (_text == 0) return; 
-    int fontSize = getFontSize(_text);
+    uint8_t fontSize = getFontSize(_text);
     _textX = GRAPHICS_UI_ELEMENT_LEFT_MARGIN;
     _textY = (height-graphics->getFontHeight(fontSize))/2;
 }	
 
 uint16_t ArduRCT_GraphicsUIListItem::_drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color) {
-    if (_state == GRAPHICS_UI_HIGHLIGHTED) color = LIGHT_GREY;
+    if (_state == GRAPHICS_UI_SELECTED || _state == GRAPHICS_UI_RELEASED) color = LIGHT_GREY;
     graphics->fillRectangle(uiX+x, uiY+y, width, height, color);
-    graphics->drawRectangle(uiX+x, uiY+y, width, height, _state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK, 1);
+    uint16_t bColor = BLACK;
+    if (_state == GRAPHICS_UI_SELECTED || _state == GRAPHICS_UI_RELEASED) bColor = GRAPHICS_UI_COLOR_HIGHLIGHTED;
+    graphics->drawRectangle(uiX+x, uiY+y, width, height, bColor, 1);
     return color;
 }
 

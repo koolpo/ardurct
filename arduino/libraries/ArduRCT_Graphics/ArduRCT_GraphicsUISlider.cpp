@@ -28,7 +28,7 @@
 
 #include "ArduRCT_GraphicsUI.hpp"
 
-ArduRCT_GraphicsUISlider::ArduRCT_GraphicsUISlider(uint8_t id, int16_t value, int16_t min, int16_t max, bool (*actionHandler)(uint8_t elementId, int16_t value), int16_t step) {
+ArduRCT_GraphicsUISlider::ArduRCT_GraphicsUISlider(uint8_t id, int16_t value, int16_t min, int16_t max, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value), int16_t step) {
     _id = id;
     _value = value;
     _actionHandler = actionHandler;
@@ -41,8 +41,9 @@ ArduRCT_GraphicsUISlider::ArduRCT_GraphicsUISlider(uint8_t id, int16_t value, in
 
 void ArduRCT_GraphicsUISlider::draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth) {
     graphics->fillRectangle(x+uiX, y+uiY, width, height, GRAPHICS_UI_COLOR_BACKGROUND);
-    uint16_t color = (_state == GRAPHICS_UI_SELECTED ? GRAPHICS_UI_COLOR_SELECTED : GRAPHICS_UI_COLOR_RELEASED);
-    uint16_t hColor = (_state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK);
+    uint16_t color = (_state == GRAPHICS_UI_PRESSED ? GRAPHICS_UI_COLOR_SELECTED : GRAPHICS_UI_COLOR_RELEASED);
+    uint16_t hColor = (_state == GRAPHICS_UI_RELEASED || _state == GRAPHICS_UI_SELECTED  || _state == GRAPHICS_UI_PRESSED ? 
+            GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK);
     if (width > height) {
         // horizontal slider
         graphics->fillRectangle(uiX+x, uiY+y+height/2-height/8, width, 2*height/8, BLACK);
@@ -68,18 +69,22 @@ ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUISlider::setValue(int16_t value) {
     return 0;
 }
 
+
+// called when the item is pressed
+// return the element that was modified if any
+// we toggle the state on press
+ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUISlider::press() {
+    if (_state == GRAPHICS_UI_PRESSED) _state = GRAPHICS_UI_RELEASED;
+    else _state = GRAPHICS_UI_PRESSED;
+    return 0;
+}
+
 // called when the touch is released
 // return true if the element needs to be escaped after release
 bool ArduRCT_GraphicsUISlider::release() {
-    return false;
+    return (_state == GRAPHICS_UI_RELEASED);
 }
 
-// called when the item is escaped
-// return true if the element needs to be run after escape
-bool ArduRCT_GraphicsUISlider::escape() {
-    _state = GRAPHICS_UI_RELEASED;
-    return false;
-}
 
 // called when the item is selected and Up is pressed
 // return true if the value was increased
@@ -102,6 +107,7 @@ bool ArduRCT_GraphicsUISlider::decrease() {
 // called when the item is touched with a pen
 // returns another element changed if any
 ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUISlider::touch(int16_t touchX, int16_t touchY) {
+    _state = GRAPHICS_UI_SELECTED;
     if (width > height) {
         int32_t value = touchX;
         value = value * (_max-_min) / (width-GRAPHICS_UI_SLIDER_KNOB_SIZE) + _min;
@@ -117,7 +123,6 @@ ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUISlider::touch(int16_t touchX, int16
         if (_value >= _max-_step/2) _value = _max;
         else _value = _value - (_value % _step);
     }
-    run();
     return 0;
 }
 

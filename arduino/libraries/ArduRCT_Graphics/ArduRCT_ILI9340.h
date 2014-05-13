@@ -1,7 +1,8 @@
 /*
- * GraphicsUIListItem - a button like list member
+
+ * ILI9340 - Implementation of the ScreenHAL abstract functions for the ILI9340
  *
- * Copyright (c) 2013 Laurent Wibaux <lm.wibaux@gmail.com>
+ * Copyright (c) 2012 Laurent Wibaux <lm.wibaux@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,25 +22,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
- 
-#ifndef GRAPHICS_UI_LIST_ITEM_HPP
-#define GRAPHICS_UI_LIST_ITEM_HPP 1
 
-#include <inttypes.h>
+#ifndef ILI9340_HPP
+#define ILI9340_HPP
 
-class ArduRCT_GraphicsUIListItem : public ArduRCT_GraphicsUIButton {
+#include "ArduRCT_Graphics.h"
+
+class ArduRCT_ILI9340: public ArduRCT_Graphics {
     
-    public:
-        ArduRCT_GraphicsUIListItem(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value));
+	public:
+		ArduRCT_ILI9340();
+        
+	protected:
+		// see ArduRCT_Graphics
+		void initScreenImpl();
+		void fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy, uint16_t color);
+		uint16_t *retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+		void pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+		void setRotationImpl(uint8_t rotation);
+		void drawPixelImpl(uint16_t x, uint16_t y, uint16_t color);
+		void selectScreenImpl();
+		void unselectScreenImpl();		
 
-        ArduRCT_GraphicsUIListItem(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-                bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value));
-
-        virtual void placeLabel(ArduRCT_Graphics *graphics);
-
-    protected:
-        uint16_t _drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color);
-
-}; 
+	private:
+		void _setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy);
+};
 
 #endif

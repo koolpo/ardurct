@@ -55,9 +55,10 @@ bool ArduRCT_Graphics::handleGraphicsUI(uint8_t actionId, int16_t x, int16_t y) 
     if (_screen->process(actionId, x, y)) return true;
     if (actionId == GRAPHICS_UI_ACTION_MENU) {
         if (_homeElement) {
-            _homeElement->enter();
+            _homeElement->select();
+            _homeElement->press();
             _homeElement->release();
-            _homeElement->escape();
+            _homeElement->unselect();
         }
         setGraphicsUIScreen(_homeScreen);
         return true;

@@ -33,13 +33,13 @@ Box::Box() {
 }
 
 
-void Box::init(uint16_t color, uint16_t size, int16_t x, int16_t y, int16_t xSpeed, int16_t ySpeed) {
+void Box::init(uint16_t color, uint16_t size, int16_t xIn, int16_t yIn, int16_t xSpeedIn, int16_t ySpeedIn) {
     _color = color;
     _size = size;
-    _x = toSoftware(x);
-    _y = toSoftware(y);
-    _xSpeed = xSpeed;
-    _ySpeed = ySpeed;
+    x = toSoftware(xIn);
+    y = toSoftware(yIn);
+    xSpeed = xSpeedIn;
+    ySpeed = ySpeedIn;
     _xDraw = -1000;
     _yDraw = 0;
 }
@@ -57,9 +57,9 @@ void Box::erase(ArduRCT_Graphics *graphics) {
 }
 
 
-void Box::draw(ArduRCT_Graphics *display) {
-    _xDraw = toScreen(_x);
-    _yDraw = toScreen(_y);
+void Box::draw(ArduRCT_Graphics *graphics) {
+    _xDraw = toScreen(x);
+    _yDraw = toScreen(y);
 #if (BOX_FILLED == 1)
     graphics->fillRectangle(_xDraw, _yDraw, _size, _size, _color);
 #else
@@ -69,43 +69,43 @@ void Box::draw(ArduRCT_Graphics *display) {
 
 
 void Box::move() {
-    _x += _xSpeed; 
-    _y += _ySpeed; 
+    x += xSpeed; 
+    y += ySpeed; 
 }
 
 
 void Box::checkWallCollisions(uint16_t wallX, uint16_t wallY) {
-    if (_x < 0) {                       // if at or beyond left side
-        _x = 0;                         // place against edge and
-        _xSpeed = -_xSpeed;           // reverse direction.
-    } else if (_x > toSoftware(wallX-_size)) {      // if at or beyond right side
-        _x = toSoftware(wallX-_size);        // place against right edge.
-        _xSpeed = -_xSpeed;           // reverse direction.
+    if (x < 0) {                                // if at or beyond left side
+        x = 0;                                  // place against edge and
+        xSpeed = -xSpeed;                       // reverse direction.
+    } else if (x > toSoftware(wallX-_size)) {   // if at or beyond right side
+        x = toSoftware(wallX-_size);            // place against right edge.
+        xSpeed = -xSpeed;                       // reverse direction.
     }
-    if (_y < 0) {                       // if at or beyond top side
-        _y = 0;                         // place against edge and
-        _ySpeed = -_ySpeed;           // reverse direction.
-    } else if (_y > toSoftware(wallY-_size)) {      // if at or beyond bottom side
-        _y = toSoftware(wallY-_size);               // place against bottom edge.
-        _ySpeed = -_ySpeed;           // reverse direction.
+    if (y < 0) {                                // if at or beyond top side
+        y = 0;                                  // place against edge and
+        ySpeed = -ySpeed;                       // reverse direction.
+    } else if (y > toSoftware(wallY-_size)) {   // if at or beyond bottom side
+        y = toSoftware(wallY-_size);            // place against bottom edge.
+        ySpeed = -ySpeed;                       // reverse direction.
     }
 }
 
 
 void Box::checkBoxCollisions(Box *box) {
     uint16_t size = toSoftware(_size);
-    if ((abs(_x-box->_x) < size) && (abs(_y-box->_y) < size)) {
-        if (_xSpeed * box->_xSpeed < 0) {
-            if (box->_x > _x) box->_x = _x + size;
-            else box->_x = _x - size;
-            _xSpeed = -_xSpeed;
-            box->_xSpeed = -box->_xSpeed;
+    if ((abs(x-box->x) < size) && (abs(y-box->y) < size)) {
+        if (xSpeed * box->xSpeed < 0) {
+            if (box->x > x) box->x = x + size;
+            else box->x = x - size;
+            xSpeed = -xSpeed;
+            box->xSpeed = -box->xSpeed;
         } 
-        if (_ySpeed * box->_ySpeed < 0) {
-            if (box->_y > _y) box->_y = _y + size;
-            else box->_y = _y - size;
-            _ySpeed = -_ySpeed;
-            box->_ySpeed = -box->_ySpeed;
+        if (ySpeed * box->ySpeed < 0) {
+            if (box->y > y) box->y = y + size;
+            else box->y = y - size;
+            ySpeed = -ySpeed;
+            box->ySpeed = -box->ySpeed;
         } 
     }
 }

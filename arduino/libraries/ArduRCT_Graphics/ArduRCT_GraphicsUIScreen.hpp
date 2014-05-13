@@ -61,7 +61,9 @@ class ArduRCT_GraphicsUIScreen {
         void setPreviousScreen(ArduRCT_GraphicsUIScreen *previous);
         
         ArduRCT_GraphicsUIScreen *getPreviousScreen();
-                
+        
+        void drawElement(uint8_t id);
+        
     private:
         int16_t _x;
         int16_t _y;
@@ -102,6 +104,8 @@ class ArduRCT_GraphicsUIScreen {
         ArduRCT_GraphicsUIElement *_findElementAt(int16_t x, int16_t y);
         
         bool _processOutOfScreenTouch(int16_t x, int16_t y);
+        
+        bool _processTouchOnSelected(uint16_t x, uint16_t y, boolean drawModified);
 }; 
 
 #endif

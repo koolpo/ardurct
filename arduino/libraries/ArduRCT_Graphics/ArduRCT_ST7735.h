@@ -32,16 +32,15 @@
 #ifndef ARDURCT_ST7735_HPP
 #define ARDURCT_ST7735_HPP
 
-// only define the connections if not defined before
-#ifndef ST7735_CD_PIN
 #define ST7735_CD_PIN 22
 #define ST7735_CS_PIN 18
 #define ST7735_RESET_PIN 23
-#endif
-// same for backlight
-#ifndef ST7735_BACKLIGHT_PIN
+
 #define ST7735_BACKLIGHT_PIN 5
-#endif
+
+// Since there is an overhead going to and from 12b mode, it is only worth doing if we have enough
+// pixels to draw in the area. 
+#define ST7735_SWITCH_TO_12B_COLORS_TRIGGER 64
 
 #include "ArduRCT_Graphics.h"
  

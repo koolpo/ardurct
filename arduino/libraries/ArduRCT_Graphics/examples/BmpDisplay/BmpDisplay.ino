@@ -23,162 +23,100 @@
  * THE SOFTWARE.
  */
 
-#include <SD.h>
+#include <SdFat.h>
 #include <SPI.h>
+#include <ArduRCT_Graphics.h>
+#include "Bmp.h"
 
-//#include <ArduRCT_S6D04H0.h>
-//ArduRCT_S6D04H0 graphics;
-
-#include <ArduRCT_SPFD5408.h>
-ArduRCT_SPFD5408 graphics;
-
-//#include <ArduRCT_ST7735.h>
-//ArduRCT_ST7735 graphics;
-
-//#define FILE_NAME "woof.bmp"
-#define FILE_NAME "monk16b.bmp"
-#define MAX_BMP_WIDTH 320
+#define SLIDE_SHOW_WAIT 2
 #define SD_CS 4
+#define MAX_BMP 50
+
+//ArduRCT_S6D04H0 graphics;
+//ArduRCT_SPFD5408 graphics;
+//ArduRCT_ST7735 graphics;
+ArduRCT_ILI9340 graphics;
+
+SdFat sd;
+SdFile file;
+Bmp bmp;
+char bmpNames[MAX_BMP][13];
+uint8_t nbBmp = 0;
+uint8_t bmpIndex = 0;
+boolean rootHasValidBmp = false;
 
 #define dualPrint(a) { Serial.print(a); graphics.print(a); }
 #define dualPrintH(a) { Serial.print(a, HEX); graphics.print(a, HEX); }
 #define dualPrintln(a) { Serial.println(a); graphics.println(a); }
 
-
 void setup() {
     Serial.begin(57600);
-    graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD, OVERLAY);
+    graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD);
     graphics.setMargin(5);
-
+        
     dualPrint("Initializing SD... ");
     pinMode(SS, OUTPUT);
-
-    if (!SD.begin(SD_CS)) {
+    pinMode(SD_CS, OUTPUT);
+    if (!sd.begin(SD_CS, SPI_FULL_SPEED)) {
         dualPrintln("Failed!");
-        while (1);
+        return;
     } else dualPrintln("OK!");
 
-    uint16_t width, height, bitsPerPixel;  
-    File bmpFile = SD.open(FILE_NAME);
-    if (!bmpFile) {
-        dualPrintln("Can not find image.");
-        while (1);
+    scanRootForBmp();
+    if (nbBmp == 0) {
+        dualPrintln("Error: no BMP on card.");
+    } else {
+        Serial.print("Found ");
+        Serial.print(nbBmp);
+        Serial.println(" BMP on card");
+        Serial.println();
     }
-    if (!bmpReadHeader(bmpFile, &width, &height, &bitsPerPixel)) { 
-        bmpFile.close();
-        while (1);
-    }  
-    bmpDraw(bmpFile, 0, 0, width, height, bitsPerPixel);
-    bmpFile.close();
-
-    delay(1000);
 }
-
 
 void loop() {
-  delay(1000);
-}
-
-
-void bmpDraw(File f, int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t bitsPerPixel) {
-    uint32_t time = millis();
-  
-    uint8_t bmpBuffer[3 * MAX_BMP_WIDTH];  // 3 * pixels to buffer
-    uint16_t imgBuffer[MAX_BMP_WIDTH];
+    if (nbBmp == 0) return;
     
-    for (uint16_t i=0; i<height; i++) {
-        if (bitsPerPixel == 16) {
-            // read one line, pixels are stored as R5G6B5
-            f.read(imgBuffer, 2*width); 
+    if (bmpNames[bmpIndex][0]) {
+        Serial.print(bmpNames[bmpIndex]);
+        Serial.print(": ");
+        uint8_t error = bmp.setFileName(bmpNames[bmpIndex]);
+        if (error) {
+            Serial.println(bmp.getErrorMessage());
+            bmpNames[bmpIndex][0] = 0;
         } else {
-            // read one line
-            f.read(bmpBuffer, 3*width);    
-            uint16_t ptr = 0;
-            for (uint16_t j=0; j<width; j++) {
-                // convert pixel from 888 to 565
-                uint8_t b = bmpBuffer[ptr++];     // blue
-                uint8_t g = bmpBuffer[ptr++];     // green
-                uint16_t color = bmpBuffer[ptr++]; // red
-                color >>= 3;
-                color <<= 6;
-                g >>= 2;
-                color |= g;
-                color <<= 5;
-                b >>= 3;
-                color |= b;
-                imgBuffer[j] = color;
-            }
+            if (rootHasValidBmp) graphics.fillScreen(WHITE);
+            rootHasValidBmp = true;
+            uint32_t timeToDraw = bmp.draw(&graphics);
+            Serial.print(timeToDraw); Serial.println("us");
+            delay(SLIDE_SHOW_WAIT * 1000);
         }
-        // bitmaps are stored with the BOTTOM line first so we have to start from the bottom
-        graphics.pasteBitmap(imgBuffer, x, y + height-1 - i, width, 1);
     }
-    graphics.setCursor(0, 0);
-    dualPrint(millis() - time); dualPrintln("ms");
-}
-
-boolean bmpReadHeader(File f, uint16_t *width, uint16_t *height, uint16_t *bitsPerPixel) {
-    uint32_t tmp = readLE16b(f);
-    if (tmp != 0x4D42) {
-        dualPrint("Start: "); dualPrintH(tmp);
-        dualPrintln(" => Not supported.");
-        // magic bytes missing
-        return false;
+    bmpIndex ++;
+    if (bmpIndex == nbBmp) {
+        if (rootHasValidBmp) bmpIndex = 0;
+        else nbBmp = 0;
     }
-    // read file size
-    tmp = readLE32b(f);  
-    dualPrint("File size: "); dualPrintln(tmp);
-    // read and ignore creator bytes
-    readLE32b(f);
-    // read offset
-    uint32_t bmpImageOffset = readLE32b(f);  
-    // read DIB header
-    tmp = readLE32b(f);
-    *width = readLE32b(f);
-    *height = readLE32b(f);
-    dualPrint("Image size: "); 
-    dualPrint(*width);
-    dualPrint("x");
-    dualPrintln(*height); 
-    
-    if (readLE16b(f) != 1)  return false;
-    
-    // read bit depth
-    *bitsPerPixel = readLE16b(f);
-    dualPrint("Bits per px: "); dualPrint(*bitsPerPixel);
-    if (*bitsPerPixel != 24 && *bitsPerPixel != 16) {
-        dualPrintln(" => Not supported.");
-        return false;
-    } else dualPrintln("");
-    
-    // read compression
-    uint32_t compression = readLE32b(f);
-    dualPrint("Compression: "); dualPrint(compression);
-    if (compression != 0 && !(compression == 3 && *bitsPerPixel==16)) {
-        dualPrintln(" => Not supported.");
-        return false;
-    } else dualPrintln("");
-
-    f.seek(bmpImageOffset);
-    return true;
 }
 
-
-// Read 16b as Little Endian
-uint16_t readLE16b(File f) {
-    uint8_t l = f.read();
-    uint16_t h = f.read();
-    h <<= 8;
-    h |= l;
-    return h;
+void scanRootForBmp() {
+    while (file.openNext(sd.vwd(), O_READ)) {
+        file.getFilename(bmpNames[nbBmp]);
+        Serial.print(bmpNames[nbBmp]);
+        Serial.print(": ");
+        if (file.isDir()) {
+            Serial.println("dir");
+            file.close();
+            continue;
+        }
+        int i = 1;
+        while (bmpNames[nbBmp][i] != 0) i++;
+        if ((bmpNames[nbBmp][i-3] == 'B') && (bmpNames[nbBmp][i-2] == 'M') && (bmpNames[nbBmp][i-1] == 'P')) {
+            nbBmp++;
+            Serial.println("ok");
+        } else {
+            Serial.println("not a BMP");
+        }
+        file.close();
+        if (nbBmp == MAX_BMP) return;
+    }
 }
-
-
-// Read 32b as Little Endian
-uint32_t readLE32b(File f) {
-    uint16_t l = readLE16b(f);
-    uint32_t h = readLE16b(f);
-    h <<= 16;
-    h |= l;
-    return h;
-}
-

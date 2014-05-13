@@ -32,10 +32,10 @@ class ArduRCT_GraphicsUIButton : public ArduRCT_GraphicsUIElement {
     public:
         ArduRCT_GraphicsUIButton();
         
-        ArduRCT_GraphicsUIButton(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, int16_t value));
+        ArduRCT_GraphicsUIButton(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value));
         
         ArduRCT_GraphicsUIButton(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-                bool (*actionHandler)(uint8_t elementId, int16_t value));
+                bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value));
 
         virtual void autoSize(ArduRCT_Graphics *graphics);
 
@@ -43,7 +43,7 @@ class ArduRCT_GraphicsUIButton : public ArduRCT_GraphicsUIElement {
 
         virtual void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
 
-        virtual ArduRCT_GraphicsUIElement *enter();
+        virtual ArduRCT_GraphicsUIElement *press();
 
         virtual bool release();
         
@@ -53,7 +53,7 @@ class ArduRCT_GraphicsUIButton : public ArduRCT_GraphicsUIElement {
         uint8_t _textY;
         
         void _init(uint8_t id, uint8_t group, char *label, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-            bool (*actionHandler)(uint8_t elementId, int16_t value));
+            bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value));
 
         virtual uint16_t _drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color);
 }; 

@@ -1,5 +1,5 @@
 /*
- * GraphicsUIListItem - a button like list member
+ * GraphicsUIToggle - a toggle switch
  *
  * Copyright (c) 2013 Laurent Wibaux <lm.wibaux@gmail.com>
  *
@@ -22,24 +22,23 @@
  * THE SOFTWARE.
  */
  
-#ifndef GRAPHICS_UI_LIST_ITEM_HPP
-#define GRAPHICS_UI_LIST_ITEM_HPP 1
+#ifndef GRAPHICS_UI_TOGGLE_HPP
+#define GRAPHICS_UI_TOGGLE_HPP 1
 
 #include <inttypes.h>
 
-class ArduRCT_GraphicsUIListItem : public ArduRCT_GraphicsUIButton {
+class ArduRCT_GraphicsUIToggle : public ArduRCT_GraphicsUIElement {
     
     public:
-        ArduRCT_GraphicsUIListItem(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value));
+        ArduRCT_GraphicsUIToggle(uint8_t id, int16_t value, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value) = 0);
 
-        ArduRCT_GraphicsUIListItem(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-                bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value));
+        virtual void draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth);
 
-        virtual void placeLabel(ArduRCT_Graphics *graphics);
+        virtual void autoSize(ArduRCT_Graphics *graphics);
 
-    protected:
-        uint16_t _drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color);
-
+        virtual ArduRCT_GraphicsUIElement *press();
+        
+        virtual ArduRCT_GraphicsUIElement *touch(int16_t touchX, int16_t touchY);
 }; 
 
 #endif

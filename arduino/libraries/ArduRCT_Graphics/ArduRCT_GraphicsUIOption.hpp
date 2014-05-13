@@ -32,14 +32,14 @@ class ArduRCT_GraphicsUIOption : public ArduRCT_GraphicsUIButton {
     public:
         ArduRCT_GraphicsUIOption();
         
-        ArduRCT_GraphicsUIOption(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group);
+        ArduRCT_GraphicsUIOption(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value), uint8_t group);
 
         ArduRCT_GraphicsUIOption(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-                bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group);
+                bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value), uint8_t group);
 
         virtual ArduRCT_GraphicsUIElement *setValue(int16_t value) ;
 
-        virtual ArduRCT_GraphicsUIElement *enter();
+        virtual ArduRCT_GraphicsUIElement *press();
 
         virtual bool release();
         

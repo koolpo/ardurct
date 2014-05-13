@@ -25,24 +25,6 @@
 #ifndef S6D0H0_HPP
 #define S6D0H0_HPP
 
-// only define the connections if not defined before
-#ifndef S6D04H0_DATA_OUT_PORT
-#define S6D04H0_DATA_OUT_PORT PORTB
-#define S6D04H0_DATA_IN_PORT PINB
-#define S6D04H0_DATA_DDR_PORT DDRB
-#define S6D04H0_WR_PORT PORTC
-#define S6D04H0_WR_PIN 22
-#define S6D04H0_RD_PIN 23
-#define S6D04H0_CD_PIN 22
-#define S6D04H0_CS_PIN 31
-#define S6D04H0_RESET_PIN 0xFF
-#define S6D04H0_SPI_ON_BUS true
-#endif
-// same for backlight
-#ifndef S6D04H0_BACKLIGHT_PIN
-#define S6D04H0_BACKLIGHT_PIN 5
-#endif
-
 #include "ArduRCT_Graphics.h"
 
 class ArduRCT_S6D04H0: public ArduRCT_Graphics {
@@ -62,9 +44,6 @@ class ArduRCT_S6D04H0: public ArduRCT_Graphics {
 		void unselectScreenImpl();		
 
 	private:
-		uint8_t _wrPortLowWR;
-		uint8_t _wrPortHighWR;
-		
 		void _setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy);
 };
 

@@ -31,27 +31,27 @@
 ArduRCT_GraphicsUIOption::ArduRCT_GraphicsUIOption() {
 }
 
-ArduRCT_GraphicsUIOption::ArduRCT_GraphicsUIOption(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group) {
+ArduRCT_GraphicsUIOption::ArduRCT_GraphicsUIOption(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value), uint8_t group) {
     _init(id, group, label, 0, actionHandler);
 }
 
 ArduRCT_GraphicsUIOption::ArduRCT_GraphicsUIOption(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-        bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group) {
+        bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value), uint8_t group) {
     _init(id, group, 0, drawHandler, actionHandler);
 }
 
 ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIOption::setValue(int16_t value) {
     _value = value;
-    if ((_group == GRAPHICS_UI_NO_GROUP) || (value != GRAPHICS_UI_SELECTED)) return 0;
+    if ((_group == GRAPHICS_UI_NO_GROUP) || (value != GRAPHICS_UI_PRESSED)) return 0;
     
     // search backward for an element in the same group
     ArduRCT_GraphicsUIElement *elt = getPrevious();
     while (elt) {
         // is there another selected in the same group
-        if ((elt->getGroup() == _group) && (elt->getValue() == GRAPHICS_UI_SELECTED)) {
+        if ((elt->getGroup() == _group) && (elt->getValue() == GRAPHICS_UI_PRESSED)) {
             // release it
             elt->setValue(GRAPHICS_UI_RELEASED);
-            elt->setState(GRAPHICS_UI_RELEASED);
+            elt->setState(GRAPHICS_UI_UNSELECTED);
             // return it for redraw
             return elt;
         }
@@ -61,10 +61,10 @@ ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIOption::setValue(int16_t value) {
     elt = getNext();
     while (elt) {
         // is there another selected in the same group
-        if ((elt->getGroup() == _group) && (elt->getValue() == GRAPHICS_UI_SELECTED)) {
+        if ((elt->getGroup() == _group) && (elt->getValue() == GRAPHICS_UI_PRESSED)) {
             // release it
             elt->setValue(GRAPHICS_UI_RELEASED);
-            elt->setState(GRAPHICS_UI_RELEASED);
+            elt->setState(GRAPHICS_UI_UNSELECTED);
             // return it for redraw
             return elt;
         }
@@ -73,10 +73,10 @@ ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIOption::setValue(int16_t value) {
     return 0;
 }
 
-ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIOption::enter() {
-    if (_group != GRAPHICS_UI_NO_GROUP) return setValue(GRAPHICS_UI_SELECTED);
-    if (_value == GRAPHICS_UI_SELECTED) setValue(GRAPHICS_UI_RELEASED);
-    else setValue(GRAPHICS_UI_SELECTED);
+ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIOption::press() {
+    if (_group != GRAPHICS_UI_NO_GROUP) return setValue(GRAPHICS_UI_PRESSED);
+    if (_value == GRAPHICS_UI_PRESSED) setValue(GRAPHICS_UI_RELEASED);
+    else setValue(GRAPHICS_UI_PRESSED);
     return 0;
 }
 
@@ -87,7 +87,9 @@ bool ArduRCT_GraphicsUIOption::release() {
 uint16_t ArduRCT_GraphicsUIOption::_drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color) {
     // a pushbutton
     graphics->fillRectangle(uiX+x, uiY+y, width, height, color);
-    graphics->drawRectangle(uiX+x, uiY+y, width, height, _state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK, 1);
+    uint16_t bColor = BLACK;
+    if (_state == GRAPHICS_UI_SELECTED || _state == GRAPHICS_UI_RELEASED) bColor = GRAPHICS_UI_COLOR_HIGHLIGHTED;
+    graphics->drawRectangle(uiX+x, uiY+y, width, height, bColor, 1);
     return color;
 }
 

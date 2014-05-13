@@ -31,12 +31,12 @@
 ArduRCT_GraphicsUIButton::ArduRCT_GraphicsUIButton() {
 }
 
-ArduRCT_GraphicsUIButton::ArduRCT_GraphicsUIButton(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, int16_t value)) {
+ArduRCT_GraphicsUIButton::ArduRCT_GraphicsUIButton(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value)) {
     _init(id, -1, label, 0, actionHandler);
 }
 
 ArduRCT_GraphicsUIButton::ArduRCT_GraphicsUIButton(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-        bool (*actionHandler)(uint8_t elementId, int16_t value)) {
+        bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value)) {
     _init(id, -1, 0, drawHandler, actionHandler);
 }
 
@@ -57,7 +57,7 @@ void ArduRCT_GraphicsUIButton::placeLabel(ArduRCT_Graphics *graphics) {
 void ArduRCT_GraphicsUIButton::draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth) {
     int bgColor = graphics->getBackgroundColor();
     int color = GRAPHICS_UI_COLOR_RELEASED;
-    if (_value == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_PRESSED;
+    if (_value == GRAPHICS_UI_PRESSED) color = GRAPHICS_UI_COLOR_PRESSED;
     color = _drawBorder(graphics, uiX, uiY, color);
     graphics->setBackgroundColor(color);
     if (_text != 0) {
@@ -70,9 +70,12 @@ void ArduRCT_GraphicsUIButton::draw(ArduRCT_Graphics *graphics, int16_t uiX, int
 }
 
     
-ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIButton::enter() {
-    _value = GRAPHICS_UI_SELECTED;
-    _state = GRAPHICS_UI_SELECTED;
+ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIButton::press() {
+    _value = GRAPHICS_UI_PRESSED;
+    if (_state < GRAPHICS_UI_PRESSED) _state = GRAPHICS_UI_PRESSED;
+    if (!repeatable) return 0;
+    _state ++;
+    if (_state > GRAPHICS_UI_REPEATED) _state = GRAPHICS_UI_REPEATED;
     return 0;
 }
 
@@ -83,21 +86,23 @@ bool ArduRCT_GraphicsUIButton::release() {
 }
 
 void ArduRCT_GraphicsUIButton::_init(uint8_t id, uint8_t group, char *label, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-        bool (*actionHandler)(uint8_t elementId, int16_t value)) {
+        bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value)) {
     _id = id;
     _group = group;
     _text = label;
-    _state = GRAPHICS_UI_RELEASED;
+    _state = GRAPHICS_UI_UNSELECTED;
     _value = GRAPHICS_UI_RELEASED;
     editable = true;
+    repeatable = false;
     _actionHandler = actionHandler;
     _drawHandler = drawHandler;
 }
 
 uint16_t ArduRCT_GraphicsUIButton::_drawBorder(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t color) {
     graphics->fillRoundedRectangle(uiX+x, uiY+y, width, height, GRAPHICS_UI_ELEMENT_TOP_MARGIN, color);
-    graphics->drawRoundedRectangle(uiX+x, uiY+y, width, height, GRAPHICS_UI_ELEMENT_TOP_MARGIN, 
-            _state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK, 1);	
+    uint16_t bColor = BLACK;
+    if (_state == GRAPHICS_UI_SELECTED || _state == GRAPHICS_UI_RELEASED) bColor = GRAPHICS_UI_COLOR_HIGHLIGHTED;
+    graphics->drawRoundedRectangle(uiX+x, uiY+y, width, height, GRAPHICS_UI_ELEMENT_TOP_MARGIN, bColor, 1);
     return color;
 }
 

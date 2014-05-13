@@ -156,113 +156,112 @@ void ArduRCT_GraphicsUIScreen::pack(uint8_t position) {
 
 bool ArduRCT_GraphicsUIScreen::process(uint8_t actionId, int16_t x, int16_t y) {
     if (actionId == GRAPHICS_UI_ACTION_TOUCH) {
-        if (_selectedElement != 0) {
+        if (_selectedElement) {
             _selectedElement->release();
-            _selectedElement->escape();
+            _selectedElement->unselect();
             _drawElement(_selectedElement);
         }
         // find an item at these coordinates
         _selectedElement = _findElementAt(x, y);
         if (_selectedElement == 0) return _processOutOfScreenTouch(x, y);
-        int touchX = x-_selectedElement->x;
-        int touchY = y-_selectedElement->y;
-        if (_selectedElement->section == GRAPHICS_UI_SECTION_MAIN) {
-            touchX -= _topX;
-            touchY -= _topY;
-        } else if (_selectedElement->section == GRAPHICS_UI_SECTION_FOOTER) {
-            touchY -= _height - _firstFooterElement->height;
-        }
-        ArduRCT_GraphicsUIElement *modifiedElement = _selectedElement->touch(touchX, touchY);
-        if (modifiedElement != 0) _drawElement(modifiedElement);
-        _drawElement(_selectedElement);
-        return true;
-    } else if (actionId == GRAPHICS_UI_ACTION_UNTOUCH) {
-        // release the item
+        return _processTouchOnSelected(x, y, true);
+    } else if (actionId == GRAPHICS_UI_ACTION_REPEAT_TOUCH) {
         if (_selectedElement == 0) return false;
-        _selectedElement->release();
-        bool runOnEscape = _selectedElement->escape();
-        _drawElement(_selectedElement);
-        if (runOnEscape) _selectedElement->run();
-        _selectedElement = 0;
-        return true;
+        if (!_selectedElement->repeatable) return false;
+        return _processTouchOnSelected(x, y, false);
     } else if (actionId == GRAPHICS_UI_ACTION_DRAG) {
         ArduRCT_GraphicsUIElement *draggedElement = _findElementAt(x, y);
         if ((_selectedElement != 0) && ((draggedElement == 0) || (draggedElement != _selectedElement))) {
             _selectedElement->release();
-            _selectedElement->escape();
+            _selectedElement->unselect();
             _drawElement(_selectedElement);
         }
         _selectedElement = draggedElement;
         if (_selectedElement == 0) return false;
-        int touchX = x-_selectedElement->x;
-        int touchY = y-_selectedElement->y;
-        if (_selectedElement->section == GRAPHICS_UI_SECTION_MAIN) {
-            touchX -= _topX;
-            touchY -= _topY;
-        } else if (_selectedElement->section == GRAPHICS_UI_SECTION_FOOTER) {
-            touchY -= _height - _firstFooterElement->height;
-        }
-        _selectedElement->touch(touchX, touchY);
+        return _processTouchOnSelected(x, y, true);
+    } else if (actionId == GRAPHICS_UI_ACTION_UNTOUCH) {
+        // release the item
+        if (_selectedElement == 0) return false;
+        _selectedElement->release();
+        _selectedElement->unselect();
         _drawElement(_selectedElement);
+        _selectedElement->run();
+        _selectedElement = 0;
         return true;
     } else if ((actionId == GRAPHICS_UI_ACTION_UP) || (actionId == GRAPHICS_UI_ACTION_DOWN)) {
         if (_currentElement == 0) {
             _currentElement = _findNextElement(false);
             if (_currentElement == 0) return false;
-            _currentElement->highlight();
+            _currentElement->select();
             if (_adjustTopToDisplayCurrentElement()) _draw();
             else _drawElement(_currentElement);
         } else if (_selectedElement != 0) {
-            // we are inside a selected elt
-            bool runOnIncreaseOrDecrease = false;
-            int16_t value = _selectedElement->getValue();
-            if (actionId == GRAPHICS_UI_ACTION_UP) runOnIncreaseOrDecrease = _selectedElement->increase();
-            else runOnIncreaseOrDecrease = _selectedElement->decrease();
+            // we are inside a selected element
+            boolean needToRun = false;
+            int value = _selectedElement->getValue();
+            if (actionId == GRAPHICS_UI_ACTION_UP) needToRun = _selectedElement->increase();
+            else needToRun = _selectedElement->decrease();
             if (_selectedElement->getValue() != value) _drawElement(_selectedElement);
-            if (runOnIncreaseOrDecrease) _selectedElement->run();
+            if (needToRun) _selectedElement->run();
         } else {
             ArduRCT_GraphicsUIElement *nextElement = _findNextElement(actionId == GRAPHICS_UI_ACTION_UP);
             if (nextElement != 0) {
-                _currentElement->escape();
+                _currentElement->unselect();
                 _drawElement(_currentElement);
                 _currentElement = nextElement;
-                _currentElement->highlight();
+                _currentElement->select();
                 if (_adjustTopToDisplayCurrentElement()) _draw();
                 else _drawElement(_currentElement);
             }
         }
         return true;
     } else if (actionId == GRAPHICS_UI_ACTION_ENTER) {
-        if (_currentElement == 0) return true;
+        if (_currentElement == 0) return false;
         _selectedElement = _currentElement;
-        ArduRCT_GraphicsUIElement *modifiedElement = _selectedElement->enter();
+        ArduRCT_GraphicsUIElement *modifiedElement = _selectedElement->press();
         if (modifiedElement != 0) _drawElement(modifiedElement);
         _drawElement(_selectedElement);
+        _selectedElement->run();
         return true;
     } else if (actionId == GRAPHICS_UI_ACTION_MENU) {
         if (_selectedElement == 0) return false;
-        bool runOnEscape = _selectedElement->escape();
-        _selectedElement->highlight();
+        _selectedElement->unselect();
         _drawElement(_selectedElement);
-        if (runOnEscape) _selectedElement->run();
         _selectedElement = 0;
+        _currentElement = 0;
         return true;
     } else if (actionId == GRAPHICS_UI_ACTION_RELEASE) {
-        if (_selectedElement == 0) return true;
-        bool escapeAfterRelease = _selectedElement->release();
-        bool runOnEscape = false;
-        if (escapeAfterRelease) {
-            runOnEscape = _selectedElement->escape();
-            _selectedElement->highlight();				
-        }
+        if (_selectedElement == 0) return false;
+        boolean canFreeSelected = _selectedElement->release();
         _drawElement(_selectedElement);
-        if (escapeAfterRelease) {
-            if (runOnEscape) _selectedElement->run();
-            _selectedElement = 0;
-        }
+        _selectedElement->run();
+        if (canFreeSelected) _selectedElement = 0;
         return true;
     }
     return false;
+}
+
+bool ArduRCT_GraphicsUIScreen::_processTouchOnSelected(uint16_t x, uint16_t y, boolean drawModified) {
+    int touchX = x-_selectedElement->x;
+    int touchY = y-_selectedElement->y;
+    if (_selectedElement->section == GUI_MAIN) {
+        touchX -= _topX;
+        touchY -= _topY;
+    } else if (_selectedElement->section == GUI_FOOTER) {
+        touchY -= _height - _firstFooterElement->height;
+    }
+    ArduRCT_GraphicsUIElement *modifiedElement = _selectedElement->touch(touchX, touchY);
+    if (drawModified && modifiedElement != 0) _drawElement(modifiedElement);
+    _drawElement(_selectedElement);
+    _selectedElement->run();
+    return true;
+}
+
+void ArduRCT_GraphicsUIScreen::drawElement(uint8_t id) {
+    if (!_enabled) return;
+    ArduRCT_GraphicsUIElement *elt = getElement(id);
+    if (!elt) return;
+    _drawElement(elt);
 }
 
 ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIScreen::getElement(uint8_t id) {
@@ -298,20 +297,22 @@ int16_t ArduRCT_GraphicsUIScreen::getElementValue(uint8_t id) {
     return elt->getValue();
 }
 
+
+
 void ArduRCT_GraphicsUIScreen::_reset() {
     ArduRCT_GraphicsUIElement *elt = _firstElement;
     while (elt) {
-        elt->setState(GRAPHICS_UI_RELEASED);
+        elt->setState(GRAPHICS_UI_UNSELECTED);
         elt = elt->getNext();
     }
     elt = _firstHeaderElement;
     while (elt) {
-        elt->setState(GRAPHICS_UI_RELEASED);
+        elt->setState(GRAPHICS_UI_UNSELECTED);
         elt = elt->getNext();
     }
     elt = _firstFooterElement;
     while (elt) {
-        elt->setState(GRAPHICS_UI_RELEASED);
+        elt->setState(GRAPHICS_UI_UNSELECTED);
         elt = elt->getNext();
     }
     if (_firstHeaderElement) {

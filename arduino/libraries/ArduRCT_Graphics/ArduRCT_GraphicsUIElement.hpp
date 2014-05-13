@@ -38,11 +38,12 @@ class ArduRCT_GraphicsUIElement {
         uint16_t height;
         bool editable;
         uint8_t section;
+        bool repeatable;
         
         ArduRCT_GraphicsUIElement();
 
         ArduRCT_GraphicsUIElement(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height) = 0, 
-                bool (*actionHandler)(uint8_t elementId, int16_t value) = 0);
+                bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value) = 0);
         
         void setNext(ArduRCT_GraphicsUIElement *next);
         
@@ -70,10 +71,16 @@ class ArduRCT_GraphicsUIElement {
         virtual void setState(uint8_t state);
 
         virtual int16_t getValue();
+
+        // called when the item is selected
+        virtual void select();
+
+        // called when the item is unselected
+        virtual void unselect();
         
         // called when the item is selected (enter is pressed)
         // returns another element which changed if any
-        virtual ArduRCT_GraphicsUIElement *enter();
+        virtual ArduRCT_GraphicsUIElement *press();
 
         // called when the item is touched with a pen
         // returns another element which changed if any
@@ -82,13 +89,7 @@ class ArduRCT_GraphicsUIElement {
         // called when the touch is released
         // return true if the element needs to be escaped after release
         virtual bool release();
-
-        // called when the item is escaped
-        // return true if the element needs to be run after escape
-        virtual bool escape();
         
-        virtual bool run();
-
         // called when the item is selected and Up is pressed
         // return true if the value was increased
         virtual bool increase();
@@ -97,10 +98,8 @@ class ArduRCT_GraphicsUIElement {
         // return true if the value was decreased
         virtual bool decrease();
 
-        // called when the element is entered or touched
-        // release will keep the highlight
-        // escape will release the highlight
-        virtual void highlight();
+        // called when the element is pressed (repeated), increased, decreased, touched or released
+        virtual bool run();
                 
     protected:
         int16_t _value;
@@ -110,7 +109,7 @@ class ArduRCT_GraphicsUIElement {
         ArduRCT_GraphicsUIElement *_next;
         ArduRCT_GraphicsUIElement *_previous;
         void (*_drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height); 
-        bool (*_actionHandler)(uint8_t elementId, int16_t value);
+        bool (*_actionHandler)(uint8_t elementId, uint8_t state, int16_t value);
 }; 
 
 #endif

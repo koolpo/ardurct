@@ -32,11 +32,11 @@ ArduRCT_GraphicsUIElement::ArduRCT_GraphicsUIElement() {
 }
 
 ArduRCT_GraphicsUIElement::ArduRCT_GraphicsUIElement(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-        bool (*actionHandler)(uint8_t elementId, int16_t value)) {
+        bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value)) {
     _id = id;
     _group = -1;
+    _state = GRAPHICS_UI_UNSELECTED;
     _value = GRAPHICS_UI_RELEASED;
-    _state = GRAPHICS_UI_RELEASED;
     editable = true;
     _actionHandler = actionHandler;
     _drawHandler = drawHandler;
@@ -73,8 +73,9 @@ uint8_t ArduRCT_GraphicsUIElement::getGroup() {
     return _group;
 }
 
+
 bool ArduRCT_GraphicsUIElement::run() {
-    if (_actionHandler) return (*_actionHandler)(_id, _value);
+    if (_actionHandler) return (*_actionHandler)(_id, _state <= GRAPHICS_UI_SELECTED ? GRAPHICS_UI_RELEASED : _state, _value);
     return false;
 }
         
@@ -90,9 +91,9 @@ void ArduRCT_GraphicsUIElement::draw(ArduRCT_Graphics *graphics, int16_t uiX, in
     else {
         graphics->fillRectangle(x+uiX, y+uiY, width, height, GRAPHICS_UI_COLOR_RELEASED);
         if (editable) {
-            int color = GRAPHICS_UI_COLOR_RELEASED;
-            if (_state == GRAPHICS_UI_HIGHLIGHTED) color = GRAPHICS_UI_COLOR_HIGHLIGHTED;
-            else if (_state == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_PRESSED;
+            uint16_t color = GRAPHICS_UI_COLOR_RELEASED;
+            if (_state == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_HIGHLIGHTED;
+            else if (_state == GRAPHICS_UI_PRESSED) color = GRAPHICS_UI_COLOR_PRESSED;
             graphics->drawRectangle(x+uiX, y+uiY, width, height, color, 1);
         }
     }
@@ -114,28 +115,36 @@ uint8_t ArduRCT_GraphicsUIElement::getId() {
     return _id;
 }
 
-// called when the item is selected (enter is pressed, or item is touched)
-// returns another element changed if any
-ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIElement::enter() {
+// called when an item is selected
+void ArduRCT_GraphicsUIElement::select() {
     _state = GRAPHICS_UI_SELECTED;
+}
+
+// called when an item is unselected
+void ArduRCT_GraphicsUIElement::unselect() {
+    _state = GRAPHICS_UI_UNSELECTED;
+}
+
+// called when the item is pressed (enter is pressed, or item is touched)
+// returns another element changed if any
+ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIElement::press() {
+    _value = GRAPHICS_UI_PRESSED;
+    if (_state < GRAPHICS_UI_PRESSED) _state = GRAPHICS_UI_PRESSED;
+    if (!repeatable) return 0;
+    _state ++;
+    if (_state > GRAPHICS_UI_REPEATED) _state = GRAPHICS_UI_REPEATED;
     return 0;
 }
 
 // called when the item is touched with a pen
 // returns another element changed if any
 ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIElement::touch(int16_t touchX, int16_t touchY) {
-    return enter();
+    return press();
 }
 
 // called when the touch is released
 // return true if the element needs to be escaped after release
 bool ArduRCT_GraphicsUIElement::release() {
-    return true;
-}
-
-// called when the item is escaped
-// return true if the element needs to be run after escape
-bool ArduRCT_GraphicsUIElement::escape() {
     _state = GRAPHICS_UI_RELEASED;
     return true;
 }
@@ -152,8 +161,5 @@ bool ArduRCT_GraphicsUIElement::decrease() {
     return false;
 }
 
-void ArduRCT_GraphicsUIElement::highlight() {
-    _state = GRAPHICS_UI_HIGHLIGHTED;
-}
 
 #endif

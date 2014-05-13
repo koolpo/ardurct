@@ -30,10 +30,10 @@
 class ArduRCT_GraphicsUITab : public ArduRCT_GraphicsUIOption {
     
     public:
-        ArduRCT_GraphicsUITab(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group) ;
+        ArduRCT_GraphicsUITab(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value), uint8_t group) ;
 
         ArduRCT_GraphicsUITab(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-                bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group);
+                bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value), uint8_t group);
 
         virtual void autoSize(ArduRCT_Graphics *graphics);
 

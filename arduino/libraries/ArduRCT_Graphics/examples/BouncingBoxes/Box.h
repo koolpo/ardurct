@@ -49,16 +49,16 @@ class Box {
         void checkBoxCollisions(Box *box);
 
     protected:
-        int16_t _x;
-        int16_t _y;
-        int16_t _xSpeed;
-        int16_t _ySpeed;
-        uint16_t _size;
-        int16_t _xDraw;
-        int16_t _yDraw;
+        int16_t x;
+        int16_t y;
+        int16_t xSpeed;
+        int16_t ySpeed;
 
     private:
         uint16_t _color;
+        int16_t _xDraw;
+        int16_t _yDraw;
+        uint16_t _size;
 };
 
 #endif

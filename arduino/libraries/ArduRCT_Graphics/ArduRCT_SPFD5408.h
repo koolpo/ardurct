@@ -26,33 +26,13 @@
 #ifndef SPFD5408_HPP
 #define SPFD5408_HPP
 
-// only define the connections if not defined before
-#ifndef SPFD5408_DATA_OUT_PORT
-#define SPFD5408_DATA_OUT_PORT PORTB
-#define SPFD5408_DATA_IN_PORT PINB
-#define SPFD5408_DATA_DDR_PORT DDRB
-#define SPFD5408_WR_PORT PORTC
-#define SPFD5408_WR_PIN 23
-#define SPFD5408_RD_PIN 21
-#define SPFD5408_CD_PIN 22
-#define SPFD5408_CS_PIN 31
-#define SPFD5408_RESET_PIN 0xFF
-#define SPFD5408_SPI_ON_BUS true
-#endif
-// same for backlight
-#ifndef SPFD5408_BACKLIGHT_PIN
-#define SPFD5408_BACKLIGHT_PIN 5
-#endif
-
 #include "ArduRCT_Graphics.h"
 
 class ArduRCT_SPFD5408: public ArduRCT_Graphics {
     
 	public:
 		ArduRCT_SPFD5408();
-		
-        uint16_t getChipId();
-        
+		       
 	protected:
 		// see ArduRCT_Graphics
 		void initScreenImpl();
@@ -65,9 +45,6 @@ class ArduRCT_SPFD5408: public ArduRCT_Graphics {
 		void unselectScreenImpl();		
 
 	private:
-		uint8_t _wrPortLowWR;
-		uint8_t _wrPortHighWR;
-		
         void _writeRegister(uint8_t reg, uint16_t data);
 		void _setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy);
 };

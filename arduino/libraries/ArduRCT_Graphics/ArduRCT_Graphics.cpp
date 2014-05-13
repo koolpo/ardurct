@@ -30,18 +30,20 @@ ArduRCT_Graphics::ArduRCT_Graphics(void) {
 }
 
 void ArduRCT_Graphics::setupScreen(uint8_t cd, uint8_t wr, uint8_t rd, uint8_t cs, uint8_t reset, bool spiOnBus) {    
-    _rdPort = portOutputRegister(digitalPinToPort(rd));
-    _rdHigh = digitalPinToBitMask(rd);
-    _rdLow = ~_rdHigh;
-    _wrPort = portOutputRegister(digitalPinToPort(wr));
-    _wrHigh = digitalPinToBitMask(wr);
-    _wrLow = ~_wrHigh;
-    _cdPort = portOutputRegister(digitalPinToPort(cd));
+#ifdef __AVR__
+    _rdPortPtr = portOutputRegister(digitalPinToPort(rd));
+    _rdHighBitMask = digitalPinToBitMask(rd);
+    _rdLowBitMask = ~_rdHighBitMask;
+    _wrPortPtr = portOutputRegister(digitalPinToPort(wr));
+    _wrHighBitMask = digitalPinToBitMask(wr);
+    _wrLowBitMask = ~_wrHighBitMask;
+    _cdPortPtr = portOutputRegister(digitalPinToPort(cd));
     _cdBitMask = digitalPinToBitMask(cd);
     if (cs != 0xFF) {
-        _csPort = portOutputRegister(digitalPinToPort(cs));
+        _csPortPtr = portOutputRegister(digitalPinToPort(cs));
         _csBitMask = digitalPinToBitMask(cs);
     }
+#endif
     _rd = rd;
     _wr = wr;
     _cd = cd;
@@ -56,12 +58,14 @@ void ArduRCT_Graphics::setupScreen(uint8_t cd, uint8_t wr, uint8_t rd, uint8_t c
 }
 
 void ArduRCT_Graphics::setupScreen(uint8_t cd, uint8_t cs, uint8_t reset) {    
-    _cdPort = portOutputRegister(digitalPinToPort(cd));
+#ifdef __AVR__
+    _cdPortPtr = portOutputRegister(digitalPinToPort(cd));
     _cdBitMask = digitalPinToBitMask(cd);
     if (cs != 0xFF) {
-        _csPort = portOutputRegister(digitalPinToPort(cs));
+        _csPortPtr = portOutputRegister(digitalPinToPort(cs));
         _csBitMask = digitalPinToBitMask(cs);
     }
+#endif
     _rd = 0xFF;
     _wr = 0xFF;
     _cd = cd;
@@ -85,18 +89,24 @@ void ArduRCT_Graphics::setupBacklight(uint8_t backlightPin) {
 
 void ArduRCT_Graphics::begin(uint16_t foregroundColor, uint16_t backgroundColor, uint8_t fontSize, bool fontBold, bool fontOverlay) {
     pinMode(_cd, OUTPUT);
-    if (_rd != 0xFF) pinMode(_rd, OUTPUT);
-    if (_rd != 0xFF) pinMode(_wr, OUTPUT);
-    if (_cs != 0xFF) pinMode(_cs, OUTPUT);
-    
+    pinMode(_rd, OUTPUT);
+    pinMode(_wr, OUTPUT);
+    digitalWrite(_cd, HIGH);
+    digitalWrite(_rd, HIGH);
+    digitalWrite(_wr, HIGH);
+    if (_cs != 0xFF)  pinMode(_cs, OUTPUT);
+
     selectScreenImpl();
+#ifdef __AVR__    
     // if we have a reset pin set to 0xFF, the RD and WR have been OR'ed to create the reset
     // they have to be on the same port for this to work
     if (_reset == 0xFF) {
-        *_rdPort &= ~(_rdHigh | _wrHigh);
+        *_rdPortPtr &= ~(_rdHighBitMask | _wrHighBitMask);
         delay(20);
-        *_rdPort |= (_rdHigh | _wrHigh);
-    } else if (_reset < 100) {
+        *_rdPortPtr |= (_rdHighBitMask | _wrHighBitMask);
+    } 
+#endif
+    if (_reset < 100) {
         if (_cs != 0xFF) digitalWrite(_cs, LOW);
         pinMode(_reset, OUTPUT);
         digitalWrite(_reset, HIGH);
@@ -568,7 +578,7 @@ void ArduRCT_Graphics::drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, 
 
     if (selectAndUnselectScreen) selectScreenImpl();    
     while (1) {
-        if (thickness == 1) drawPixelImpl(x1, y1, color);
+        if (thickness == 1) _drawBoundedPixel(x1, y1, color);
         else _fillBoundedArea(x1-d1, y1-d1, x1+d2, y1+d2, color);
         if ((x1 == x2) && (y1 == y2)) break;
         int16_t e2 = 2 * err;
@@ -594,6 +604,9 @@ void ArduRCT_Graphics::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t 
 }
 
 void ArduRCT_Graphics::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color, bool selectAndUnselectScreen) {
+    int16_t a, b, y, last;
+
+    // Sort coordinates by Y order (y2 >= y1 >= y0)
     if (y0 > y1) {
         swap(y0, y1); 
         swap(x0, x1);
@@ -607,33 +620,57 @@ void ArduRCT_Graphics::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t 
         swap(x0, x1);
     }
 
-    int32_t dx1, dx2, dx3;
-    int32_t sx1, sx2, sy;
-
-    sx2 = (int32_t)x0 * (int32_t)1000;
-    sx1 = sx2;
-    sy = y0;
-
-    // Calculate interpolation deltas
-    if (y1-y0 > 0) dx1 = ((x1-x0)*1000)/(y1-y0);
-    else dx1 = 0;
-    if (y2-y0 > 0) dx2 = ((x2-x0)*1000)/(y2-y0);
-    else dx2 = 0;
-    if (y2-y1 > 0) dx3 = ((x2-x1)*1000)/(y2-y1);
-    else dx3 = 0;
-
-    // Render scanlines 
     if (selectAndUnselectScreen) selectScreenImpl();    
-    if (dx1 > dx2) {
-        for (; sy<=y1; sy++, sx1+=dx2, sx2+=dx1) _fillBoundedArea(sx1/1000, sy, sx2/1000, sy, color);
-        sx2 = x1 * 1000;
-        sy = y1;
-        for (; sy<=y2; sy++, sx1+=dx2, sx2+=dx3) _fillBoundedArea(sx1/1000, sy, sx2/1000, sy, color);
-    } else {
-        for (; sy<=y1; sy++, sx1+=dx1, sx2+=dx2) _fillBoundedArea(sx1/1000, sy, sx2/1000, sy, color);
-        sx1 = x1 * 1000;
-        sy = y1;
-        for (; sy<=y2; sy++, sx1+=dx3, sx2+=dx2) _fillBoundedArea(sx1/1000, sy, sx2/1000, sy, color);
+    if (y0 == y2) { // Handle awkward all-on-same-line case as its own thing
+        a = b = x0;
+        if(x1 < a)      a = x1;
+        else if(x1 > b) b = x1;
+        if(x2 < a)      a = x2;
+        else if(x2 > b) b = x2;
+        _fillBoundedArea(a, y, b, y, color);
+        if (selectAndUnselectScreen) unselectScreenImpl();
+        return;
+    }
+
+    int16_t
+        dx01 = x1 - x0,
+        dy01 = y1 - y0,
+        dx02 = x2 - x0,
+        dy02 = y2 - y0,
+        dx12 = x2 - x1,
+        dy12 = y2 - y1,
+        sa   = 0,
+        sb   = 0;
+
+    // For upper part of triangle, find scanline crossings for segments
+    // 0-1 and 0-2.  If y1=y2 (flat-bottomed triangle), the scanline y1
+    // is included here (and second loop will be skipped, avoiding a /0
+    // error there), otherwise scanline y1 is skipped here and handled
+    // in the second loop...which also avoids a /0 error here if y0=y1
+    // (flat-topped triangle).
+    if (y1 == y2) last = y1;   // Include y1 scanline
+    else         last = y1-1; // Skip it
+
+    for (y=y0; y<=last; y++) {
+        a   = x0 + sa / dy01;
+        b   = x0 + sb / dy02;
+        sa += dx01;
+        sb += dx02;
+        if (a > b) swap(a,b);
+        _fillBoundedArea(a, y, b, y, color);
+    }
+
+    // For lower part of triangle, find scanline crossings for segments
+    // 0-2 and 1-2.  This loop is skipped if y1=y2.
+    sa = dx12 * (y - y1);
+    sb = dx02 * (y - y0);
+    for(; y<=y2; y++) {
+        a   = x1 + sa / dy12;
+        b   = x0 + sb / dy02;
+        sa += dx12;
+        sb += dx02;
+        if (a > b) swap(a,b);
+        _fillBoundedArea(a, y, b, y, color);
     }
     if (selectAndUnselectScreen) unselectScreenImpl();
 }
@@ -768,6 +805,19 @@ void ArduRCT_Graphics::drawPattern(uint8_t *pattern, uint8_t orientation, int16_
     if (selectAndUnselectScreen) unselectScreenImpl();
 }
 
+void ArduRCT_Graphics::startDoubleBuffering(uint16_t *buffer, uint16_t bufferWidth, uint16_t bufferHeight) {
+    _buffer = buffer;
+    _bufferWidth = bufferWidth;
+    _bufferHeight = bufferHeight;
+}
+
+void ArduRCT_Graphics::pasteDoubleBuffer(int16_t x, int16_t y, bool selectAndUnselectScreen) {
+    if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height)) return;
+    if (selectAndUnselectScreen) selectScreenImpl();
+    pasteBitmapImpl(_buffer, x, y, _bufferWidth, _bufferHeight);
+    if (selectAndUnselectScreen) unselectScreenImpl();
+}
+
 
 /* ---------------- Protected functions ------------------------ */
 // the following functions are overwritten by the implementing class
@@ -861,8 +911,20 @@ void ArduRCT_Graphics::_drawPatternPixelPerPixel(uint16_t *buffer, int16_t x, in
 
 void ArduRCT_Graphics::_fillBoundedArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
     if (x2 < x1) swap(x1, x2);
-    if (x1 >= _width) return;
     if (y2 < y1) swap(y1, y2);
+    if (_buffer) {
+        if (x1 >= _bufferWidth) return;
+        if (y1 >= _bufferHeight) return;
+        if (x1 < 0) x1 = 0;
+        if (x2 >= _bufferHeight) x2 = _bufferWidth-1;
+        if (y1 < 0) y1 = 0;
+        if (y2 >= _bufferHeight) y2 = _bufferHeight-1;
+        for (int y=y1; y<=y2; y++) {
+            for (int x=x1; x<=x2; x++) _buffer[y*_bufferWidth+x] = color;
+        }
+        return;
+    }
+    if (x1 >= _width) return;
     if (y1 >= _height) return;
     if (x1 < 0) x1 = 0;
     if (x2 >= _width) x2 = _width-1;
@@ -873,9 +935,11 @@ void ArduRCT_Graphics::_fillBoundedArea(int16_t x1, int16_t y1, int16_t x2, int1
 
 
 void ArduRCT_Graphics::_drawBoundedPixel(int16_t x, int16_t y, uint16_t color) {
-    if ((x < 0) || (x >= _width)) return;
-    if ((y < 0) || (y >= _height)) return;
-    drawPixelImpl(x, y, color);
+    if ((x < 0) || (y < 0)) return;
+    if (_buffer) {
+        if ((x >= _bufferWidth) || (y >= _bufferHeight)) return;
+        _buffer[y*_bufferWidth+x] = color;
+    } else if ((x < _width) && (y < _height)) drawPixelImpl(x, y, color);
 }
 
 /*

@@ -23,34 +23,21 @@
  */
  
 #include <SPI.h>
-
-//#include <ArduRCT_S6D04H0.h>
-//ArduRCT_S6D04H0 graphics;
-
-#include <ArduRCT_SPFD5408.h>
-ArduRCT_SPFD5408 graphics;
-
-//#include <ArduRCT_ST7735.h>
-//ArduRCT_ST7735 graphics;
-
-#define BOX_SIZE 20
-#define BOX_SPEED_X 2
-#define BOX_SPEED_Y 3
-
-//#include <ArduRCT_ST7735.h>
-//ArduRCT_ST7735 graphics(10, 9 , 8, 5);         // graphics(CD, CS, RESET, BACKLIGHT)
-
-//#define BOX_SIZE 12
-//#define BOX_SPEED_X 1
-//#define BOX_SPEED_Y 2
+#include <ArduRCT_Graphics.h>
 
 #include "Box.h"
 
 #define BACKGROUND WHITE
-
 #define REFRESH_SCREEN_DELAY 50
-
 #define NB_BOXES 3
+#define BOX_SIZE 20
+#define BOX_SPEED_X 2
+#define BOX_SPEED_Y 3
+
+//ArduRCT_S6D04H0 graphics;
+//ArduRCT_SPFD5408 graphics;
+//ArduRCT_ST7735 graphics;
+ArduRCT_ILI9340 graphics;
 
 Box box[NB_BOXES];
 int16_t maxX;

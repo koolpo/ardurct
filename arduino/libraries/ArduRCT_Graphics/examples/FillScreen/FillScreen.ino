@@ -23,14 +23,11 @@
  */
 
 #include <SPI.h>
+#include <ArduRCT_Graphics.h>
 
-//#include <ArduRCT_S6D04H0.h>
 //ArduRCT_S6D04H0 graphics;
-
-#include <ArduRCT_SPFD5408.h>
-ArduRCT_SPFD5408 graphics;
-
-//#include <ArduRCT_ST7735.h>
+//ArduRCT_SPFD5408 graphics;
+ArduRCT_ILI9340 graphics;
 //ArduRCT_ST7735 graphics;
 
 void setup() {
@@ -38,20 +35,24 @@ void setup() {
 }
 
 void loop() {
-    uint32_t duration = millis();
+    uint32_t duration = micros();
+    
     delay(500);
     graphics.fillScreen(RED);
     delay(500);
     graphics.fillScreen(GREEN);
     delay(500);
-    graphics.fillScreen(BLUE);
+    graphics.fillScreen(BLUE);    
     delay(500);
     graphics.fillScreen(WHITE);
     delay(500);
     graphics.fillScreen(BLACK);
 	
-    duration = (millis() - duration)/5 - 500;
+    duration = (micros() - duration)/5 - 500000;
     graphics.setCursor(20, 20);
     graphics.print(duration);
-    graphics.print("ms");
+    graphics.print("us");
+    Serial.print(duration);
+    Serial.println("us");
+    delay(1000);
 }

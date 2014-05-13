@@ -28,12 +28,12 @@
 
 #include "ArduRCT_GraphicsUI.hpp"
 
-ArduRCT_GraphicsUITab::ArduRCT_GraphicsUITab(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group) {
+ArduRCT_GraphicsUITab::ArduRCT_GraphicsUITab(uint8_t id, char *label, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value), uint8_t group) {
     _init(id, group, label, 0, actionHandler);
 }
 
 ArduRCT_GraphicsUITab::ArduRCT_GraphicsUITab(uint8_t id, void (*drawHandler)(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height), 
-        bool (*actionHandler)(uint8_t elementId, int16_t value), uint8_t group) {
+        bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value), uint8_t group) {
     _init(id, group, 0, drawHandler, actionHandler);
 }
 
@@ -48,20 +48,21 @@ void ArduRCT_GraphicsUITab::autoSize(ArduRCT_Graphics *graphics) {
 void ArduRCT_GraphicsUITab::draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth) {
     uint16_t bgColor = graphics->getBackgroundColor();
     uint16_t color = GRAPHICS_UI_COLOR_RELEASED;
-    if (_value == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_BACKGROUND;
-    if (_state == GRAPHICS_UI_SELECTED) color = GRAPHICS_UI_COLOR_PRESSED;
+    if (_value == GRAPHICS_UI_PRESSED) color = GRAPHICS_UI_COLOR_BACKGROUND;
+    if (_state == GRAPHICS_UI_PRESSED) color = GRAPHICS_UI_COLOR_PRESSED;
     graphics->setBackgroundColor(color);
     int16_t xStart = 0;
     if ((getPrevious() == 0) || (getPrevious()->getGroup() != _group)) xStart = GRAPHICS_UI_TAB_LEFT_MARGIN;
     graphics->fillRectangle(xStart+uiX+x, uiY+y+1, width-xStart, height-1, color);
-    graphics->drawRectangle(xStart+uiX+x, uiY+y+1, width-xStart, height-1, 
-            _state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK, 1);	
+    uint16_t bColor = BLACK;
+    if (_state == GRAPHICS_UI_SELECTED || _state == GRAPHICS_UI_RELEASED) bColor = GRAPHICS_UI_COLOR_HIGHLIGHTED;
+    graphics->drawRectangle(xStart+uiX+x, uiY+y+1, width-xStart, height-1, bColor, 1);	
     int16_t lineY = uiY+y+height-1;
     if (xStart != 0) graphics->drawLine(uiX+x, lineY, uiX+x+xStart, lineY, BLACK, 1);
     // for the last tab, go to the end of the ui
     if ((getNext() == 0) || (getNext()->getGroup() != _group)) 
         graphics->drawLine(uiX+x+width, lineY, uiX+x+width+uiWidth, lineY, BLACK, 1);
-    if (_value == GRAPHICS_UI_SELECTED) 
+    if (_value == GRAPHICS_UI_PRESSED) 
         graphics->drawLine(uiX+x+xStart+1, lineY, uiX+x+width-2, lineY, WHITE, 1);
     if (_text) {
         uint8_t fontSize = getFontSize(_text);

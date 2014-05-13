@@ -87,11 +87,21 @@
 
 #define ST7735_DELAY 0x80
 
-// Since there is an overhead going to and from 12b mode, it is only worth doing if we have enough
-// pixels to draw in the area. 
-#define ST7735_SWITCH_TO_12B_COLORS_TRIGGER 64
+#ifdef __AVR__
+#define _clearCS() *_csPortPtr &= ~_csBitMask;
+#define _setCS() *_csPortPtr |= _csBitMask;
+#define _clearCD() *_cdPortPtr &= ~_cdBitMask;
+#define _setCD() *_cdPortPtr |= _cdBitMask;
+#define _spiWrite(data) { SPDR = data; while (!(SPSR & _BV(SPIF))); }
+#endif
 
-#define _spiWrite(d) { SPDR = d; while (!(SPSR & _BV(SPIF))); }
+#if defined(__arm__) && defined(CORE_TEENSY)
+#define _clearCS() digitalWriteFast(ST7735_CS_PIN, 0)
+#define _setCS() digitalWriteFast(ST7735_CS_PIN, 1)
+#define _clearCD() digitalWriteFast(ST7735_CD_PIN, 0)
+#define _setCD() digitalWriteFast(ST7735_CD_PIN, 1)
+#define _spiWrite(data) SPI.transfer(data)
+#endif
 
 ArduRCT_ST7735::ArduRCT_ST7735(void) {
     _widthImpl = ST7735_WIDTH;
@@ -148,10 +158,10 @@ void ArduRCT_ST7735::initScreenImpl(void) {
             delay(hundredth * 10);
         } else {
             _writeCommand(buffer[1]);
-            *_csPort &= ~_csBitMask;
+            _clearCS();
             for (uint8_t j=0; j<buffer[0]; j++) _spiWrite(buffer[2+j]);
             i += buffer[0]+1;
-            *_csPort |= _csBitMask;
+            _setCS();
         }
         i++;
     }
@@ -161,10 +171,10 @@ void ArduRCT_ST7735::initScreenImpl(void) {
 // we inline the function to go as fast as possible
 void ArduRCT_ST7735::drawPixelImpl(uint16_t x, uint16_t y, uint16_t color) {
     _setClippingRectangle(x, y, x, y);
-    *_csPort &= ~_csBitMask;
+    _clearCS();
     _spiWrite(color >> 8);
     _spiWrite(color);
-    *_csPort |= _csBitMask;
+    _setCS();
 }
 
 
@@ -179,13 +189,13 @@ void ArduRCT_ST7735::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_
         // switch to 12b mode
         // we will send nbPixels/2*3 instead of nbPixels*2 bytes: 33% improvment in speed
         _writeCommand(ST7735_COLMOD);
-        *_csPort &= ~_csBitMask;
+        _clearCS();
         _spiWrite(ST7735_COLMOD_12B);
-        *_csPort |= _csBitMask;    
+        _setCS();    
     }
 #endif
     _setClippingRectangle(lx, ly, hx, hy);
-    *_csPort &= ~_csBitMask;
+    _clearCS();
 #if defined(GRAPHICS_12B_COLORS_ALLOWED)
     if (nbPixels > ST7735_SWITCH_TO_12B_COLORS_TRIGGER) {
         // ensure the last pixel is drawn if nbPixels is odd
@@ -204,10 +214,10 @@ void ArduRCT_ST7735::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_
             _spiWrite(colM);
             _spiWrite(colL);
         }
-        *_csPort |= _csBitMask;
+        _setCS();
         // switch back to 16b mode
         _writeCommand(ST7735_COLMOD);
-        *_csPort &= ~_csBitMask;
+        _clearCS();
         _spiWrite(ST7735_COLMOD_16B);
     } else {
 #endif
@@ -221,7 +231,7 @@ void ArduRCT_ST7735::fillAreaImpl(uint16_t lx, uint16_t ly, uint16_t hx, uint16_
 #if defined(GRAPHICS_12B_COLORS_ALLOWED)
     }
 #endif
-    *_csPort |= _csBitMask;
+    _setCS();
 }
 
 
@@ -234,17 +244,17 @@ void ArduRCT_ST7735::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, u
     uint16_t nbPixels = width;
     nbPixels *= height;
     _setClippingRectangle(x, y, x+width-1, y+height-1); 
-    *_csPort &= ~_csBitMask;    
+    _clearCS();    
     for (uint16_t i=0; i<nbPixels; i++) {
         _spiWrite(bitmap[i] >> 8);
         _spiWrite(bitmap[i]);
     }
-    *_csPort |= _csBitMask;
+    _setCS();
 }
 
 void ArduRCT_ST7735::setRotationImpl(uint8_t rotation) {
     _writeCommand(ST7735_MADCTL);
-    *_csPort &= ~_csBitMask;    
+    _clearCS();    
     if (rotation == GRAPHICS_ROTATION_0) {
         _spiWrite(ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB);
     } else if (rotation == GRAPHICS_ROTATION_90) {
@@ -254,7 +264,7 @@ void ArduRCT_ST7735::setRotationImpl(uint8_t rotation) {
     } else if (rotation == GRAPHICS_ROTATION_270) {
         _spiWrite(ST7735_MADCTL_MX | ST7735_MADCTL_MV | ST7735_MADCTL_RGB);
     }
-    *_csPort |= _csBitMask;
+    _setCS();
 }
 
 
@@ -287,32 +297,32 @@ void ArduRCT_ST7735::invertDisplay(boolean invert) {
 void ArduRCT_ST7735::_writeCommand(uint8_t cmd) { 
     // change the C/D bit while unselected
     // switch to command mode
-    *_cdPort &= ~_cdBitMask;  
+    _clearCD();  
     // select the tft
-    *_csPort &= ~_csBitMask;
+    _clearCS();
     // write the command
     _spiWrite(cmd);
     // unselect the screen
-    *_csPort |= _csBitMask;
+    _setCS();
     // switch to data mode
-    *_cdPort |= _cdBitMask;  
+    _setCD();  
 }
 
 // define the zone we are going to write to
 void ArduRCT_ST7735::_setClippingRectangle(uint16_t lx, uint16_t ly, uint16_t hx, uint16_t hy) {
     _writeCommand(ST7735_CASET);
-    *_csPort &= ~_csBitMask;
+    _clearCS();
     _spiWrite(0);
     _spiWrite(lx);
     _spiWrite(0);
     _spiWrite(hx);
-    *_csPort |= _csBitMask;
+    _setCS();
     _writeCommand(ST7735_RASET);
-    *_csPort &= ~_csBitMask;
+    _clearCS();
     _spiWrite(0);
     _spiWrite(ly);
     _spiWrite(0);
     _spiWrite(hy);
-    *_csPort |= _csBitMask;
+    _setCS();
     _writeCommand(ST7735_RAMWR);
 }

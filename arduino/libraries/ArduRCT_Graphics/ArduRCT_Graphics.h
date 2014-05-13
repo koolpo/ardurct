@@ -22,8 +22,8 @@
  * THE SOFTWARE.
  */
 
-#ifndef ARDURCT_GRAPHICS_HPP
-#define ARDURCT_GRAPHICS_HPP 1
+#ifndef ARDURCT_GRAPHICS_H
+#define ARDURCT_GRAPHICS_H 1
 
 #if ARDUINO >= 100
  #include "Arduino.h"
@@ -112,6 +112,8 @@
 
 #define OVERLAY true
 #define NO_OVERLAY false
+
+#define stopDoubleBuffering() startDoubleBuffering(0, 0, 0)
 
 class ArduRCT_Graphics: public Print {
    
@@ -227,6 +229,10 @@ class ArduRCT_Graphics: public Print {
 		void drawPattern(uint8_t *pattern, uint8_t orientation, int16_t x, int16_t y, uint8_t width, uint8_t height, uint16_t color, uint16_t backColor, uint8_t scale = 1, bool overlay = false, bool selectAndUnselectScreen = true);
 
 		void fillScreen(uint16_t color, bool selectAndUnselectScreen = true);
+        
+        void startDoubleBuffering(uint16_t *buffer = 0, uint16_t bufferWidth = 0, uint16_t bufferHeight = 0);
+        
+        void pasteDoubleBuffer(int16_t x, int16_t y, bool selectAndUnselectScreen = true);
 
 #if defined(GRAPHICS_HAS_MACROS)
 		uint8_t *executeMacro(uint8_t *macro, int16_t x = 0, int16_t y = 0, uint16_t scaleMul = 1, uint16_t scaleDiv = 1, 
@@ -256,19 +262,26 @@ class ArduRCT_Graphics: public Print {
 		bool _isFontBold;
 		bool _isFontOverlay;
 		int8_t _thickness;
-		volatile uint8_t *_rdPort;
-		volatile uint8_t *_wrPort;
-		volatile uint8_t *_cdPort;
-		volatile uint8_t *_csPort;
+        uint16_t *_buffer;
+        uint16_t _bufferWidth;
+        uint16_t _bufferHeight;
+#ifdef __AVR__
+		volatile uint8_t *_rdPortPtr;
+		volatile uint8_t *_wrPortPtr;
+		volatile uint8_t *_cdPortPtr;
+		volatile uint8_t *_csPortPtr;
+		uint8_t _rdHighBitMask;
+		uint8_t _rdLowBitMask;
+		uint8_t _wrHighBitMask;
+		uint8_t _wrLowBitMask;
+		uint8_t _cdBitMask;
+		uint8_t _csBitMask;
+        uint8_t _wrLow;
+        uint8_t _wrHigh;
+#endif
 		uint8_t _rd;
 		uint8_t _wr;
 		uint8_t _cd;		
-		uint8_t _rdHigh;
-		uint8_t _rdLow;
-		uint8_t _wrHigh;
-		uint8_t _wrLow;
-		uint8_t _cdBitMask;
-		uint8_t _csBitMask;
 		uint8_t _cs;
 		uint8_t _reset;
 		uint8_t _backlightPin;
@@ -371,6 +384,13 @@ class ArduRCT_Graphics: public Print {
 #include "ArduRCT_GraphicsUILabel.hpp"
 #include "ArduRCT_GraphicsUIGauge.hpp"
 #include "ArduRCT_GraphicsUISlider.hpp"
+#include "ArduRCT_GraphicsUIToggle.hpp"
 #endif
+
+#include "ArduRCT_ILI9340.h"
+#include "ArduRCT_S6D04H0.h"
+#include "ArduRCT_SPFD5408.h"
+#include "ArduRCT_SPFD5408.h"
+#include "ArduRCT_ST7735.h"
 
 #endif

@@ -28,7 +28,7 @@
 
 #include "ArduRCT_GraphicsUI.hpp"
 
-ArduRCT_GraphicsUIValue::ArduRCT_GraphicsUIValue(uint8_t id, int16_t value, int16_t min, int16_t max, bool (*actionHandler)(uint8_t elementId, int16_t value), int16_t step, uint8_t radix) {
+ArduRCT_GraphicsUIValue::ArduRCT_GraphicsUIValue(uint8_t id, int16_t value, int16_t min, int16_t max, bool (*actionHandler)(uint8_t elementId, uint8_t state, int16_t value), int16_t step, uint8_t radix) {
     _id = id;
     _value = value;
     _actionHandler = actionHandler;
@@ -37,15 +37,16 @@ ArduRCT_GraphicsUIValue::ArduRCT_GraphicsUIValue(uint8_t id, int16_t value, int1
     _step = step;
     _radix = radix;
     editable = true;
+    repeatable = true;
     if (_step == 0) _step = 1;
 }
 
 void ArduRCT_GraphicsUIValue::draw(ArduRCT_Graphics *graphics, int16_t uiX, int16_t uiY, uint16_t uiWidth) {
     uint16_t bgColor = graphics->getBackgroundColor();
-    uint16_t color = (_state == GRAPHICS_UI_SELECTED ? GRAPHICS_UI_COLOR_SELECTED : GRAPHICS_UI_COLOR_RELEASED);
+    uint16_t color = (_state == GRAPHICS_UI_PRESSED ? GRAPHICS_UI_COLOR_SELECTED : GRAPHICS_UI_COLOR_RELEASED);
     graphics->setBackgroundColor(color);
     graphics->fillRectangle(x+uiX, y+uiY, width, height, color);
-    uint16_t hColor = (_state == GRAPHICS_UI_HIGHLIGHTED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK);
+    uint16_t hColor = (_state == GRAPHICS_UI_RELEASED || _state == GRAPHICS_UI_SELECTED || _state == GRAPHICS_UI_PRESSED ? GRAPHICS_UI_COLOR_HIGHLIGHTED : BLACK);
     graphics->drawRectangle(x+uiX, y+uiY, width, height, hColor, 1);
     if (_value < _max) graphics->fillCorner(uiX+x+width-2, uiY+y+1, 5, GRAPHICS_POSITION_SW, BLACK);
     if (_value > _min) graphics->fillCorner(uiX+x+1, uiY+y+height-2, 5, GRAPHICS_POSITION_NE, BLACK);
@@ -71,24 +72,21 @@ ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIValue::setValue(int16_t value) {
     return 0;
 }
 
-// called when the item is selected (enter is pressed, or item is touched)
-ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIValue::enter() {
-    _state = GRAPHICS_UI_SELECTED;
+// called when the item is pressed
+// return the element that was modified if any
+// we toggle the state on press
+ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIValue::press() {
+    if (_state == GRAPHICS_UI_PRESSED) _state = GRAPHICS_UI_RELEASED;
+    else _state = GRAPHICS_UI_PRESSED;
     return 0;
 }
 
 // called when the touch is released
 // return true if the element needs to be escaped after release
 bool ArduRCT_GraphicsUIValue::release() {
-    return false;
+    return (_state == GRAPHICS_UI_RELEASED);
 }
 
-// called when the item is escaped
-// return true if the element needs to be run after escape
-bool ArduRCT_GraphicsUIValue::escape() {
-    _state = GRAPHICS_UI_RELEASED;
-    return false;
-}
 
 // called when the item is selected and Up is pressed
 // return true if the value was increased
@@ -108,9 +106,6 @@ bool ArduRCT_GraphicsUIValue::decrease() {
     return true;
 }
 
-void ArduRCT_GraphicsUIValue::highlight() {
-    _state = GRAPHICS_UI_HIGHLIGHTED;
-}
 
 // called when the item is touched with a pen
 ArduRCT_GraphicsUIElement *ArduRCT_GraphicsUIValue::touch(int16_t touchX, int16_t touchY) {
