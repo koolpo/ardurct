@@ -25,13 +25,15 @@
 #include "ArduRCT_TouScruinoV2.hpp"
 
 ArduRCT_TouScruinoV2::ArduRCT_TouScruinoV2(ArduRCT_RealTimeClock *rtc, ArduRCT_TouchPanel *tp) {
-    setupScreen(SPFD5408_CD_PIN, SPFD5408_WR_PIN, SPFD5408_RD_PIN, SPFD5408_CS_PIN, SPFD5408_RESET_PIN, SPFD5408_SPI_ON_BUS);
-    setupBacklight(SPFD5408_BACKLIGHT_PIN);
+    _widthImpl = TOUSCRUINO_V2_WIDTH; \
+    _heightImpl = TOUSCRUINO_V2_HEIGHT; \
+    setupScreen(TOUSCRUINO_V2_CD_PIN, TOUSCRUINO_V2_WR_PIN, TOUSCRUINO_V2_RD_PIN, TOUSCRUINO_V2_CS_PIN, TOUSCRUINO_V2_RESET_PIN, TOUSCRUINO_V2_SPI_ON_BUS);
+    setupBacklight(TOUSCRUINO_V2_BACKLIGHT_PIN);
     registerRTC(rtc);
     if (tp != 0) registerTouchPanel(tp);
 }
 
-void ArduRCT_TouScruinoV2::setRotation(uint8_t rotation) {
+void ArduRCT_TouScruinoV2::setRotation(uint8_t rotation, bool selectAndUnselectScreen) {
     ArduRCT_Graphics::setRotation(rotation);
     if (getRegisteredTouchPanel() != 0) getRegisteredTouchPanel()->setRotation(rotation);
 }

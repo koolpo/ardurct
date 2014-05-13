@@ -25,6 +25,8 @@
 /**
  *  Demonstrates the use of the UI manager included in the Touscruino
  **/
+
+#define GRAPHICS_UI_ELEMENT_FONT FONT_HUGE
   
 #include <Wire.h>
 #include <SPI.h>
@@ -57,8 +59,8 @@ void loop() {
     Touscruino.manageEvents();
 }
 
-boolean isRed = false;
-boolean uiHandler(uint8_t elementId, int16_t value) {
+bool isRed = false;
+bool uiHandler(uint8_t elementId, uint8_t state, int16_t value) {
     isRed = !isRed;
     Touscruino.fillRectangle(80, 200, 80, 80, isRed ? RED : WHITE);
 }

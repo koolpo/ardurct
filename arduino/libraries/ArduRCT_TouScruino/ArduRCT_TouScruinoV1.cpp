@@ -28,8 +28,8 @@
 
 ArduRCT_TouScruinoV1::ArduRCT_TouScruinoV1(ArduRCT_RealTimeClock *rtc,
             ArduRCT_Switch *up, ArduRCT_Switch *down, ArduRCT_Switch *left, ArduRCT_Switch *right, ArduRCT_Switch *center) {
-    setupScreen(ST7735_CD_PIN, ST7735_CS_PIN, ST7735_RESET_PIN);
-    setupBacklight(ST7735_BACKLIGHT_PIN);
+    setupScreen(TOUSCRUINO_V1_CD_PIN, TOUSCRUINO_V1_CS_PIN, TOUSCRUINO_V1_RESET_PIN);
+    setupBacklight(TOUSCRUINO_V1_BACKLIGHT_PIN);
     registerSwitch(up);
     registerSwitch(down);
     registerSwitch(right);

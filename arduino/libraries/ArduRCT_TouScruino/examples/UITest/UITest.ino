@@ -149,13 +149,15 @@ void loop() {
 }
 
 // handle the actions created by the UI
-bool handleActions(uint8_t elementId, int16_t value) {
-    if (elementId == TAB2) Touscruino.setGraphicsUIScreen(&screen2);
-    else if (elementId == TAB1) Touscruino.setGraphicsUIScreen(&screen1);
-    else if (elementId == MENU) Touscruino.setGraphicsUIScreen(&menu);
-    else if (elementId == POPUP) Touscruino.setGraphicsUIScreen(&popup);
-    else if ((elementId >= 50) && (elementId <= 63)) Touscruino.setGraphicsUIScreen(&screen1);
-    else if (elementId == 40) screen2.setElementValue(41, value);
+bool handleActions(uint8_t elementId, uint8_t state, int16_t value) {
+    if (state == GRAPHICS_UI_RELEASED) {
+        if (elementId == TAB2) Touscruino.setGraphicsUIScreen(&screen2);
+        else if (elementId == TAB1) Touscruino.setGraphicsUIScreen(&screen1);
+        else if (elementId == MENU) Touscruino.setGraphicsUIScreen(&menu);
+        else if (elementId == POPUP) Touscruino.setGraphicsUIScreen(&popup);
+        else if ((elementId >= 50) && (elementId <= 63)) Touscruino.setGraphicsUIScreen(&screen1);
+    }
+    if (elementId == 40) screen2.setElementValue(41, value);
     screenChanged = true;
     return false;
 }

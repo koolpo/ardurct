@@ -85,22 +85,31 @@ ArduRCT_EventHandler ArduRCT_TouscruinoGraphicsHandler(EVENT_SWITCH, EVENT_ANY_V
  *        - a touch panel, driven by the AR1021 controller
  **/
 #include <ArduRCT_TouScruinoV2.hpp>
-#include <ArduRCT_SPFD5408.h>
 
-int8_t touscruinoHandleGraphicsUI(uint8_t type, uint8_t value, int16_t x, int16_t y);
+int8_t touscruinoHandleGraphicsUI(uint8_t eventId, uint8_t value, int16_t x, int16_t y);
 
+#ifdef __AVR__
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
 ArduRCT_TouchPanel touscruinoTouchPanel(TOUSCRUINO_V2_TP_INT, TOUSCRUINO_V2_DRAG_TRIGGER, TOUSCRUINO_V2_WIDTH, TOUSCRUINO_V2_HEIGHT, TOUSCRUINO_EEPROM_TOUCHPANEL);
 #else
 ArduRCT_TouchPanel touscruinoTouchPanel(TOUSCRUINO_V2_TP_INT, TOUSCRUINO_V2_DRAG_TRIGGER, TOUSCRUINO_V2_WIDTH, TOUSCRUINO_V2_HEIGHT);
 #endif
+#endif
+
+#if defined(__arm__) && defined(CORE_TEENSY)
+#ifdef TOUCHPANEL_MATRIX_CALIBRATION
+ArduRCT_TouchPanel touscruinoTouchPanel(TOUSCRUINO_V2_TP_XP, TOUSCRUINO_V2_TP_XM, TOUSCRUINO_V2_TP_YP, TOUSCRUINO_V2_TP_YM, TOUSCRUINO_V2_DRAG_TRIGGER, TOUSCRUINO_V2_WIDTH, TOUSCRUINO_V2_HEIGHT, TOUSCRUINO_EEPROM_TOUCHPANEL);
+#else
+ArduRCT_TouchPanel touscruinoTouchPanel(TOUSCRUINO_V2_TP_XP, TOUSCRUINO_V2_TP_XM, TOUSCRUINO_V2_TP_YP, TOUSCRUINO_V2_TP_YM, TOUSCRUINO_V2_DRAG_TRIGGER, TOUSCRUINO_V2_WIDTH, TOUSCRUINO_V2_HEIGHT);
+#endif
+#endif
 
 ArduRCT_TouScruinoV2 Touscruino(&touscruinoRTC, &touscruinoTouchPanel);
 
-int8_t ArduRCT_TouscruinoV2HandleGraphicsUI(uint8_t type, uint8_t value, int16_t x, int16_t y) {
+int8_t ArduRCT_TouscruinoV2HandleGraphicsUI(uint8_t eventId, uint8_t value, int16_t x, int16_t y) {
     uint8_t actionId = 0;
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
-    if (type == EVENT_TOUCHPANEL_CALIBRATION) {
+    if (eventId == EVENT_TOUCHPANEL_CALIBRATION) {
         if (value == 1) Touscruino.setRotation(GRAPHICS_ROTATION_0); 
         Touscruino.fillScreen(WHITE);
         Touscruino.drawLine(x-10, y, x+10, y, BLACK, 3);
@@ -109,9 +118,10 @@ int8_t ArduRCT_TouscruinoV2HandleGraphicsUI(uint8_t type, uint8_t value, int16_t
         return EVENT_HANDLING_EXIT;
     }
 #endif
-    if (type == EVENT_TOUCHPANEL_PRESSED) actionId = GRAPHICS_UI_ACTION_TOUCH;
-    else if (type == EVENT_TOUCHPANEL_RELEASED) actionId = GRAPHICS_UI_ACTION_UNTOUCH;
-    else if (type == EVENT_TOUCHPANEL_DRAGGED) actionId = GRAPHICS_UI_ACTION_DRAG;
+    if (eventId == EVENT_TOUCHPANEL_PRESSED) actionId = GRAPHICS_UI_ACTION_TOUCH;
+    else if (eventId == EVENT_TOUCHPANEL_REPEAT_PRESSED) actionId = GRAPHICS_UI_ACTION_REPEAT_TOUCH;
+    else if (eventId == EVENT_TOUCHPANEL_RELEASED) actionId = GRAPHICS_UI_ACTION_UNTOUCH;
+    else if (eventId == EVENT_TOUCHPANEL_DRAGGED) actionId = GRAPHICS_UI_ACTION_DRAG;
     if (actionId == 0) return EVENT_HANDLING_DONE;
     if (Touscruino.handleGraphicsUI(actionId, x, y)) return EVENT_HANDLING_EXIT;
     return EVENT_HANDLING_DONE;

@@ -68,7 +68,12 @@ uint8_t penSize;
 int16_t penX;
 int16_t penY;
 
+boolean isSet = false;
+uint8_t counter = 0;
+
 void setup() {
+    Serial.begin(57600);
+    
     penColor = PEN_COLORS[0];
     penSize = penIdToSize(PEN_2);
     
@@ -78,19 +83,19 @@ void setup() {
     // this should be done before any other event handler registration 
     // to ensure the UI has the first go at any event
     Touscruino.enableGraphicsUI();
-    
+        
     // add a screen
     Touscruino.addScreen(&screen);
     // add the screen elements
     screen.addElement(&pen1, 0, 0, 30, 30);
     screen.addElement(&pen2, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
     screen.addElement(&pen3, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
-    screen.setElementValue(PEN_2, GRAPHICS_UI_SELECTED);
+    screen.setElementValue(PEN_2, GRAPHICS_UI_PRESSED);
     screen.addElement(&color1, GUI_ROPWM, GUI_SAP, 26, GUI_SAP);
     screen.addElement(&color2, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
     screen.addElement(&color3, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
     screen.addElement(&color4, GUI_ROP, GUI_SAP, GUI_SAP, GUI_SAP);
-    screen.setElementValue(COLOR_1, GRAPHICS_UI_SELECTED);
+    screen.setElementValue(COLOR_1, GRAPHICS_UI_PRESSED);
     screen.addElement(&blank, GUI_ROPWM, GUI_SAP, 31, GUI_SAP);
     
     // draw the screen
@@ -100,7 +105,7 @@ void setup() {
     Touscruino.registerEventHandler(&touchpanelHandler);
 }
 
-void loop() {
+void loop() {  
     Touscruino.manageEvents();
 }
 
@@ -122,14 +127,17 @@ int8_t handleTouchPanel(uint8_t eventType, uint8_t z, int16_t x, int16_t y) {
 
 // Draw the icon inside the button or option
 void uiDrawer(uint8_t id, uint8_t state, int16_t value, int16_t x, int16_t y, uint16_t width, uint16_t height) {
+    if ((id < BLANK) && (value == GRAPHICS_UI_PRESSED)) Touscruino.fillRectangle(x+1, y+1, width-2, height-2, GRAPHICS_UI_COLOR_PRESSED); 
     if (id < COLOR_1) Touscruino.drawLine(x+8+id-1, y+8+id-1, x+width-8-id+1, y+height-8-id+1, BLACK, id*3); 
     else if (id < BLANK) Touscruino.fillRectangle(x+5, y+5, width-10, height-10, PEN_COLORS[id-COLOR_1]); 
     else Touscruino.fillRectangle(x+5, y+5, width-10, height-10, WHITE); 
 }
 
 // Handle the UI: here changes the pen size, pen color or erases the screen
-bool uiHandler(uint8_t id, int16_t value) {
+bool uiHandler(uint8_t id, uint8_t state, int16_t value) {
+    if (state != GRAPHICS_UI_RELEASED) return true;
     if (id < COLOR_1) penSize = penIdToSize(id);
     else if (id < BLANK) penColor = PEN_COLORS[id-COLOR_1];
     else Touscruino.fillRectangle(0, screen.getElement(PEN_1)->height+1, Touscruino.getWidth(), Touscruino.getHeight()-screen.getElement(PEN_1)->height, WHITE); 
+    return true;
 }

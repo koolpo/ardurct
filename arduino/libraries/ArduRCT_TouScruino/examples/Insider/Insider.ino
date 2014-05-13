@@ -30,14 +30,23 @@
 #include <Wire.h>
 #include <ArduRCT_EventManager.h>
 #include <ArduRCT_Graphics.h>
-#include <ArduRCT_SPFD5408.h>
-#include <ArduRCT_TouchPanel.h>
+#include <ArduRCT_TouchPanel.hpp>
 #include <SPI.h>
 
+#define TP_INT_PIN 30
+#define TP_DRAG_TRIGGER 4
+#define TP_XP 24
+#define TP_YP 33
+#define TP_XM 26
+#define TP_YM 31
+#define TP_WIDTH 240
+#define TP_HEIGHT 320
+
 // define the graphics
-ArduRCT_SPFD5408 graphics;
+ArduRCT_ILI9340 graphics;
 // define the touchpanel
-ArduRCT_TouchPanel touchpanel;
+ArduRCT_TouchPanel touchpanel(TP_XP, TP_XM, TP_YP, TP_YM, TP_DRAG_TRIGGER, TP_WIDTH, TP_HEIGHT);
+//ArduRCT_TouchPanel touchpanel(TP_INT_PIN, TP_DRAG_TRIGGER, TP_WIDTH, TP_HEIGHT);
 
 int16_t x;
 int16_t y;

@@ -31,16 +31,23 @@
 #define TOUSCRUINO_V2_H 1
 
 #include "../ArduRCT_Graphics/ArduRCT_Graphics.h"
-#include "../ArduRCT_Graphics/ArduRCT_SPFD5408.h"
 #include "../ArduRCT_EventManager/ArduRCT_EventManager.h"
 #include "ArduRCT_TouScruino_Configuration.hpp"
 
+#ifdef __AVR__
+#include "../ArduRCT_Graphics/ArduRCT_SPFD5408.h"
 class ArduRCT_TouScruinoV2: public ArduRCT_SPFD5408, public ArduRCT_EventManager {
+#endif
+
+#if defined(__arm__) && defined(CORE_TEENSY)
+#include "../ArduRCT_Graphics/ArduRCT_ILI9340.h"
+class ArduRCT_TouScruinoV2: public ArduRCT_ILI9340, public ArduRCT_EventManager {
+#endif
 
 	public:
 		ArduRCT_TouScruinoV2(ArduRCT_RealTimeClock *rtc, ArduRCT_TouchPanel *tp);
         
-        void setRotation(uint8_t rotation);
+        virtual void setRotation(uint8_t rotation, bool selectAndUnselectScreen = true);
     
     private:
         ArduRCT_TouchPanel *_touchpanel;
