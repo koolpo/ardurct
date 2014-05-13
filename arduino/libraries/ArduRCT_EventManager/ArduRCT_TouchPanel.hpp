@@ -40,6 +40,16 @@
 #define TOUCHPANEL_ROTATION_180 2
 #define TOUCHPANEL_ROTATION_270 3
 
+#define TOUCHPANEL_NOT_INITIALIZED                  0
+#define TOUCHPANEL_CALIBRATION_REQUEST_CROSS_1      1
+#define TOUCHPANEL_CALIBRATION_WAIT_FOR_PENDOWN_1   11
+#define TOUCHPANEL_CALIBRATION_REQUEST_CROSS_2      2
+#define TOUCHPANEL_CALIBRATION_WAIT_FOR_PENDOWN_2   12
+#define TOUCHPANEL_CALIBRATION_REQUEST_CROSS_3      3
+#define TOUCHPANEL_CALIBRATION_WAIT_FOR_PENDOWN_3   13
+#define TOUCHPANEL_CALIBRATED                       0x55
+#define TOUCHPANEL_NOT_CALIBRATED                   0xFF
+
 typedef struct {
 	int32_t a;
 	int32_t b;
@@ -53,11 +63,15 @@ class ArduRCT_TouchPanel {
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
 		ArduRCT_TouchPanel(uint8_t interruptPin = TOUCHPANEL_EVENT_PIN, uint8_t dragTrigger = TOUCHPANEL_DRAG_TRIGGER, 
                 uint16_t width = TOUCHPANEL_WIDTH, uint16_t height = TOUCHPANEL_HEIGHT, uint16_t calibrationMatrixEepromAddress = 0xFFFF);
+
+		ArduRCT_TouchPanel(uint8_t xp, uint8_t xm, uint8_t yp, uint8_t ym, uint8_t dragTrigger = TOUCHPANEL_DRAG_TRIGGER, 
+                uint16_t width = TOUCHPANEL_WIDTH, uint16_t height = TOUCHPANEL_HEIGHT, uint16_t calibrationMatrixEepromAddress = 0xFFFF);
 #else
-		ArduRCT_TouchPanel(uint8_t interruptPin = TOUCHPANEL_EVENT_PIN, uint8_t dragTrigger = TOUCHPANEL_DRAG_TRIGGER, 
-                uint16_t width = TOUCHPANEL_WIDTH, uint16_t height = TOUCHPANEL_HEIGHT);
+		ArduRCT_TouchPanel(uint8_t interruptPin, uint8_t dragTrigger, uint16_t width, uint16_t height);
+
+		ArduRCT_TouchPanel(uint8_t xp, uint8_t xm, uint8_t yp, uint8_t ym, uint8_t dragTrigger, uint16_t width, uint16_t height);
 #endif
-		int8_t getPenXYZ(uint16_t *x = 0, uint16_t *y = 0, int8_t *z = 0);
+		int16_t getPenXYZ(int16_t *x = 0, int16_t *y = 0, int16_t *z = 0);
 		
 		uint8_t update();
 		
@@ -73,7 +87,7 @@ class ArduRCT_TouchPanel {
 		
 		int16_t getPenY();
 		
-		int8_t getPenZ();
+		int16_t getPenZ();
 
         void setRotation(uint8_t rotation);
 
@@ -92,16 +106,20 @@ class ArduRCT_TouchPanel {
         uint8_t _rotation;
 		int16_t _penX;
 		int16_t _penY;
-		int8_t _penZ;
+		int16_t _penZ;
         int16_t _touchX;
         int16_t _touchY;
-        int8_t _touchZ;
+        int16_t _touchZ;
         uint8_t _calibrationStatus;
         uint8_t _interruptPin;
         uint8_t _dragTrigger;
         uint16_t _width;
         uint16_t _height;
-        void (*_graphicsRotationHandler)(int16_t *x, int16_t *y);
+   		uint8_t _xm;
+		uint8_t _xp;
+		uint8_t _ym;
+		uint8_t _yp;
+
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
         uint16_t _calibrationMatrixEepromAddress;
         tsCalibrationEquation_t _xCalibrationEquation;
@@ -113,9 +131,9 @@ class ArduRCT_TouchPanel {
 		
 		int16_t _getTouchY();
 		
-		int8_t _getTouchZ();
+		int16_t _getTouchZ();
         
-        void _adjustTouchWithCalibration();
+        boolean _adjustTouchWithCalibration();
 
         uint8_t _calibrate();
 };

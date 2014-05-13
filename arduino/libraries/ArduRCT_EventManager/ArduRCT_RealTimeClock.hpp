@@ -77,6 +77,11 @@
 #define RTC_ALARM_ON 0x80
 #define RTC_ALARM_OFF 0x00
 
+#define RTC_DATE_STRING_DOW 0
+#define RTC_DATE_STRING_DAY 4
+#define RTC_DATE_STRING_MONTH 7
+#define RTC_DATE_STRING_YEAR 11
+
 typedef struct {
     uint8_t hour;
     uint8_t minute;
@@ -88,27 +93,29 @@ class ArduRCT_RealTimeClock {
         ArduRCT_RealTimeClock(bool hasMCP7941x = false);
         ArduRCT_RealTimeClock(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, bool hasMCP7941x = false);
         
+        void useEEPROMToStoreAlarms(uint16_t eepromAddress);
+        
         void setDate(uint16_t year, uint8_t month, uint8_t day);
         
         void setTime(uint8_t hour, uint8_t minute, uint8_t second);
-        
-        uint8_t getDayOfWeek(uint16_t year, uint8_t month, uint8_t day);
-        
+                
         void setDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
         
         bool updateTime();
         
         uint8_t getMonthLastDay(uint8_t year, uint8_t month);
+
+        uint8_t getDOW(uint16_t year, uint8_t month, uint8_t day);
         
-        void setAlarmTime(uint8_t dayOfWeek, uint8_t hour, uint8_t minute, uint8_t turnOn);
+        void setDOWAlarmTime(uint8_t dayOfWeek, uint8_t hour, uint8_t minute, uint8_t turnOn);
         
-        rtcAlarm_t *getAlarmTime(uint8_t dayOfWeek);
+        rtcAlarm_t *getDOWAlarmTime(uint8_t dayOfWeek);
         
-        void setAlarmOn(uint8_t dayOfWeek);
+        void setDOWAlarmOn(uint8_t dayOfWeek);
         
-        bool isAlarmOn(uint8_t dayOfWeek);
+        bool isDOWAlarmOn(uint8_t dayOfWeek);
         
-        void setAlarmOff(uint8_t dayOfWeek);
+        void setDOWAlarmOff(uint8_t dayOfWeek);
         
         void stopAlarm();
         
@@ -122,17 +129,21 @@ class ArduRCT_RealTimeClock {
         
         uint8_t getTimeDigit(uint8_t digit);
         
-        char *getDayOfWeekAsString();
+        uint8_t getDOWAlarmDigit(uint8_t dayOfWeek, uint8_t digit);
         
-        char *getDayOfWeekAsString(uint8_t dow);
+        char *getDOWAsString();
         
-        char *getDateAsString(uint16_t year, uint8_t month, uint8_t day, bool withDayOfWeek);
+        char *getDOWAsString(uint8_t dow);
         
-        char *getDateAsString(bool withDayOfWeek);
+        char *getDateAsString(uint16_t year, uint8_t month, uint8_t day, bool withDayOfWeek = false, char separator = ' ');
         
-        char *getTimeAsString(bool withSeconds);
+        char *getDateAsString(bool withDayOfWeek = false);
         
-        char *getAlarmTimeAsString(uint8_t dayOfWeek);
+        char *getTimeAsString(bool withSeconds = false);
+        
+        char *getDOWAlarmTimeAsString(uint8_t dayOfWeek, bool withDayOfWeek = false);
+        
+        char *getMonthAsString(uint8_t month);
         
         uint16_t getYear();
         
@@ -140,7 +151,7 @@ class ArduRCT_RealTimeClock {
         
         uint8_t getDay();
         
-        uint8_t getDayOfWeek();
+        uint8_t getDOW();
         
         uint8_t getHour();
         
@@ -168,6 +179,8 @@ class ArduRCT_RealTimeClock {
         int8_t _alarmStatus;
         rtcAlarm_t _alarm[7];
         char _buffer[18];
+        uint16_t _dayOfWeekAlarmsEEPROMAddress;
+
 #ifdef RTC_MCP7941X
         uint8_t _mcp7941xStatus;
 

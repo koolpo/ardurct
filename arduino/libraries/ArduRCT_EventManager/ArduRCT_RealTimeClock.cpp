@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  */
 #include <Wire.h>
+#include <avr/eeprom.h>
 
 #include "ArduRCT_RealTimeClock.hpp"
 
@@ -62,6 +63,7 @@ ArduRCT_RealTimeClock::ArduRCT_RealTimeClock(bool hasMCP7941x) {
 #ifdef RTC_MCP7941X
     if (hasMCP7941x) _mcp7941xStatus = RTC_MCP7941X_NOT_STARTED;
 #endif
+    _dayOfWeekAlarmsEEPROMAddress = 0xFFFF;
 }
 
 ArduRCT_RealTimeClock::ArduRCT_RealTimeClock(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, bool hasMCP7941x) {
@@ -74,6 +76,7 @@ ArduRCT_RealTimeClock::ArduRCT_RealTimeClock(uint16_t year, uint8_t month, uint8
 #ifdef RTC_MCP7941X
     if (hasMCP7941x) _mcp7941xStatus = RTC_MCP7941X_NOT_STARTED;
 #endif
+    _dayOfWeekAlarmsEEPROMAddress = 0xFFFF;
 }
 
 #ifdef RTC_MCP7941X
@@ -139,6 +142,17 @@ bool ArduRCT_RealTimeClock::updateTime() {
     return true;
 }
 
+void ArduRCT_RealTimeClock::useEEPROMToStoreAlarms(uint16_t eepromAddress) {
+    _dayOfWeekAlarmsEEPROMAddress = eepromAddress;
+    if (eepromAddress == 0xFFFF) return;
+    for (int i=0; i<7; i++) {
+        _alarm[i].hour = eeprom_read_byte((uint8_t *)(eepromAddress+i*2));
+        if ((_alarm[i].hour & ~RTC_ALARM_ON) > 23) _alarm[i].hour = 0;
+        _alarm[i].minute = eeprom_read_byte((uint8_t *)(eepromAddress+i*2+1));
+        if (_alarm[i].minute > 59) _alarm[i].minute = 0;
+    }
+}
+
 void ArduRCT_RealTimeClock::setDate(uint16_t year, uint8_t month, uint8_t day) {
     setDateTime(year, month, day, 0xFF, 0xFF, 0xFF);
 }
@@ -156,7 +170,7 @@ void ArduRCT_RealTimeClock::setDateTime(uint16_t year, uint8_t month, uint8_t da
         if (_day == 0) _day = 1;
         int mld = getMonthLastDay(_year, _month);
         if (_day > mld) _day = mld;
-        _dayOfWeek = getDayOfWeek(_year, _month, _day);
+        _dayOfWeek = getDOW(_year, _month, _day);
     }
     if (second != 0xFF) {    
         _hour = hour % 24;
@@ -184,15 +198,16 @@ void ArduRCT_RealTimeClock::setDateTime(uint16_t year, uint8_t month, uint8_t da
         Wire.write(decToBcd((uint8_t)(_year-RTC_MCP7941X_YEAR_OFFSET))); // set the year (11111111)
     }
     Wire.endTransmission();
+    delay(50);
     Wire.beginTransmission(RTC_MCP7941X_ADDRESS);
     Wire.write(RTC_MCP7941X_SECONDS);
-    Wire.write(0x80 | (decToBcd(_second) & 0x7f));        // set seconds and enable clock (11111111)
-    Wire.beginTransmission(RTC_MCP7941X_ADDRESS);
+    Wire.write(0x80 | decToBcd(_second));        // set seconds and enable clock (11111111)
+    Wire.endTransmission();
 #endif
 }
 
 
-uint8_t ArduRCT_RealTimeClock::getDayOfWeek(uint16_t year, uint8_t month, uint8_t day) {
+uint8_t ArduRCT_RealTimeClock::getDOW(uint16_t year, uint8_t month, uint8_t day) {
     uint8_t t[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
     uint16_t y = year;
     if (month < 3) y --;
@@ -208,27 +223,31 @@ uint8_t ArduRCT_RealTimeClock::getMonthLastDay(uint8_t year, uint8_t month) {
     return 29;
 }
 
-void ArduRCT_RealTimeClock::setAlarmTime(uint8_t dayOfWeek, uint8_t hour, uint8_t minute, uint8_t turnOn) {
+void ArduRCT_RealTimeClock::setDOWAlarmTime(uint8_t dayOfWeek, uint8_t hour, uint8_t minute, uint8_t turnOn) {
     if (dayOfWeek > 6) return;
     _alarm[dayOfWeek].hour = (hour % 24) + (turnOn != 0 ? RTC_ALARM_ON : 0);
     _alarm[dayOfWeek].minute = (minute % 60);
+    if (_dayOfWeekAlarmsEEPROMAddress != 0xFFFF) {
+        eeprom_write_byte((uint8_t *)(_dayOfWeekAlarmsEEPROMAddress+dayOfWeek*2), _alarm[dayOfWeek].hour);
+        eeprom_write_byte((uint8_t *)(_dayOfWeekAlarmsEEPROMAddress+dayOfWeek*2+1), _alarm[dayOfWeek].minute);
+    }
 }
         
-rtcAlarm_t *ArduRCT_RealTimeClock::getAlarmTime(uint8_t dayOfWeek) {
+rtcAlarm_t *ArduRCT_RealTimeClock::getDOWAlarmTime(uint8_t dayOfWeek) {
     if (dayOfWeek > 6) return 0;
     return &_alarm[dayOfWeek];
 }
         
-void ArduRCT_RealTimeClock::setAlarmOn(uint8_t dayOfWeek) {
+void ArduRCT_RealTimeClock::setDOWAlarmOn(uint8_t dayOfWeek) {
     if (dayOfWeek > 6) return;
     _alarm[dayOfWeek].hour |= RTC_ALARM_ON;
 }
 
-bool ArduRCT_RealTimeClock::isAlarmOn(uint8_t dayOfWeek) {
+bool ArduRCT_RealTimeClock::isDOWAlarmOn(uint8_t dayOfWeek) {
     return ((_alarm[dayOfWeek].hour & RTC_ALARM_ON) != 0);
 }
 
-void ArduRCT_RealTimeClock::setAlarmOff(uint8_t dayOfWeek) {
+void ArduRCT_RealTimeClock::setDOWAlarmOff(uint8_t dayOfWeek) {
     if (dayOfWeek > 6) return;
     _alarm[dayOfWeek].hour &= ~RTC_ALARM_ON;
 }
@@ -266,32 +285,47 @@ uint8_t ArduRCT_RealTimeClock::getTimeDigit(uint8_t digit) {
     if (digit == RTC_MINUTE10) return _minute / 10;
     if (digit == RTC_MINUTE1) return _minute % 10;
     if (digit == RTC_SECOND10) return _second / 10;
-    if (digit == RTC_SECOND1) return _second % 10;
+    return _second % 10;
 }
 
-char *ArduRCT_RealTimeClock::getDayOfWeekAsString() {
+uint8_t ArduRCT_RealTimeClock::getDOWAlarmDigit(uint8_t dayOfWeek, uint8_t digit) {
+    if (dayOfWeek > 6) return 0xFF;
+    if (digit > RTC_MINUTE1) return 0xFF;
+    if (digit == RTC_HOUR10) return (_alarm[dayOfWeek].hour & ~RTC_ALARM_ON) / 10;
+    if (digit == RTC_HOUR1) return (_alarm[dayOfWeek].hour & ~RTC_ALARM_ON) % 10;
+    if (digit == RTC_MINUTE10) return _alarm[dayOfWeek].minute / 10;
+    return _alarm[dayOfWeek].minute % 10;
+}
+
+char *ArduRCT_RealTimeClock::getDOWAsString() {
 #ifdef RTC_MCP7941X
     if (_mcp7941xStatus == RTC_MCP7941X_NOT_STARTED) _getMCP7941xTime();
 #endif
-    return getDayOfWeekAsString(_dayOfWeek);
+    return getDOWAsString(_dayOfWeek);
 }
 
-char *ArduRCT_RealTimeClock::getDayOfWeekAsString(uint8_t dow) {
+char *ArduRCT_RealTimeClock::getDOWAsString(uint8_t dow) {
     for (int i=0; i<3; i++) _buffer[i] = rtc_dayOfWeekString[dow*3+i];
     _buffer[3] = 0;
     return _buffer;
 }
 
-char *ArduRCT_RealTimeClock::getDateAsString(uint16_t year, uint8_t month, uint8_t day, bool withDayOfWeek) {
-    for (uint8_t i=0; i<(withDayOfWeek ? 15 : 11); i++) _buffer[i] = ' ';
+char *ArduRCT_RealTimeClock::getMonthAsString(uint8_t month) {
+    for (uint8_t i=0; i<3; i++) _buffer[i] = rtc_monthString[(month-1)*3+i];
+    _buffer[3] = 0;
+    return _buffer;
+}
+
+char *ArduRCT_RealTimeClock::getDateAsString(uint16_t year, uint8_t month, uint8_t day, bool withDayOfWeek, char separator) {
+    for (uint8_t i=0; i<(withDayOfWeek ? 15 : 11); i++) _buffer[i] = separator;
     _buffer[withDayOfWeek ? 15 : 11] = 0;
     uint8_t i = 0;
     if (withDayOfWeek) {
-        uint8_t dayOfWeek = getDayOfWeek(year, month, day);
+        uint8_t dayOfWeek = getDOW(year, month, day);
         for (int j=0; j<3; j++) _buffer[j] = rtc_dayOfWeekString[dayOfWeek*3+j];
         i = 4;
     }
-    if (day > 10) _buffer[i++] = (day / 10) + '0';
+    if (day >= 10) _buffer[i++] = (day / 10) + '0';
     else _buffer[i++] = ' ';
     _buffer[i++] = (day % 10) + '0';
     i++;
@@ -301,17 +335,18 @@ char *ArduRCT_RealTimeClock::getDateAsString(uint16_t year, uint8_t month, uint8
         _buffer[i++] = '-';
         year = -year;
     }
-    boolean yearStart = false;
+    boolean yearStarted = false;
     if (year > 1000) {
         _buffer[i++] = (year / 1000) + '0';
         year -= (year / 1000) * 1000;
-        yearStart = true;
+        yearStarted = true;
     }
-    if ((year > 100) || yearStart) {
+    if ((year > 100) || yearStarted) {
         _buffer[i++] = (year / 100) + '0';
         year -= (year / 100) * 100;
+        yearStarted = true;
     }
-    if ((year > 10) || yearStart) _buffer[i++] = (year / 10) + '0';
+    if ((year > 10) || yearStarted) _buffer[i++] = (year / 10) + '0';
     _buffer[i++] = (year % 10) + '0';
     return _buffer;
     
@@ -321,7 +356,7 @@ char *ArduRCT_RealTimeClock::getDateAsString(bool withDayOfWeek) {
 #ifdef RTC_MCP7941X
     if (_mcp7941xStatus == RTC_MCP7941X_NOT_STARTED) _getMCP7941xTime();
 #endif
-    return getDateAsString(_year, _month, _day, withDayOfWeek);
+    return getDateAsString(_year, _month, _day, withDayOfWeek, ' ');
 }
 
 char *ArduRCT_RealTimeClock::getTimeAsString(bool withSeconds) {
@@ -335,16 +370,22 @@ char *ArduRCT_RealTimeClock::getTimeAsString(bool withSeconds) {
     return _buffer;
 }
 
-char *ArduRCT_RealTimeClock::getAlarmTimeAsString(uint8_t dayOfWeek) {
+char *ArduRCT_RealTimeClock::getDOWAlarmTimeAsString(uint8_t dayOfWeek, bool withDayOfWeek) {
     if (dayOfWeek > 6) return 0;
+    uint8_t i = 0;
+    if (withDayOfWeek) {
+        for (int j=0; j<3; j++) _buffer[j] = rtc_dayOfWeekString[dayOfWeek*3+j];
+        _buffer[3] = ' ';
+        i = 4;
+    }
     uint8_t hour = (_alarm[dayOfWeek].hour & ~RTC_ALARM_ON);
-    if (hour / 10 > 0) _buffer[0] = hour/10 + '0';
-    else _buffer[0] = ' ';
-    _buffer[1] = (hour % 10) + '0';
-    _buffer[2] = RTC_TIME_SEPARATOR;
-    _buffer[3] = (_alarm[dayOfWeek].minute / 10) + '0';
-    _buffer[4] = (_alarm[dayOfWeek].minute % 10) + '0';
-    _buffer[5] = 0;
+    if (hour / 10 > 0) _buffer[i++] = hour/10 + '0';
+    else _buffer[i++] = ' ';
+    _buffer[i++] = (hour % 10) + '0';
+    _buffer[i++] = RTC_TIME_SEPARATOR;
+    _buffer[i++] = (_alarm[dayOfWeek].minute / 10) + '0';
+    _buffer[i++] = (_alarm[dayOfWeek].minute % 10) + '0';
+    _buffer[i++] = 0;
     return _buffer;
 }
 
@@ -369,7 +410,7 @@ uint8_t ArduRCT_RealTimeClock::getDay() {
     return _day;
 }
 
-uint8_t ArduRCT_RealTimeClock::getDayOfWeek() {
+uint8_t ArduRCT_RealTimeClock::getDOW() {
 #ifdef RTC_MCP7941X
     if (_mcp7941xStatus == RTC_MCP7941X_NOT_STARTED) _getMCP7941xTime();
 #endif

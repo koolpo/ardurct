@@ -24,6 +24,8 @@
  
 #include <Wire.h>
 
+//#define TOUCHPANEL_MANUAL_CALIBRATION 1
+
 #include "ArduRCT_TouchPanel.hpp"
 #include "ArduRCT_EventManager_Configuration.hpp"
 #include "ArduRCT_Events.hpp"
@@ -31,16 +33,6 @@
 #include <avr/eeprom.h>
 
 //#include "eepromUtils.hpp"
-
-#define TOUCHPANEL_NOT_INITIALIZED                  0
-#define TOUCHPANEL_CALIBRATION_REQUEST_CROSS_1      1
-#define TOUCHPANEL_CALIBRATION_WAIT_FOR_PENDOWN_1   11
-#define TOUCHPANEL_CALIBRATION_REQUEST_CROSS_2      2
-#define TOUCHPANEL_CALIBRATION_WAIT_FOR_PENDOWN_2   12
-#define TOUCHPANEL_CALIBRATION_REQUEST_CROSS_3      3
-#define TOUCHPANEL_CALIBRATION_WAIT_FOR_PENDOWN_3   13
-#define TOUCHPANEL_CALIBRATED                       0x55
-#define TOUCHPANEL_NOT_CALIBRATED                   0xFF
 
 #ifdef TOUCHPANEL_AR1021
 #define AR1021_ADDRESS  0x4D
@@ -50,6 +42,13 @@
 #define AR1021_Y_MAX    3900
 #endif
 
+#define TOUCHPANEL_X_MIN 880
+#define TOUCHPANEL_X_MAX 100
+#define TOUCHPANEL_Y_MIN 930
+#define TOUCHPANEL_Y_MAX 110
+#define TOUCHPANEL_TOUCH_TRIGGER 35
+#define TOUCHPANEL_DRAG_SPEED_ANOMALY 15
+
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
 ArduRCT_TouchPanel::ArduRCT_TouchPanel(uint8_t interruptPin, uint8_t dragTrigger, uint16_t width, uint16_t height, uint16_t calibrationMatrixEepromAddress) {
     _calibrationMatrixEepromAddress = calibrationMatrixEepromAddress;
@@ -57,6 +56,7 @@ ArduRCT_TouchPanel::ArduRCT_TouchPanel(uint8_t interruptPin, uint8_t dragTrigger
 ArduRCT_TouchPanel::ArduRCT_TouchPanel(uint8_t interruptPin, uint8_t dragTrigger, uint16_t width, uint16_t height) {
 #endif
     _interruptPin = interruptPin;
+    _xp = 0xFF;
     _width = width;
     _height = height;
     _dragTrigger = dragTrigger;
@@ -65,7 +65,6 @@ ArduRCT_TouchPanel::ArduRCT_TouchPanel(uint8_t interruptPin, uint8_t dragTrigger
     _touchX = TOUCHPANEL_NO_TOUCH;
     _touchY = TOUCHPANEL_NO_TOUCH;
     _touchZ = TOUCHPANEL_NO_TOUCH;    
-    _graphicsRotationHandler = 0;
     if (interruptPin == 0xFF) return; 
     
     pinMode(interruptPin, INPUT);
@@ -73,7 +72,37 @@ ArduRCT_TouchPanel::ArduRCT_TouchPanel(uint8_t interruptPin, uint8_t dragTrigger
 }
 
 
-int8_t ArduRCT_TouchPanel::getPenXYZ(uint16_t *x, uint16_t *y, int8_t *z) {
+#ifdef TOUCHPANEL_MATRIX_CALIBRATION
+ArduRCT_TouchPanel::ArduRCT_TouchPanel::ArduRCT_TouchPanel(uint8_t xp, uint8_t xm, uint8_t yp, uint8_t ym, uint8_t dragTrigger, 
+                uint16_t width = TOUCHPANEL_WIDTH, uint16_t height = TOUCHPANEL_HEIGHT, uint16_t calibrationMatrixEepromAddress) {
+#else
+ArduRCT_TouchPanel::ArduRCT_TouchPanel(uint8_t xp, uint8_t xm, uint8_t yp, uint8_t ym, uint8_t dragTrigger, uint16_t width, uint16_t height) {
+#endif
+    _interruptPin = 0xFF;
+    _xm = xm;
+    _xp = xp;
+    _ym = ym;
+    _yp = yp;
+    _width = width;
+    _height = height;
+    _dragTrigger = dragTrigger;
+    _state = EVENT_STATE_IDLE;
+    _calibrationStatus = TOUCHPANEL_NOT_INITIALIZED;
+    _touchX = TOUCHPANEL_NO_TOUCH;
+    _touchY = TOUCHPANEL_NO_TOUCH;
+    _touchZ = TOUCHPANEL_NO_TOUCH;    
+    if (_xp == 0xFF) return; 
+
+    pinMode(_xp, OUTPUT);
+    digitalWrite(_xp, LOW);
+    pinMode(_yp, OUTPUT);
+    digitalWrite(_yp, LOW);
+    pinMode(_xm, INPUT);
+    pinMode(_ym, INPUT);
+}
+
+
+int16_t ArduRCT_TouchPanel::getPenXYZ(int16_t *x, int16_t *y, int16_t *z) {
 	if (x != 0) *x = _penX;
 	if (y != 0) *y = _penY;
 	if (z != 0) *z = _penZ;
@@ -89,7 +118,8 @@ uint8_t ArduRCT_TouchPanel::update() {
 		return _state;
 	} 
 	if ((_state == EVENT_STATE_RELEASED) || (_state == EVENT_STATE_IDLE)) _state = EVENT_STATE_PRESSED;
-	else if ((abs(_penX-_touchX) > _dragTrigger) || (abs(_penY-_touchY) > _dragTrigger)) _state = EVENT_STATE_DRAGGED;
+    else if ((abs(_penX-_touchX) > TOUCHPANEL_DRAG_SPEED_ANOMALY) || (abs(_penY-_touchY) > TOUCHPANEL_DRAG_SPEED_ANOMALY)) _state = EVENT_STATE_PRESSED_MOTIONLESS;
+    else if ((abs(_penX-_touchX) > _dragTrigger) || (abs(_penY-_touchY) > _dragTrigger)) _state = EVENT_STATE_DRAGGED;
     else _state = EVENT_STATE_PRESSED_MOTIONLESS;
 	if (_state != EVENT_STATE_PRESSED_MOTIONLESS) {
 		_penX = _getTouchX();
@@ -123,7 +153,7 @@ int16_t ArduRCT_TouchPanel::getPenY() {
 	return _penY;
 }
 
-int8_t ArduRCT_TouchPanel::getPenZ() {
+int16_t ArduRCT_TouchPanel::getPenZ() {
 	return _penZ;
 }
 
@@ -170,36 +200,90 @@ int16_t ArduRCT_TouchPanel::_getTouchY() {
 	return _touchY;
 }
 
-int8_t ArduRCT_TouchPanel::_getTouchZ() {
+int16_t ArduRCT_TouchPanel::_getTouchZ() {
+    // check if we have a driver chip
+    if (_xp == 0xFF) {
 #ifdef TOUCHPANEL_AR1021
-    uint8_t packet[5];
-    if (digitalRead(_interruptPin) == 0) return TOUCHPANEL_NO_TOUCH;
-    Wire.requestFrom(AR1021_ADDRESS, 5);
-    for (uint8_t i=0; i<5; i++) packet[i] = Wire.read();
-    if (packet[0] & 0x01) {
-        // get the coordinates
-        _touchX = packet[2];
-        _touchX = _touchX << 7;
-        _touchX += packet[1];
-        _touchY = packet[4];
-        _touchY = _touchY << 7;
-        _touchY += packet[3];
-        _adjustTouchWithCalibration();
-    }
-    return (packet[0] & 0x01 ? 100 : TOUCHPANEL_NO_TOUCH);
-#else
-    return TOUCHPANEL_NO_TOUCH;
+        uint8_t packet[5];
+        if (digitalRead(_interruptPin) == 0) return TOUCHPANEL_NO_TOUCH;
+        Wire.requestFrom(AR1021_ADDRESS, 5);
+        for (uint8_t i=0; i<5; i++) packet[i] = Wire.read();
+        if (packet[0] & 0x01) {
+            // get the coordinates
+            _touchX = packet[2];
+            _touchX = _touchX << 7;
+            _touchX += packet[1];
+            _touchY = packet[4];
+            _touchY = _touchY << 7;
+            _touchY += packet[3];
+            if (!_adjustTouchWithCalibration()) return TOUCHPANEL_NO_TOUCH;
+        }
+        return (packet[0] & 0x01 ? 100 : TOUCHPANEL_NO_TOUCH);
 #endif
+    } else {
+#if defined(__arm__) && defined(CORE_TEENSY)
+        analogReference(EXTERNAL);
+        analogReadRes(10);
+#endif
+        // read Z:
+        // if the 2 ITO layers don't touch, the value will be 0 since XP is tied to ground
+        // else it will be a different value
+        pinMode(_xp, OUTPUT);
+        pinMode(_yp, OUTPUT);
+        digitalWrite(_yp, HIGH);
+        digitalWrite(_xp, LOW);
+        delay(1);
+        _touchZ = analogRead(_xm);
+        if (_touchZ < TOUCHPANEL_TOUCH_TRIGGER) return TOUCHPANEL_NO_TOUCH;
+        // read X
+        pinMode(_yp, INPUT);
+        pinMode(_xm, OUTPUT);
+        digitalWrite(_xp, HIGH);
+        digitalWrite(_xm, LOW);
+        delay(1);
+        _touchX = analogRead(_ym);
+        // read Y
+        pinMode(_xp, INPUT);
+        pinMode(_xm, INPUT);
+        digitalWrite(_xp, LOW);
+        pinMode(_yp, OUTPUT);
+        pinMode(_ym, OUTPUT);
+        digitalWrite(_yp, HIGH);
+        digitalWrite(_ym, LOW);
+        delay(1);
+        _touchY = analogRead(_xm);
+        // reset the reader: empty the capacitors on xm and ym
+        pinMode(_xp, OUTPUT);
+        digitalWrite(_yp, LOW);
+        digitalWrite(_xp, LOW);
+        pinMode(_xm, INPUT);
+        pinMode(_ym, INPUT);
+#ifdef TOUCHPANEL_MANUAL_CALIBRATION
+        Serial.print(_touchZ); Serial.print(" "); Serial.print(_touchX); Serial.print(" "); Serial.print(_touchY);
+#endif
+        if (!_adjustTouchWithCalibration()) return TOUCHPANEL_NO_TOUCH;
+#ifdef TOUCHPANEL_MANUAL_CALIBRATION
+        Serial.print(" -> "); Serial.print(_touchX); Serial.print(" "); Serial.println(_touchY);
+#endif
+        return _touchZ;
+    }
+    return TOUCHPANEL_NO_TOUCH;
 }
 
-void ArduRCT_TouchPanel::_adjustTouchWithCalibration() {
+boolean ArduRCT_TouchPanel::_adjustTouchWithCalibration() {
     if (_calibrationStatus == TOUCHPANEL_NOT_CALIBRATED) {
         if (_width > 0) {
+            if (_xp == 0xFF) {
 #ifdef TOUCHPANEL_AR1021
-            // experimental non calibrated, not very exact, but working
-            _touchX = map(_touchX, AR1021_X_MIN, AR1021_X_MAX, 0, _width-1);
-            _touchY = map(_touchY, AR1021_Y_MIN, AR1021_Y_MAX, 0, _height-1);
+                // experimental non calibrated, not very exact, but working
+                _touchX = map(_touchX, AR1021_X_MIN, AR1021_X_MAX, 0, _width-1);
+                _touchY = map(_touchY, AR1021_Y_MIN, AR1021_Y_MAX, 0, _height-1);
 #endif
+            } else {
+                _touchX = map(_touchX, TOUCHPANEL_X_MIN, TOUCHPANEL_X_MAX, 0, _width-1);
+                _touchY = map(_touchY, TOUCHPANEL_Y_MIN, TOUCHPANEL_Y_MAX, 0, _height-1);                
+            }
+            if ((_touchX < 0) || (_touchX >= _width) || (_touchY < 0) || (_touchY >= _height)) return false;
         }
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
     } else if (_calibrationStatus == TOUCHPANEL_CALIBRATED) {
@@ -210,21 +294,22 @@ void ArduRCT_TouchPanel::_adjustTouchWithCalibration() {
         _touchX = X;
         _touchY = Y;
 #endif        
-    } else return;
+    } else return true;
     // rotate the co-ordinates
-    if (_rotation == TOUCHPANEL_ROTATION_0) return;
+    if (_rotation == TOUCHPANEL_ROTATION_0) return true;
     if (_rotation == TOUCHPANEL_ROTATION_90) {
-        int16_t t = _width - 1 - _touchY;
-        _touchY = _touchX;
-        _touchX = t;
+        int16_t t = _width - 1 - _touchX;
+        _touchX = _touchY;
+        _touchY = t;
     } else if (_rotation == TOUCHPANEL_ROTATION_180) {
         _touchX = _width - 1 - _touchX;
         _touchY = _height - 1 - _touchY;
     } else if (_rotation == TOUCHPANEL_ROTATION_270) {
-        int16_t t = _touchY;
-        _touchY = _height - 1 - _touchX;
+        int16_t t = _touchX;
+        _touchX = _height - 1 - _touchY;
         _touchX = t;
     }
+    return true;
 }
 
 uint8_t ArduRCT_TouchPanel::_calibrate() {

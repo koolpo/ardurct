@@ -27,14 +27,23 @@
 
 #define LED_PIN 13
 #define TP_INT_PIN 30
-#define TP_DRAG_TRIGGER 40
+#define TP_DRAG_TRIGGER 4
+#define TP_XP 24
+#define TP_YP 33
+#define TP_XM 26
+#define TP_YM 31
+#define TP_WIDTH 240
+#define TP_HEIGHT 320
+
+int8_t handleTouchPanel(uint8_t eventType, uint8_t z, int16_t x, int16_t y);
 
 // define the eventManager
 ArduRCT_EventManager eventManager;
 // define the touchpanel
-ArduRCT_TouchPanel touchpanel;
+//ArduRCT_TouchPanel touchpanel(TP_XP, TP_XM, TP_YP, TP_YM, TP_DRAG_TRIGGER, TP_WIDTH, TP_HEIGHT);
+ArduRCT_TouchPanel touchpanel(TP_INT_PIN, TP_DRAG_TRIGGER, TP_WIDTH, TP_HEIGHT);
 // define an event handler for the touch panel
-ArduRCT_EventHandler touchpanelHandler(EVENT_TOUCHPANEL, EVENT_ANY_VALUE, 0, 0, &handleTouchPanel)
+ArduRCT_EventHandler touchpanelHandler(EVENT_TOUCHPANEL, EVENT_ANY_VALUE, 0, 0, &handleTouchPanel);
 
 void setup() {
     Serial.begin(57600);
@@ -55,8 +64,9 @@ void loop() {
 }
 
 int8_t handleTouchPanel(uint8_t eventType, uint8_t z, int16_t x, int16_t y) {
-    if (eventType == EVENT_TOUCHPANEL_PRESSED) {
+    if ((eventType == EVENT_TOUCHPANEL_PRESSED) || (eventType == EVENT_TOUCHPANEL_REPEAT_PRESSED)) {
         digitalWrite(LED_PIN, HIGH);
+        if (eventType == EVENT_TOUCHPANEL_REPEAT_PRESSED) Serial.print("R"); 
         Serial.print("P "); Serial.print(x); Serial.print(" "); Serial.println(y);
     } else if (eventType == EVENT_TOUCHPANEL_DRAGGED) {
         Serial.print("D "); Serial.print(x); Serial.print(" "); Serial.println(y);

@@ -84,11 +84,11 @@ void ArduRCT_EventManager::registerEventHandler(ArduRCT_EventHandler *handler) {
 	}
 }
 
-void ArduRCT_EventManager::manageEvents() {
+uint8_t ArduRCT_EventManager::manageEvents() {
     // check if we have to run or not
-    if ((int32_t)(millis() - _nextUpdate) < 0) return;
+    if ((int32_t)(millis() - _nextUpdate) < 0) return 0;
     _nextUpdate = millis() + EVENT_MANAGER_CYCLE;
-
+    
     // update the tick counter
     _tick ++;
     // and the handlers attached to it
@@ -131,7 +131,9 @@ void ArduRCT_EventManager::manageEvents() {
             uint8_t z = _touchPanel->getPenZ();
             if (_touchPanel->isPenPressed()) {
                 if (_touchPanel->isPenDragged()) processEvent(EVENT_TOUCHPANEL_DRAGGED, z, x, y);
-                else if (!_touchPanel->isPenPressedMotionless()) processEvent(EVENT_TOUCHPANEL_PRESSED, z, x, y);
+                else if (_touchPanel->isPenPressedMotionless()) {
+                    if ((_tick % EVENT_REPEATING_CYLES) == 0) processEvent(EVENT_TOUCHPANEL_REPEAT_PRESSED, z, x, y);
+                } else processEvent(EVENT_TOUCHPANEL_PRESSED, z, x, y);
             } else if (_touchPanel->isPenReleased()) processEvent(EVENT_TOUCHPANEL_RELEASED, 0, 0, 0);
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
         }
@@ -159,7 +161,8 @@ void ArduRCT_EventManager::manageEvents() {
         if (change != 0) processEvent(change > 0 ? EVENT_ENCODER_INCREASE : EVENT_ENCODER_DECREASE, anEncoder->getPinA(), value, change);
         anEncoder = anEncoder->getNext();
     }
-
+    
+    return 1;
 }
 
 int8_t ArduRCT_EventManager::processEvent(uint8_t type, uint8_t value) {
@@ -191,7 +194,7 @@ int8_t ArduRCT_EventManager::processEvent(uint8_t type, uint8_t value, uint16_t 
 void ArduRCT_EventManager::_updateTime() {
 	if (_rtc->updateTime()) {
 		processEvent(EVENT_TIME_SECOND, _rtc->getSecond());
-		if (_rtc->isAlarmStartingToRing()) processEvent(EVENT_TIME_ALARM, _rtc->getDayOfWeek());
+		if (_rtc->isAlarmStartingToRing()) processEvent(EVENT_TIME_ALARM, _rtc->getDOW());
 		if (_rtc->getSecond() == 0) {
 			processEvent(EVENT_TIME_MINUTE, _rtc->getMinute());
 			if (_rtc->getMinute() == 0) {

@@ -66,14 +66,14 @@ class ArduRCT_EventManager {
         
         void registerEventHandler(ArduRCT_EventHandler *handler);
         
-        void manageEvents();
+        uint8_t manageEvents();
         
         int8_t processEvent(uint8_t type, uint8_t value);
         
         int8_t processEvent(uint8_t type, uint8_t value, uint16_t x, uint16_t y);
 
     private:
-        uint32_t _nextUpdate;
+        unsigned long _nextUpdate;
         uint8_t _tick;
         ArduRCT_RealTimeClock *_rtc;
         ArduRCT_Switch *_switch;

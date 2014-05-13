@@ -29,6 +29,10 @@
 // a value betweeen 20 and 50 is recommended
 #define EVENT_MANAGER_CYCLE 25
 
+// define the how many cycles between repeating when repeating or fast repeating
+#define EVENT_REPEATING_CYLES 10
+#define EVENT_FAST_REPEATING_CYLES 3
+
 // number of samples to average while reading analog values
 // the higher the value, the higher the dampening of change,
 // value should be between 1 and 6

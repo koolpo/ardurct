@@ -90,10 +90,10 @@ bool ArduRCT_Switch::isRepeating() {
 	if (_state < EVENT_STATE_REPEATING) return false;
 	// after SWITCH_STATE_FAST_REPEATING * EVENT_MANAGER_CYCLE = 4 seconds
 	if (_state >= EVENT_STATE_FAST_REPEATING) {
-		// indicate a repeat every 5 * EVENT_MANAGER_CYCLE = 250ms
-		if ((_state % 5) == 0) return true;
+		// indicate a repeat every EVENT_FAST_REPEATING_CYLES * EVENT_MANAGER_CYCLE = 250ms
+		if ((_state % EVENT_FAST_REPEATING_CYLES) == 0) return true;
 	// after SWITCH_STATE_REPEATING * EVENT_MANAGER_CYCLE = 1 seconds
-	// indicate a repeat every 10 * EVENT_MANAGER_CYCLE = 500ms
-	} else if ((_state % 10) == 0) return true;
+	// indicate a repeat every EVENT_REPEATING_CYLES * EVENT_MANAGER_CYCLE = 500ms
+	} else if ((_state % EVENT_REPEATING_CYLES) == 0) return true;
 	return false;
 }
