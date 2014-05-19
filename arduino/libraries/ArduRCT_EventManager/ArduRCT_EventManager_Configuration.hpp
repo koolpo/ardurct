@@ -45,7 +45,7 @@
 #define TOUCHPANEL_AR1021 1
 #endif
 // comment out the following to disable matrix calibration
-//#define TOUCHPANEL_MATRIX_CALIBRATION 1
+#define TOUCHPANEL_MATRIX_CALIBRATION 1
 // define a default hardware
 #define TOUCHPANEL_WIDTH 240
 #define TOUCHPANEL_HEIGHT 320

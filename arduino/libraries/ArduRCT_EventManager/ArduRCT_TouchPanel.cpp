@@ -24,7 +24,7 @@
  
 #include <Wire.h>
 
-//#define TOUCHPANEL_MANUAL_CALIBRATION 1
+//#define TOUCHPANEL_DEBUG 1
 
 #include "ArduRCT_TouchPanel.hpp"
 #include "ArduRCT_EventManager_Configuration.hpp"
@@ -73,8 +73,8 @@ ArduRCT_TouchPanel::ArduRCT_TouchPanel(uint8_t interruptPin, uint8_t dragTrigger
 
 
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
-ArduRCT_TouchPanel::ArduRCT_TouchPanel::ArduRCT_TouchPanel(uint8_t xp, uint8_t xm, uint8_t yp, uint8_t ym, uint8_t dragTrigger, 
-                uint16_t width = TOUCHPANEL_WIDTH, uint16_t height = TOUCHPANEL_HEIGHT, uint16_t calibrationMatrixEepromAddress) {
+ArduRCT_TouchPanel::ArduRCT_TouchPanel::ArduRCT_TouchPanel(uint8_t xp, uint8_t xm, uint8_t yp, uint8_t ym, uint8_t dragTrigger, uint16_t width, uint16_t height, uint16_t calibrationMatrixEepromAddress) {
+    _calibrationMatrixEepromAddress = calibrationMatrixEepromAddress;
 #else
 ArduRCT_TouchPanel::ArduRCT_TouchPanel(uint8_t xp, uint8_t xm, uint8_t yp, uint8_t ym, uint8_t dragTrigger, uint16_t width, uint16_t height) {
 #endif
@@ -163,7 +163,7 @@ void ArduRCT_TouchPanel::setRotation(uint8_t rotation) {
 
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
 uint8_t ArduRCT_TouchPanel::getCalibrationCrossNumber() {
-    if ((_calibrationStatus < 1) || (_calibrationStatus > 3)) return 0;
+    if ((_calibrationStatus < 1) || (_calibrationStatus > 4)) return 0;
     return _calibrationStatus;
 }
 
@@ -258,11 +258,11 @@ int16_t ArduRCT_TouchPanel::_getTouchZ() {
         digitalWrite(_xp, LOW);
         pinMode(_xm, INPUT);
         pinMode(_ym, INPUT);
-#ifdef TOUCHPANEL_MANUAL_CALIBRATION
+#ifdef TOUCHPANEL_DEBUG
         Serial.print(_touchZ); Serial.print(" "); Serial.print(_touchX); Serial.print(" "); Serial.print(_touchY);
 #endif
         if (!_adjustTouchWithCalibration()) return TOUCHPANEL_NO_TOUCH;
-#ifdef TOUCHPANEL_MANUAL_CALIBRATION
+#ifdef TOUCHPANEL_DEBUG
         Serial.print(" -> "); Serial.print(_touchX); Serial.print(" "); Serial.println(_touchY);
 #endif
         return _touchZ;
@@ -312,7 +312,17 @@ boolean ArduRCT_TouchPanel::_adjustTouchWithCalibration() {
     return true;
 }
 
+#ifdef TOUCHPANEL_DEBUG
+static uint8_t lastCalibrationStatus = 0;
+#endif
 uint8_t ArduRCT_TouchPanel::_calibrate() {
+#ifdef TOUCHPANEL_DEBUG
+    if (lastCalibrationStatus != _calibrationStatus) {
+        Serial.print("_calibrate status="); 
+        Serial.println(_calibrationStatus);
+        lastCalibrationStatus = _calibrationStatus;
+    }
+#endif
     if (_calibrationStatus == TOUCHPANEL_NOT_INITIALIZED) {
 #ifdef TOUCHPANEL_AR1021
         Wire.begin();
@@ -323,34 +333,39 @@ uint8_t ArduRCT_TouchPanel::_calibrate() {
             return EVENT_STATE_IDLE;
         }
         // check if we are calibrated
-        uint8_t isCalibrated = eeprom_read_byte((const uint8_t *)_calibrationMatrixEepromAddress);
-        if (isCalibrated == TOUCHPANEL_CALIBRATED) {
+        _calibrationStatus = eeprom_read_byte((const uint8_t *)_calibrationMatrixEepromAddress);
+        if (_calibrationStatus == TOUCHPANEL_CALIBRATED) {
             // read the calibration matrix in 
-            _calibrationStatus = TOUCHPANEL_CALIBRATED;
             _xCalibrationEquation.a = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-4));
             _xCalibrationEquation.b = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-8));
             _xCalibrationEquation.divider = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-12));
             _yCalibrationEquation.a = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-16));
             _yCalibrationEquation.b = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-20));
             _yCalibrationEquation.divider = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-24));
+#ifdef TOUCHPANEL_DEBUG
+            delay(2000);
+            Serial.print("x: "); Serial.print(_xCalibrationEquation.a); Serial.print(" "); Serial.print(_xCalibrationEquation.b); Serial.print(" "); Serial.println(_xCalibrationEquation.divider); 
+            Serial.print("y: "); Serial.print(_yCalibrationEquation.a); Serial.print(" "); Serial.print(_yCalibrationEquation.b); Serial.print(" "); Serial.println(_yCalibrationEquation.divider); 
+#endif
         } else {
             _rotation = TOUCHPANEL_ROTATION_0;
             _calibrationStatus = TOUCHPANEL_CALIBRATION_REQUEST_CROSS_1;
         }
-    } else if ((_calibrationStatus >= 1) && (_calibrationStatus <= 3)) {
-        // move to the next step
-        _calibrationStatus += 10;
-    } 
-    if ((_calibrationStatus >= 11) && (_calibrationStatus <= 13)) {
+    } else if ((_calibrationStatus >= TOUCHPANEL_CALIBRATION_REQUEST_CROSS_1) && (_calibrationStatus <= TOUCHPANEL_CALIBRATION_REQUEST_CROSS_3)) {
+        // wait for pen up and move to the next step: waiting for pen down on cross
+        if (_getTouchZ() == TOUCHPANEL_NO_TOUCH) _calibrationStatus += 10;      
+    } else if ((_calibrationStatus >= TOUCHPANEL_CALIBRATION_WAIT_FOR_PENDOWN_1) && (_calibrationStatus <= TOUCHPANEL_CALIBRATION_WAIT_FOR_PENDOWN_3)) {
         // wait for a pen down
         if (_getTouchZ() != TOUCHPANEL_NO_TOUCH) {
-            _calibrationX[_calibrationStatus-11] = _touchX;
-            _calibrationY[_calibrationStatus-11] = _touchY;
-            // request the next cross drawing
+            _calibrationX[_calibrationStatus-TOUCHPANEL_CALIBRATION_WAIT_FOR_PENDOWN_1] = _touchX;
+            _calibrationY[_calibrationStatus-TOUCHPANEL_CALIBRATION_WAIT_FOR_PENDOWN_1] = _touchY;
+            // request the next cross drawing, or the CALIBRATION_SAVE
             _calibrationStatus += 1 - 10;
         }
-    }
-    if (_calibrationStatus == 4) {
+    } else if (_calibrationStatus == TOUCHPANEL_CALIBRATION_PREPARE_SAVE) {
+        // wait for pen up
+        if (_getTouchZ() == TOUCHPANEL_NO_TOUCH) _calibrationStatus = TOUCHPANEL_CALIBRATION_SAVE;
+    } else if (_calibrationStatus == TOUCHPANEL_CALIBRATION_SAVE) {
         // we got the 3 points, calculate the matrix
         int32_t dX0, dY0;
         uint16_t dX1, dY1, dX2, dY2;
@@ -387,15 +402,36 @@ uint8_t ArduRCT_TouchPanel::_calibrate() {
         _yCalibrationEquation.a = dY1 - dY0;
         _yCalibrationEquation.b = dY0 * (_calibrationY[1] - _calibrationY[0]) - _calibrationY[0] * (dY1 - dY0);
         _yCalibrationEquation.divider = _calibrationY[1] - _calibrationY[0];
-        
+
+#ifdef TOUCHPANEL_DEBUG
+            Serial.print("calibrated: "); Serial.println(TOUCHPANEL_CALIBRATED);
+            Serial.print("x: "); Serial.print(_xCalibrationEquation.a); Serial.print(" "); Serial.print(_xCalibrationEquation.b); Serial.print(" "); Serial.println(_xCalibrationEquation.divider); 
+            Serial.print("y: "); Serial.print(_yCalibrationEquation.a); Serial.print(" "); Serial.print(_yCalibrationEquation.b); Serial.print(" "); Serial.println(_yCalibrationEquation.divider); 
+#endif
+            
         // persist the matrix
-        eeprom_write_byte((uint8_t *)_calibrationMatrixEepromAddress, TOUCHPANEL_CALIBRATED);
+        eeprom_write_byte((uint8_t *)(_calibrationMatrixEepromAddress), TOUCHPANEL_CALIBRATED);
         eeprom_write_dword((uint32_t *)(_calibrationMatrixEepromAddress-4), _xCalibrationEquation.a);
         eeprom_write_dword((uint32_t *)(_calibrationMatrixEepromAddress-8), _xCalibrationEquation.b);
         eeprom_write_dword((uint32_t *)(_calibrationMatrixEepromAddress-12), _xCalibrationEquation.divider);
         eeprom_write_dword((uint32_t *)(_calibrationMatrixEepromAddress-16), _yCalibrationEquation.a);
         eeprom_write_dword((uint32_t *)(_calibrationMatrixEepromAddress-20), _yCalibrationEquation.b);
         eeprom_write_dword((uint32_t *)(_calibrationMatrixEepromAddress-24), _yCalibrationEquation.divider);
+
+#ifdef TOUCHPANEL_DEBUG
+        delay(2000);
+        uint8_t calibrated = eeprom_read_byte((const uint8_t *)(_calibrationMatrixEepromAddress));
+        // read the calibration matrix in 
+        _xCalibrationEquation.a = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-4));
+        _xCalibrationEquation.b = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-8));
+        _xCalibrationEquation.divider = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-12));
+        _yCalibrationEquation.a = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-16));
+        _yCalibrationEquation.b = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-20));
+        _yCalibrationEquation.divider = eeprom_read_dword((const uint32_t *)(_calibrationMatrixEepromAddress-24));
+        Serial.print("calibrated: "); Serial.println(calibrated);
+        Serial.print("x: "); Serial.print(_xCalibrationEquation.a); Serial.print(" "); Serial.print(_xCalibrationEquation.b); Serial.print(" "); Serial.println(_xCalibrationEquation.divider); 
+        Serial.print("y: "); Serial.print(_yCalibrationEquation.a); Serial.print(" "); Serial.print(_yCalibrationEquation.b); Serial.print(" "); Serial.println(_yCalibrationEquation.divider); 
+#endif
 
         _calibrationStatus = TOUCHPANEL_CALIBRATED;
 #else
