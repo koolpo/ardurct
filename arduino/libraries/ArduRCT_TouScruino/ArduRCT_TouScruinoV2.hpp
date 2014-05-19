@@ -35,12 +35,10 @@
 #include "ArduRCT_TouScruino_Configuration.hpp"
 
 #ifdef __AVR__
-#include "../ArduRCT_Graphics/ArduRCT_SPFD5408.h"
 class ArduRCT_TouScruinoV2: public ArduRCT_SPFD5408, public ArduRCT_EventManager {
 #endif
 
 #if defined(__arm__) && defined(CORE_TEENSY)
-#include "../ArduRCT_Graphics/ArduRCT_ILI9340.h"
 class ArduRCT_TouScruinoV2: public ArduRCT_ILI9340, public ArduRCT_EventManager {
 #endif
 
@@ -48,6 +46,8 @@ class ArduRCT_TouScruinoV2: public ArduRCT_ILI9340, public ArduRCT_EventManager 
 		ArduRCT_TouScruinoV2(ArduRCT_RealTimeClock *rtc, ArduRCT_TouchPanel *tp);
         
         virtual void setRotation(uint8_t rotation, bool selectAndUnselectScreen = true);
+
+        void resetCalibration();
     
     private:
         ArduRCT_TouchPanel *_touchpanel;

@@ -37,3 +37,7 @@ void ArduRCT_TouScruinoV2::setRotation(uint8_t rotation, bool selectAndUnselectS
     ArduRCT_Graphics::setRotation(rotation);
     if (getRegisteredTouchPanel() != 0) getRegisteredTouchPanel()->setRotation(rotation);
 }
+
+void ArduRCT_TouScruinoV2::resetCalibration() {
+    if (getRegisteredTouchPanel() != 0) getRegisteredTouchPanel()->deleteCalibration();
+}

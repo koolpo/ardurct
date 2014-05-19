@@ -84,6 +84,6 @@
 // the address in the eeprom where the calibration matrix is stored 
 // 25 bytes are taken in descending order
 // set to 0xFFFF to prevent calibration and to E2END to calibrate
-#define TOUSCRUINO_EEPROM_TOUCHPANEL    0xFFFF
+#define TOUSCRUINO_EEPROM_TOUCHPANEL    (E2END-1)
 
 #endif

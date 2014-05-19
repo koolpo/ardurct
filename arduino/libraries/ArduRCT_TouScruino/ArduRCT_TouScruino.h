@@ -33,6 +33,7 @@
 #include "ArduRCT_Touscruino_Configuration.hpp"
 #include <ArduRCT_Graphics.h>
 #include <ArduRCT_EventManager.h>
+#include <avr/eeprom.h>
 
 ArduRCT_RealTimeClock touscruinoRTC;
 
@@ -110,11 +111,19 @@ int8_t ArduRCT_TouscruinoV2HandleGraphicsUI(uint8_t eventId, uint8_t value, int1
     uint8_t actionId = 0;
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
     if (eventId == EVENT_TOUCHPANEL_CALIBRATION) {
-        if (value == 1) Touscruino.setRotation(GRAPHICS_ROTATION_0); 
+        // if first cross, rotate the screen to get the co-ordinates
+        if (value == 1) Touscruino.setRotation(GRAPHICS_ROTATION_0);
+        // clear the screen
         Touscruino.fillScreen(WHITE);
-        Touscruino.drawLine(x-10, y, x+10, y, BLACK, 3);
-        Touscruino.drawLine(x, y-10, x, y+10, BLACK, 3);
-        Touscruino.drawString("Touch the cross", Touscruino.getWidth()-7*Touscruino.getFontCharWidth(FONT_MEDIUM), Touscruino.getHeight()/2, BLACK, FONT_MEDIUM);
+        // draw one of the 3 crosses
+        if (value <= 3) {
+            Touscruino.drawLine(x-10, y, x+10, y, BLACK, 3);
+            Touscruino.drawLine(x, y-10, x, y+10, BLACK, 3);
+            Touscruino.drawString("Touch the cross", 20, Touscruino.getHeight()/2, BLACK, FONT_MEDIUM);
+        } else if (value == 4) {
+            // asking for cross 4 will draw the home screen
+            Touscruino.setGraphicsUIScreen();
+        }
         return EVENT_HANDLING_EXIT;
     }
 #endif

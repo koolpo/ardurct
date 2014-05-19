@@ -25,7 +25,7 @@
 /**
  *  Demonstrates the use of the EventManager included in the Touscruino
  *  to manage the touchpanel and the graphics
- *  This is a variation of the Simple sketch using Touscruino instead of its components
+ *  This is a variation of the Insider sketch using Touscruino instead of its components
  *      with this, you don't have to deal with any hardware
  **/
   
@@ -45,8 +45,13 @@ int16_t penY;
 ArduRCT_EventHandler touchpanelHandler(EVENT_TOUCHPANEL, EVENT_ANY_VALUE, 0, 0, &handleTouchPanel);
 
 void setup() {
+    Serial.begin(57600);
+    // reset the calibration
+    // Touscruino.resetCalibration();
     // prepare the screen
     Touscruino.begin(BLACK, WHITE, FONT_SMALL, FONT_PLAIN, NO_OVERLAY);
+    // enable the graphics UI to calibrate if required
+    Touscruino.enableGraphicsUI();
     // register the EventHandler
     Touscruino.registerEventHandler(&touchpanelHandler);
 }
