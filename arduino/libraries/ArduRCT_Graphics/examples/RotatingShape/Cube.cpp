@@ -3,10 +3,7 @@
 Cube::Cube(uint8_t style) {
     setStyle(style);
     setVerticesPerFace(4);
-    initialize();
-}
 
-void Cube::initialize() {
     setVertice( 0, -1024, +1024, -1024);
     setVertice( 1, +1024, +1024, -1024);
     setVertice( 2, +1024, -1024, -1024);

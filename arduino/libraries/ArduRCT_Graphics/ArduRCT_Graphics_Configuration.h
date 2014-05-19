@@ -30,7 +30,7 @@
 
 /**
  * Defining the pins as constants here allows for a lot of optimisations
- * during compilation: such as digitalFastWrite
+ * during compilation
  * See ArduRCT_ParallelScreenUtils.h for details
  **/
 
@@ -68,5 +68,24 @@
 #define GRAPHICS_HARDWARE_BACKLIGHT_PIN 32
 #endif
 
+// Max space that a pattern or a bitmap that needs to be overlaid can occupy
+// minimum is FONT_MAX_SPACE (from font.hpp)
+// RAM taken can be up to 5 times this, so beware! 
+#define GRAPHICS_MAX_BITMAP_SPACE (9*14)		
+
+// if defined, the screen will try to use 12bits colors
+#define GRAPHICS_12B_COLORS_ALLOWED 1
+
+// Comment this if you don't want to use macros
+//#define GRAPHICS_HAS_MACROS 1
+// the number of macros defined in eeprom
+// each compressed macro can be up to SCREEN_MACRO_MAX_SIZE character long
+// the eeprom taken will be SCREEN_MACRO_MAX_NUMBER * SCREEN_MACRO_MAX_SIZE bytes
+#define GRAPHICS_MACRO_MAX_NUMBER 16
+// this number can not be bigger than 255
+#define GRAPHICS_MACRO_MAX_SIZE 128
+
+// Comment this if you don't want to use the UI
+#define GRAPHICS_HAS_UI 1
 
 #endif

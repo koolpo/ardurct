@@ -118,7 +118,7 @@
       "dec %4               ; pixelH--                      \n\t" \
       "brne wscb_heql       ; if pixelH > 0 goto wscb_heql  \n\t" \
       "rjmp wscb_end        ; go to end                     \n\t" \
-    "wscb_hnel:\n\t" \
+    "wscb_hnel:                                             ²\n\t" \
       "out %1,%7            ; PORTB = colH                  \n\t" \
       "out %0,%2            ; WR = LOW                      \n\t" \
       "out %0,%3            ; WR = HIGH                     \n\t" \
@@ -131,7 +131,7 @@
       "brne wscb_hnel       ; if pixelM > 0 goto wscb_hnel  \n\t" \
       "dec %4               ; pixelH--                      \n\t" \
       "brne wscb_hnel       ; if pixelH > 0 goto wscb_hnel  \n\t" \
-    "wscb_end:                                               \n\t" \
+    "wscb_end:                                              \n\t" \
     :: \
     "I" (_SFR_IO_ADDR(GRAPHICS_HARDWARE_WR_PORT)), \
     "I" (_SFR_IO_ADDR(GRAPHICS_HARDWARE_DATA_OUT_PORT)), \

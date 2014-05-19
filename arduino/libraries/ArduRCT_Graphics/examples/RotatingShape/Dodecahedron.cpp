@@ -43,10 +43,7 @@
 Dodecahedron::Dodecahedron(uint8_t style) {
     setStyle(style);
     setVerticesPerFace(5);
-    initialize();
-}
 
-void Dodecahedron::initialize() {
     //  used factor 1.7*1024
     setVertice(0, 1057, 0, 1384);
     setVertice(1, 327, 1004, 1384);

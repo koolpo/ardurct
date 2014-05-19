@@ -35,6 +35,7 @@
 
 void ArduRCT_Graphics::addScreen(ArduRCT_GraphicsUIScreen *screen) {
     screen->setGraphics(this);
+    if (!_homeScreen) _homeScreen = screen;
 }
 
 void ArduRCT_Graphics::setGraphicsUIHome(ArduRCT_GraphicsUIScreen *screen, ArduRCT_GraphicsUIElement *element) {
@@ -43,6 +44,7 @@ void ArduRCT_Graphics::setGraphicsUIHome(ArduRCT_GraphicsUIScreen *screen, ArduR
 }
 
 void ArduRCT_Graphics::setGraphicsUIScreen(ArduRCT_GraphicsUIScreen *screen, ArduRCT_GraphicsUIScreen *returnToScreen) {
+    if (!screen) screen = _homeScreen;
     if (_screen == screen) return;
     if (_screen) _screen->deactivate();
     _screen = screen;

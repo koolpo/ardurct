@@ -18,10 +18,7 @@
 Tetrahedron::Tetrahedron(uint8_t style) {
     setStyle(style);
     setVerticesPerFace(3);
-    initialize();
-}
 
-void Tetrahedron::initialize() {
     //  used factor 1.7*1024
     setVertice(0, 0, 0, 1741);
     setVertice(1, 1642, 0, -580);

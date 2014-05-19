@@ -25,7 +25,14 @@
 #include <SPI.h>
 #include <ArduRCT_Graphics.h>
 
+#define REPORT_PERFORMANCE 1
+
 #include "Shape3D.h"
+
+//ArduRCT_S6D04H0 graphics;
+//ArduRCT_SPFD5408 graphics;
+ArduRCT_ILI9340 graphics;
+//ArduRCT_ST7735 graphics;
 
 #define BUFFER_WIDTH 160
 #define BUFFER_HEIGHT 160
@@ -34,64 +41,73 @@
 #define FIELD_OF_VIEW 300
 #define VIEW_DISTANCE 7
 
-//ArduRCT_S6D04H0 graphics;
-//ArduRCT_SPFD5408 graphics;
-ArduRCT_ILI9340 graphics;
-//ArduRCT_ST7735 graphics;
+#define NB_SHAPES 6
+#define NB_STYLES 4
 
-#define NB_SHAPES 5
-#define NB_STYLES 3
-#define STARTING_STYLE WIREFRAME
-Tetrahedron tetrahedron(STARTING_STYLE);
-Cube cube(STARTING_STYLE);
-Octahedron octahedron(STARTING_STYLE);
-Dodecahedron dodecahedron(STARTING_STYLE);
-Isocahedron isocahedron(STARTING_STYLE);
-Shape3D *shape[] = { &tetrahedron, &cube, &octahedron, &dodecahedron, &isocahedron };
+Tetrahedron tetrahedron(WIREFRAME);
+Cube cube(WIREFRAME);
+Octahedron octahedron(WIREFRAME);
+Dodecahedron dodecahedron(WIREFRAME);
+Isocahedron isocahedron(WIREFRAME);
+Shape3D polyhedron(WIREFRAME);
+Shape3D *shape[] = { &tetrahedron, &cube, &octahedron, &dodecahedron, &isocahedron, &polyhedron };
 
 uint16_t buffer[BUFFER_WIDTH*BUFFER_HEIGHT];
 uint16_t angle = 0;
 uint8_t shapeNb = 0;
+uint8_t style = WIREFRAME;
 uint32_t startTime = 0;
 uint16_t maxSize[2];
 
 void setup() {
     maxSize[X] = 0;
     maxSize[Y] = 0;
+#ifdef REPORT_PERFORMANCE
     Serial.begin(57600);
+#endif
     graphics.begin(WHITE, BLACK, FONT_MEDIUM, FONT_PLAIN, NO_OVERLAY);
     graphics.fillScreen(BLACK);
     // display the shape and style
     showShapeNameAndStyle();
     // start the double buffering
     graphics.startDoubleBuffering(buffer, BUFFER_WIDTH, BUFFER_HEIGHT);
+    // create the polyedron faces
+    createPolyhedronFaces();
 }
 
 void loop() {
     if (startTime == 0) startTime = micros();
     // fill the buffer with black
     graphics.fillRectangle(0, 0, BUFFER_WIDTH, BUFFER_HEIGHT, BLACK);
-    // rotate the cube
-    shape[shapeNb/NB_STYLES]->rotate(angle/ROTATIONS_STEPS_PER_DEGREE, angle, 0);
+    // build the shape if required
+    if (shapeNb == 5) createPolyhedronVertices();
+    // rotate the shape
+    shape[shapeNb]->rotate(angle/ROTATIONS_STEPS_PER_DEGREE, angle, 0);
     // draw it in the buffer
-    shape[shapeNb/NB_STYLES]->draw(&graphics, FIELD_OF_VIEW, VIEW_DISTANCE, BUFFER_WIDTH, BUFFER_HEIGHT, maxSize);
+    shape[shapeNb]->draw(&graphics, FIELD_OF_VIEW, VIEW_DISTANCE, BUFFER_WIDTH, BUFFER_HEIGHT, maxSize);
     // paste the buffer in the middle of the screen
     graphics.pasteDoubleBuffer((graphics.getWidth()-BUFFER_WIDTH)/2,(graphics.getHeight()-BUFFER_HEIGHT)/2);
-    
     angle += 1;  
     // when ROTATIONS_PER_SHAPE have been performed
     if (angle == 360*ROTATIONS_PER_SHAPE*ROTATIONS_STEPS_PER_DEGREE) {
+#ifdef REPORT_PERFORMANCE
         // show a performance measure
-        Serial.print(shape[shapeNb/NB_STYLES]->getName()); Serial.print(" "); Serial.print(shape[shapeNb/NB_STYLES]->getStyle()); 
+        Serial.print(shape[shapeNb]->getName()); Serial.print(" "); Serial.print(shape[shapeNb]->getStyle()); 
         Serial.print(": size "); Serial.print(maxSize[X]); Serial.print("x"); Serial.print(maxSize[Y]);
         Serial.print(", "); Serial.print(ROTATIONS_PER_SHAPE*ROTATIONS_STEPS_PER_DEGREE*360L*1000000L/(micros()-startTime)); Serial.println("fps");
+#endif
         startTime = 0;    
         angle = 0;
-        // change the shape to display, or its style
-        shapeNb ++;
-        if (shapeNb >= NB_SHAPES*NB_STYLES) shapeNb = 0;
-        // shange the style of the shape
-        shape[shapeNb/NB_STYLES]->setStyle((shapeNb%NB_STYLES) + STARTING_STYLE);
+        // change the style
+        style ++;
+        // when all styles have been shown change the shape
+        if (style > GREY_SHADED) {
+            style = WIREFRAME;
+            shapeNb ++;
+            if (shapeNb >= NB_SHAPES) shapeNb = 0;
+        }
+        // change the style of the shape
+        shape[shapeNb]->setStyle(style);
         maxSize[X] = 0;
         maxSize[Y] = 0;
         // stop the double buffering
@@ -106,7 +122,45 @@ void loop() {
 void showShapeNameAndStyle() {
     graphics.fillRectangle(10, 300, 230, 20, BLACK);
     graphics.setCursor(10, 300);
-    graphics.print(shape[shapeNb/NB_STYLES]->getName());
+    graphics.print(shape[shapeNb]->getName());
     graphics.print(" ");
-    graphics.print(shape[shapeNb/NB_STYLES]->getStyle());
+    graphics.print(shape[shapeNb]->getStyle());
+}
+
+
+// the polyhedron contains 4 tetrahedrons
+void createPolyhedronFaces() {
+    polyhedron.setVerticesPerFace(3);
+    for (uint8_t i=0; i<4; i++) {
+        for (uint8_t j=0; j<4; j++) {
+            uint8_t *face = tetrahedron.getFace(j);
+            polyhedron.setFace(i*4+j, i*4+face[0], i*4+face[1], i*4+face[2], i*4+face[3], i*4+face[4]);
+        }
+    }
+}
+
+void createPolyhedronVertices() {
+    // we translate the 4 small tetrahedron to the vertices of a big tetrahedron
+    int32_t translations[4][3];
+    tetrahedron.rotate(0, 0, 0);
+    tetrahedron.scale(3, 5);
+    for (uint8_t i=0; i<4; i++) {
+        int32_t *vertice = tetrahedron.getRotatedVertice(i);
+        translations[i][X] = vertice[X];
+        translations[i][Y] = vertice[Y];
+        translations[i][Z] = vertice[Z];
+    }
+    // we rotate the small tetrahedron
+    for (uint8_t i=0; i<4; i++) {
+        if (i == 0) tetrahedron.rotate(angle/2, angle, 0);
+        else if (i == 1) tetrahedron.rotate(angle, angle/2, 0);
+        else if (i == 2) tetrahedron.rotate(-angle/2, -angle, 0);
+        else tetrahedron.rotate(-angle, -angle/2, 0);
+        tetrahedron.scale(1, 2);
+        tetrahedron.translate(translations[i][X], translations[i][Y], translations[i][Z]);
+        for (uint8_t j=0; j<4; j++) {
+            int32_t *vertice = tetrahedron.getRotatedVertice(j);
+            polyhedron.setVertice(i*4+j, vertice[X], vertice[Y], vertice[Z]);
+        }
+    }
 }

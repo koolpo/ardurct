@@ -42,10 +42,8 @@
 Isocahedron::Isocahedron(uint8_t style) {
     setStyle(style);
     setVerticesPerFace(3);
-    initialize();
-}
 
-void Isocahedron::initialize() {
+    //  used factor 1.7*1024
     setVertice(0, 0, 0, 1741);
     setVertice(1, 1556, 0, 778);
     setVertice(2, 480, 1481, 778);
