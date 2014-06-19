@@ -283,7 +283,6 @@ boolean ArduRCT_TouchPanel::_adjustTouchWithCalibration() {
                 _touchX = map(_touchX, TOUCHPANEL_X_MIN, TOUCHPANEL_X_MAX, 0, _width-1);
                 _touchY = map(_touchY, TOUCHPANEL_Y_MIN, TOUCHPANEL_Y_MAX, 0, _height-1);                
             }
-            if ((_touchX < 0) || (_touchX >= _width) || (_touchY < 0) || (_touchY >= _height)) return false;
         }
 #ifdef TOUCHPANEL_MATRIX_CALIBRATION
     } else if (_calibrationStatus == TOUCHPANEL_CALIBRATED) {
@@ -295,6 +294,7 @@ boolean ArduRCT_TouchPanel::_adjustTouchWithCalibration() {
         _touchY = Y;
 #endif        
     } else return true;
+    if ((_touchX < 0) || (_touchX >= _width) || (_touchY < 0) || (_touchY >= _height)) return false;
     // rotate the co-ordinates
     if (_rotation == TOUCHPANEL_ROTATION_0) return true;
     if (_rotation == TOUCHPANEL_ROTATION_90) {
@@ -377,22 +377,25 @@ uint8_t ArduRCT_TouchPanel::_calibrate() {
         /* --------------------------------------------------------------------- *
             Assuming that the touch panel is verticaly aligned with the screen,
             and that the touch panel resistance is almost linear;
-            D being a Display coordinate and TP being a Touch Panel coordinate,
-            m and n being 2 points, 
+            Dx being a Display x coordinate and TPx being a Touch Panel x coordinate,
+            M and N being 2 points, 
             
             we have:
-                Dm = A * TPm + B
-                Dn = A * TPn + B
+                DxM = A * TPxM + B
+                DxN = A * TPxN + B
             so
-                A = (Dm - Dn) / (TPm - TPn)
-                B = Dn - TPn * (Dm - Dn) / (TPm - TPn)
+                A = (DxM - DxN) / (TPxM - TPxN)
+                B = DxN - TPxN * (DxM - DxN) / (TPxM - TPxN)
                 
             to use only integers, we can solve D through
-                D = (a * TP + b) / divider
+                Dx = (a * TPx + b) / divider
             with 
-                      a = Dm - Dn
-                      b = Dn * (TPm - TPn) - TPn * (Dm - Dn)
-                divider = TPm - TPn
+                      a = DxM - DxN
+                      b = DxN * (TPxM - TPxN) - TPxN * (DxM - DxN)
+                divider = TPxM - TPxN
+                
+            The same logic applies for y coordinate
+            
         * ---------------------------------------------------------------------- */
         // use the points with the biggest X difference: 0 and 2
         _xCalibrationEquation.a = dX2 - dX0;
