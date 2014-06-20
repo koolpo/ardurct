@@ -1,7 +1,7 @@
 /*
  * ArduRCT_Graphics - Screen Hardware Abstraction Layer
  *
- * Copyright (c) 2010-2012 Laurent Wibaux <lm.wibaux@gmail.com>
+ * Copyright (c) 2010-2014 Laurent Wibaux <lm.wibaux@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,33 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ */
+ 
+/*
+   fillTriangle is an adapted copy of Adafruit_GFX
+ 
+    Copyright (c) 2013 Adafruit Industries.  All rights reserved.
+    
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    - Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    - Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "ArduRCT_Graphics.h"
@@ -603,10 +630,12 @@ void ArduRCT_Graphics::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t 
     if (selectAndUnselectScreen) unselectScreenImpl();    
 }
 
-void ArduRCT_Graphics::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color, bool selectAndUnselectScreen) {
+/* 
+    This fillTriangle is adapted from Adafruit_GFX
+ */
+void ArduRCT_Graphics::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, bool selectAndUnselectScreen) {
     int16_t a, b, y, last;
 
-    // Sort coordinates by Y order (y2 >= y1 >= y0)
     if (y0 > y1) {
         swap(y0, y1); 
         swap(x0, x1);
@@ -623,10 +652,10 @@ void ArduRCT_Graphics::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t 
     if (selectAndUnselectScreen) selectScreenImpl();    
     if (y0 == y2) { // Handle awkward all-on-same-line case as its own thing
         a = b = x0;
-        if(x1 < a)      a = x1;
-        else if(x1 > b) b = x1;
-        if(x2 < a)      a = x2;
-        else if(x2 > b) b = x2;
+        if (x1 < a)      a = x1;
+        else if (x1 > b) b = x1;
+        if (x2 < a)      a = x2;
+        else if (x2 > b) b = x2;
         _fillBoundedArea(a, y, b, y, color);
         if (selectAndUnselectScreen) unselectScreenImpl();
         return;
@@ -649,7 +678,7 @@ void ArduRCT_Graphics::fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t 
     // in the second loop...which also avoids a /0 error here if y0=y1
     // (flat-topped triangle).
     if (y1 == y2) last = y1;   // Include y1 scanline
-    else         last = y1-1; // Skip it
+    else          last = y1-1; // Skip it
 
     for (y=y0; y<=last; y++) {
         a   = x0 + sa / dy01;

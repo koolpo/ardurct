@@ -27,12 +27,12 @@ Octahedron::Octahedron(uint8_t style) {
     setVerticesPerFace(3);
 
     //  used factor 1.7*1024
-    setVertice(0, 0, 0, 1741);
-    setVertice(1, 1741, 0, 0);
-    setVertice(2, 0, 1741, 0);
-    setVertice(3, -1741, 0, 0);
-    setVertice(4, 0, -1741, 0);
-    setVertice(5, 0, 0, -1741);
+    setInitialVertice(0, 0, 0, 1741);
+    setInitialVertice(1, 1741, 0, 0);
+    setInitialVertice(2, 0, 1741, 0);
+    setInitialVertice(3, -1741, 0, 0);
+    setInitialVertice(4, 0, -1741, 0);
+    setInitialVertice(5, 0, 0, -1741);
 
     setFace(0, 0, 1, 2);
     setFace(1, 0, 2, 3);

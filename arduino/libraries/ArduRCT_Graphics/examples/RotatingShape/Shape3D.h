@@ -27,12 +27,13 @@ class Shape3D {
         Shape3D();
         Shape3D(uint8_t style);
         
-        virtual void initialize();
+        void clearTransformations();
+        
         void setStyle(uint8_t style);
         void setVerticesPerFace(uint8_t vpf);
-        void setVertice(uint8_t n, int32_t x, int32_t y, int32_t z);
+        void setInitialVertice(uint8_t n, int32_t x, int32_t y, int32_t z);
+        int32_t *getInitialVertice(uint8_t n);
         int32_t *getVertice(uint8_t n);
-        int32_t *getRotatedVertice(uint8_t n);
         void setFace(uint8_t n, uint8_t v1, uint8_t v2, uint8_t v3, uint8_t v4 = 0, uint8_t v5 = 0);
         uint8_t *getFace(uint8_t n);
 
@@ -42,10 +43,10 @@ class Shape3D {
         void draw(ArduRCT_Graphics *graphics, int32_t fov, int32_t viewDistance, uint16_t drawWidth, uint16_t drawHeight, uint16_t drawSize[] = 0);
  
         virtual char *getName();
-        virtual char *getStyle();
+        char *getStyle();
 
     protected:
-        int32_t _vertice[MAX_VERTICES][3];
+        int32_t _initialVertice[MAX_VERTICES][3];
         uint8_t _face[MAX_FACES][MAX_VERTICES_PER_FACE];
         uint8_t _nbVertices;
         uint8_t _nbFaces;
@@ -53,10 +54,10 @@ class Shape3D {
     
     private:
         int32_t _vertice2D[MAX_VERTICES][2];
-        int32_t _rVertice[MAX_VERTICES][3];
+        int32_t _vertice[MAX_VERTICES][3];
         uint8_t _faceOrder[MAX_FACES];
         uint8_t _style;
-        bool _rotated;
+        bool _transformed;
         bool _facesOrdered;
 
         void _rotateX(int32_t verticeIn[], int32_t cosa, int32_t sina, int32_t verticeOut[]);

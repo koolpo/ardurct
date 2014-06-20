@@ -44,18 +44,18 @@ Isocahedron::Isocahedron(uint8_t style) {
     setVerticesPerFace(3);
 
     //  used factor 1.7*1024
-    setVertice(0, 0, 0, 1741);
-    setVertice(1, 1556, 0, 778);
-    setVertice(2, 480, 1481, 778);
-    setVertice(3, -1260, 916, 778);
-    setVertice(4, -1260, -916, 778);
-    setVertice(5, 480, -1481, 778);
-    setVertice(6, 1260, 916, -778);
-    setVertice(7, -480, 1481, -778);
-    setVertice(8, -1556, 0, -778);
-    setVertice(9, -480, -1481, -778);
-    setVertice(10, 1260, -916, -778);
-    setVertice(11, 0, 0, -1741);
+    setInitialVertice(0, 0, 0, 1741);
+    setInitialVertice(1, 1556, 0, 778);
+    setInitialVertice(2, 480, 1481, 778);
+    setInitialVertice(3, -1260, 916, 778);
+    setInitialVertice(4, -1260, -916, 778);
+    setInitialVertice(5, 480, -1481, 778);
+    setInitialVertice(6, 1260, 916, -778);
+    setInitialVertice(7, -480, 1481, -778);
+    setInitialVertice(8, -1556, 0, -778);
+    setInitialVertice(9, -480, -1481, -778);
+    setInitialVertice(10, 1260, -916, -778);
+    setInitialVertice(11, 0, 0, -1741);
 
     setFace(0,  0,  1,  2);
     setFace(1,  0,  2,  3);

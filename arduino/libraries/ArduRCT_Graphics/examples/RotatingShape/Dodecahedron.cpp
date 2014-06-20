@@ -45,26 +45,26 @@ Dodecahedron::Dodecahedron(uint8_t style) {
     setVerticesPerFace(5);
 
     //  used factor 1.7*1024
-    setVertice(0, 1057, 0, 1384);
-    setVertice(1, 327, 1004, 1384);
-    setVertice(2, -855, 621, 1384);
-    setVertice(3, -855, -621, 1384);
-    setVertice(4, 327, -1004, 1384);
-    setVertice(5, 1709, 0, 327);
-    setVertice(6, 529, 1626, 327);
-    setVertice(7, -1384, 1004, 327);
-    setVertice(8, -1384, -1004, 327);
-    setVertice(9, 529, -1626, 327);
-    setVertice(10, 1384, 1004, -327);
-    setVertice(11, -529, 1626, -327);
-    setVertice(12, -1709, 0, -327);
-    setVertice(13, -529, -1626, -327);
-    setVertice(14, 1384, -1004, -327);
-    setVertice(15, 855, 621, -1384);
-    setVertice(16, -327, 1004, -1384);
-    setVertice(17, -1057, 0, -1384);
-    setVertice(18, -327, -1004, -1384);
-    setVertice(19, 855, -621, -1384);
+    setInitialVertice(0, 1057, 0, 1384);
+    setInitialVertice(1, 327, 1004, 1384);
+    setInitialVertice(2, -855, 621, 1384);
+    setInitialVertice(3, -855, -621, 1384);
+    setInitialVertice(4, 327, -1004, 1384);
+    setInitialVertice(5, 1709, 0, 327);
+    setInitialVertice(6, 529, 1626, 327);
+    setInitialVertice(7, -1384, 1004, 327);
+    setInitialVertice(8, -1384, -1004, 327);
+    setInitialVertice(9, 529, -1626, 327);
+    setInitialVertice(10, 1384, 1004, -327);
+    setInitialVertice(11, -529, 1626, -327);
+    setInitialVertice(12, -1709, 0, -327);
+    setInitialVertice(13, -529, -1626, -327);
+    setInitialVertice(14, 1384, -1004, -327);
+    setInitialVertice(15, 855, 621, -1384);
+    setInitialVertice(16, -327, 1004, -1384);
+    setInitialVertice(17, -1057, 0, -1384);
+    setInitialVertice(18, -327, -1004, -1384);
+    setInitialVertice(19, 855, -621, -1384);
 
     setFace(0,   0,  1,  2,  3,  4);
     setFace(1,   0,  5, 10,  6,  1);

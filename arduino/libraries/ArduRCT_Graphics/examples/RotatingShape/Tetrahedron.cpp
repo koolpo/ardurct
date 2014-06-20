@@ -20,10 +20,10 @@ Tetrahedron::Tetrahedron(uint8_t style) {
     setVerticesPerFace(3);
 
     //  used factor 1.7*1024
-    setVertice(0, 0, 0, 1741);
-    setVertice(1, 1642, 0, -580);
-    setVertice(2, -820, 1420, -580);
-    setVertice(3, -820, -1420, -580);
+    setInitialVertice(0, 0, 0, 1741);
+    setInitialVertice(1, 1642, 0, -580);
+    setInitialVertice(2, -820, 1420, -580);
+    setInitialVertice(3, -820, -1420, -580);
     
     setFace(0, 0, 1, 2);
     setFace(1, 0, 3, 1);

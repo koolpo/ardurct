@@ -1,5 +1,14 @@
 #include "Shape3D.h"
 
+/*
+ * Shape3D uses fixed point math on int16_t
+ * with snnnnn.dddddddddd 
+ */
+ 
+/*
+ *  TODO: use asm DSP instructions
+ *  https://github.com/PaulStoffregen/Audio/blob/master/utility/dspinst.h
+ */ 
 static int16_t _COS[] = {
     1024, 1024, 1023, 1023, 1022, 1020, 1018, 1016, 1014, 1011,
     1008, 1005, 1002, 998, 994, 989, 984, 979, 974, 968,
@@ -44,18 +53,22 @@ static uint16_t GREY565[] = {
     0xF79E, 0xFFDF };
 
 static uint16_t COLORS[] = { 
-    VIOLET, YELLOW, MAGENTA, GREEN, CYAN, RED, ORANGE, GREY, FUSCHIA, WHITE, 
-    BLUE, BROWN, DARK_GREEN, DARK_RED, DARK_GREY, BLUE, YELLOW, DARK_CYAN, MAGENTA, CYAN, 
-    RED, GREEN, ORANGE, GREY };    
-
+    VIOLET, YELLOW, MAGENTA, GREEN, CYAN, RED, ORANGE, GREY, 
+    FUSCHIA, WHITE, BLUE, BROWN, 0xFEFE, 0x1616, 0xD5D5, 0xDFDF, 
+    0xF5F5, DARK_GREEN, DARK_RED, DARK_GREY };    
 
 Shape3D::Shape3D() {
     Shape3D(WIREFRAME_HIDDEN_FACES);
 }
 
 Shape3D::Shape3D(uint8_t style) {
-    setStyle(style);
-    _rotated = false;
+    _style = style;
+    _transformed = false;
+    _facesOrdered = false;
+}
+
+void Shape3D::clearTransformations() {
+    _transformed = false;
     _facesOrdered = false;
 }
 
@@ -74,27 +87,24 @@ char *Shape3D::getName() {
     return "Polyhedron";
 }
 
-void Shape3D::initialize() {
-}
-
 void Shape3D::setVerticesPerFace(uint8_t vpf) {
     _verticesPerFace = vpf;
 }
 
 // all vertices are stored as integer, 1.0f becomes 1024 (1 << 10)
-void Shape3D::setVertice(uint8_t n, int32_t x, int32_t y, int32_t z) {
-    _vertice[n][X] = x;
-    _vertice[n][Y] = y;
-    _vertice[n][Z] = z;
+void Shape3D::setInitialVertice(uint8_t n, int32_t x, int32_t y, int32_t z) {
+    _initialVertice[n][X] = x;
+    _initialVertice[n][Y] = y;
+    _initialVertice[n][Z] = z;
     if (n+1 > _nbVertices) _nbVertices = n+1;
+}
+
+int32_t *Shape3D::getInitialVertice(uint8_t n) {
+    return _initialVertice[n];
 }
 
 int32_t *Shape3D::getVertice(uint8_t n) {
     return _vertice[n];
-}
-
-int32_t *Shape3D::getRotatedVertice(uint8_t n) {
-    return _rVertice[n];
 }
 
 void Shape3D::setFace(uint8_t n, uint8_t v1, uint8_t v2, uint8_t v3, uint8_t v4, uint8_t v5) {
@@ -129,9 +139,9 @@ void Shape3D::_rotateZ(int32_t verticeIn[], int32_t cosa, int32_t sina, int32_t 
 }
 
 void Shape3D::_project(uint8_t n, int16_t viewWidth, int16_t viewHeight, int32_t fov, int32_t viewDistance) {
-    int32_t factor = fov / (viewDistance + _rVertice[n][Z]);
-    _vertice2D[n][X] = (((_rVertice[n][X] * factor) >> 10) + viewWidth / 2);
-    _vertice2D[n][Y] = (((_rVertice[n][Y] * factor) >> 10) + viewHeight / 2);
+    int32_t factor = fov / (viewDistance + _vertice[n][Z]);
+    _vertice2D[n][X] = (((_vertice[n][X] * factor) >> 10) + viewWidth / 2);
+    _vertice2D[n][Y] = (((_vertice[n][Y] * factor) >> 10) + viewHeight / 2);
 }
         
 void Shape3D::rotate(int16_t angleX, int16_t angleY, int16_t angleZ) {
@@ -143,32 +153,47 @@ void Shape3D::rotate(int16_t angleX, int16_t angleY, int16_t angleZ) {
     int32_t cosZ = _cos(angleZ);
     int32_t sinZ = _cos(angleZ+90);
     for (uint8_t i=0; i<_nbVertices; i++) {
-        _rotateX(_vertice[i], cosX, sinX, tempVertice);
-        _rotateY(tempVertice, cosY, sinY, _rVertice[i]);
-        _rotateZ(_rVertice[i], cosZ, sinZ, tempVertice);
-        _rVertice[i][X] = tempVertice[X];
-        _rVertice[i][Y] = tempVertice[Y];
-        _rVertice[i][Z] = tempVertice[Z];
+        if (!_transformed) _rotateX(_initialVertice[i], cosX, sinX, tempVertice);
+        else _rotateX(_vertice[i], cosX, sinX, tempVertice);
+        _rotateY(tempVertice, cosY, sinY, _vertice[i]);
+        _rotateZ(_vertice[i], cosZ, sinZ, tempVertice);
+        _vertice[i][X] = tempVertice[X];
+        _vertice[i][Y] = tempVertice[Y];
+        _vertice[i][Z] = tempVertice[Z];
     }
-    _rotated = true;
+    _transformed = true;
     _facesOrdered = false;
 }
 
 void Shape3D::scale(int32_t scaleMul, int32_t scaleDiv) {
     for (uint8_t i=0; i<_nbVertices; i++) {
-        _rVertice[i][X] = _rVertice[i][X] * scaleMul / scaleDiv;
-        _rVertice[i][Y] = _rVertice[i][Y] * scaleMul / scaleDiv;
-        _rVertice[i][Z] = _rVertice[i][Z] * scaleMul / scaleDiv;
-    }    	
+        if (_transformed) {
+            _vertice[i][X] = _vertice[i][X] * scaleMul / scaleDiv;
+            _vertice[i][Y] = _vertice[i][Y] * scaleMul / scaleDiv;
+            _vertice[i][Z] = _vertice[i][Z] * scaleMul / scaleDiv;
+        } else {
+            _vertice[i][X] = _initialVertice[i][X] * scaleMul / scaleDiv;
+            _vertice[i][Y] = _initialVertice[i][Y] * scaleMul / scaleDiv;
+            _vertice[i][Z] = _initialVertice[i][Z] * scaleMul / scaleDiv;
+        }
+    }
+    _transformed = true;
     _facesOrdered = false;
 }
 
 void Shape3D::translate(int32_t x, int32_t y, int32_t z) {
     for (uint8_t i=0; i<_nbVertices; i++) {
-        _rVertice[i][X] += x;
-        _rVertice[i][Y] += y;
-        _rVertice[i][Z] += z;    		
-    }    	
+        if (_transformed) {
+            _vertice[i][X] += x;
+            _vertice[i][Y] += y;
+            _vertice[i][Z] += z;
+        } else {
+            _vertice[i][X] = _initialVertice[i][X] + x;
+            _vertice[i][Y] = _initialVertice[i][Y] + y;
+            _vertice[i][Z] = _initialVertice[i][Z] + z;
+        }
+    }
+    _transformed = true;
     _facesOrdered = false;
 }
 
@@ -177,8 +202,8 @@ void Shape3D::_orderFaces() {
     int16_t faceZ[MAX_FACES];
     for (uint8_t i=0; i<_nbFaces; i++) {
         uint8_t *p = _face[i];
-        faceZ[i] = _rVertice[p[0]][Z];
-        for (uint8_t j=1; j<_verticesPerFace; j++) faceZ[i] += _rVertice[p[j]][Z];
+        faceZ[i] = _vertice[p[0]][Z];
+        for (uint8_t j=1; j<_verticesPerFace; j++) faceZ[i] += _vertice[p[j]][Z];
         faceZ[i] = faceZ[i] / _verticesPerFace;
         _faceOrder[i] = i;
     }
@@ -200,12 +225,12 @@ void Shape3D::_orderFaces() {
 int32_t Shape3D::_getFaceVisibility(uint8_t f, int32_t viewDistance) {
     uint8_t *p = _face[f];
     // face normal vector: cross product of p0-p1 and p0-p2
-    int32_t v1x = _rVertice[p[1]][X] - _rVertice[p[0]][X];
-    int32_t v1y = _rVertice[p[1]][Y] - _rVertice[p[0]][Y];
-    int32_t v1z = _rVertice[p[1]][Z] - _rVertice[p[0]][Z];
-    int32_t v2x = _rVertice[p[2]][X] - _rVertice[p[0]][X];
-    int32_t v2y = _rVertice[p[2]][Y] - _rVertice[p[0]][Y];
-    int32_t v2z = _rVertice[p[2]][Z] - _rVertice[p[0]][Z];
+    int32_t v1x = _vertice[p[1]][X] - _vertice[p[0]][X];
+    int32_t v1y = _vertice[p[1]][Y] - _vertice[p[0]][Y];
+    int32_t v1z = _vertice[p[1]][Z] - _vertice[p[0]][Z];
+    int32_t v2x = _vertice[p[2]][X] - _vertice[p[0]][X];
+    int32_t v2y = _vertice[p[2]][Y] - _vertice[p[0]][Y];
+    int32_t v2z = _vertice[p[2]][Z] - _vertice[p[0]][Z];
     int32_t nX = v1y * v2z - v2y * v1z;
     int32_t nY = v2x * v1z - v1x * v2z;
     int32_t nZ = v1x * v2y - v2x * v1y;
@@ -224,9 +249,9 @@ int32_t Shape3D::_getFaceVisibility(uint8_t f, int32_t viewDistance) {
         nZ = nZ >> 10;
     }
     // view vector: from first point of face to point of origin (0, 0, -viewDistance) 
-    int32_t vX = 0 - _rVertice[p[0]][X];
-    int32_t vY = 0 - _rVertice[p[0]][Y];
-    int32_t vZ = -viewDistance - _rVertice[p[0]][Z];
+    int32_t vX = 0 - _vertice[p[0]][X];
+    int32_t vY = 0 - _vertice[p[0]][Y];
+    int32_t vZ = -viewDistance - _vertice[p[0]][Z];
     if (_style == GREY_SHADED) {
         // for shaded, we calculate the unit vector
         int32_t vModulus = _sqrt(vX*vX + vY*vY + vZ*vZ);
@@ -242,7 +267,7 @@ int32_t Shape3D::_getFaceVisibility(uint8_t f, int32_t viewDistance) {
 }
     
 void Shape3D::draw(ArduRCT_Graphics *graphics, int32_t fov, int32_t viewDistance, uint16_t drawWidth, uint16_t drawHeight, uint16_t drawSize[]) {
-    if (!_rotated) rotate(0, 0, 0);
+    if (!_transformed) translate(0, 0, 0);
     if (!_facesOrdered) _orderFaces();
     fov = fov << 10;
     viewDistance = viewDistance << 10;
@@ -278,6 +303,7 @@ void Shape3D::draw(ArduRCT_Graphics *graphics, int32_t fov, int32_t viewDistance
             if (_style == GREY_SHADED) color = GREY565[SHADING_LIGHT + (faceVisibility >> 6)];
             // or a basic color
             else if (_style == COLORIZED) color = COLORS[_faceOrder[i]];
+            // we use a basic triangulation of the faces (max 5 vertices per face)
             // if 3 vertices per face
             graphics->fillTriangle(_vertice2D[p[0]][X], _vertice2D[p[0]][Y], 
                     _vertice2D[p[1]][X], _vertice2D[p[1]][Y], 

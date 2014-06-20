@@ -190,7 +190,7 @@ class ArduRCT_Graphics: public Print {
 				
 		void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 	
-		void fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color, bool selectAndUnselectScreen = true);
+		void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, bool selectAndUnselectScreen = true);
 		
 		void drawArc(int16_t x0, int16_t y0, uint16_t r, uint8_t octant, uint16_t color, int8_t thickness = 1, bool selectAndUnselectScreen = true);
 
@@ -232,7 +232,7 @@ class ArduRCT_Graphics: public Print {
         
         void setGraphicsUIHome(ArduRCT_GraphicsUIScreen *screen, ArduRCT_GraphicsUIElement *element = 0);
 
-        void setGraphicsUIScreen(ArduRCT_GraphicsUIScreen *screen, ArduRCT_GraphicsUIScreen *returnToScreen = 0);
+        void setGraphicsUIScreen(ArduRCT_GraphicsUIScreen *screen = 0, ArduRCT_GraphicsUIScreen *returnToScreen = 0);
         
         bool handleGraphicsUI(uint8_t actionId, int16_t x, int16_t y);
 #endif

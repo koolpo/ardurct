@@ -4,14 +4,14 @@ Cube::Cube(uint8_t style) {
     setStyle(style);
     setVerticesPerFace(4);
 
-    setVertice( 0, -1024, +1024, -1024);
-    setVertice( 1, +1024, +1024, -1024);
-    setVertice( 2, +1024, -1024, -1024);
-    setVertice( 3, -1024, -1024, -1024);
-    setVertice( 4, -1024, +1024, +1024);
-    setVertice( 5, +1024, +1024, +1024);
-    setVertice( 6, +1024, -1024, +1024);
-    setVertice( 7, -1024, -1024, +1024);
+    setInitialVertice(0, -1024, +1024, -1024);
+    setInitialVertice(1, +1024, +1024, -1024);
+    setInitialVertice(2, +1024, -1024, -1024);
+    setInitialVertice(3, -1024, -1024, -1024);
+    setInitialVertice(4, -1024, +1024, +1024);
+    setInitialVertice(5, +1024, +1024, +1024);
+    setInitialVertice(6, +1024, -1024, +1024);
+    setInitialVertice(7, -1024, -1024, +1024);
     
     setFace(0, 0, 1, 2, 3);
     setFace(1, 1, 5, 6, 2);

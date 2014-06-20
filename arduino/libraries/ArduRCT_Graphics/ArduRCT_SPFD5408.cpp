@@ -201,23 +201,10 @@ uint16_t *ArduRCT_SPFD5408::retrieveBitmapImpl(uint16_t *bitmap, uint16_t x, uin
 }
 
 void ArduRCT_SPFD5408::pasteBitmapImpl(uint16_t *bitmap, uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
-    // nbPixels is always < 8192 because of RAM constraint
-    uint16_t nbPixels = width;
-    nbPixels *= height;
     _psu_prepareWR();
     _setClippingRectangle(x, y, x+width-1, y+height-1); 
     _psu_write16bCommand(SPFD5408_RAM);
-    uint8_t *bitmap8 = (uint8_t *)bitmap;
-    uint8_t pixelL;
-    uint8_t pixelH;
-    while (nbPixels-- > 0) {
-        pixelL = *bitmap8;
-        bitmap8++;
-        pixelH = *bitmap8;
-        bitmap8++;
-        _psu_write8bData(pixelH);
-        _psu_write8bData(pixelL);
-    }
+    _psu_write16bBitmapBuffer(bitmap, width, height);
 }
 
 

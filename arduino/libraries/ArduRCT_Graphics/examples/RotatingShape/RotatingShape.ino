@@ -43,6 +43,7 @@ ArduRCT_ILI9340 graphics;
 
 #define NB_SHAPES 6
 #define NB_STYLES 4
+#define POLYHEDRON 5
 
 Tetrahedron tetrahedron(WIREFRAME);
 Cube cube(WIREFRAME);
@@ -72,7 +73,7 @@ void setup() {
     // start the double buffering
     graphics.startDoubleBuffering(buffer, BUFFER_WIDTH, BUFFER_HEIGHT);
     // create the polyedron faces
-    createPolyhedronFaces();
+    calculatePolyhedronFaces();
 }
 
 void loop() {
@@ -80,8 +81,9 @@ void loop() {
     // fill the buffer with black
     graphics.fillRectangle(0, 0, BUFFER_WIDTH, BUFFER_HEIGHT, BLACK);
     // build the shape if required
-    if (shapeNb == 5) createPolyhedronVertices();
-    // rotate the shape
+    if (shapeNb == POLYHEDRON) calculatePolyhedronVertices();
+    // rotate the shape, starting from the initial position to suppress the fixed point math imprecision on rotations
+    shape[shapeNb]->clearTransformations();
     shape[shapeNb]->rotate(angle/ROTATIONS_STEPS_PER_DEGREE, angle, 0);
     // draw it in the buffer
     shape[shapeNb]->draw(&graphics, FIELD_OF_VIEW, VIEW_DISTANCE, BUFFER_WIDTH, BUFFER_HEIGHT, maxSize);
@@ -129,7 +131,7 @@ void showShapeNameAndStyle() {
 
 
 // the polyhedron contains 4 tetrahedrons
-void createPolyhedronFaces() {
+void calculatePolyhedronFaces() {
     polyhedron.setVerticesPerFace(3);
     for (uint8_t i=0; i<4; i++) {
         for (uint8_t j=0; j<4; j++) {
@@ -139,19 +141,20 @@ void createPolyhedronFaces() {
     }
 }
 
-void createPolyhedronVertices() {
-    // we translate the 4 small tetrahedron to the vertices of a big tetrahedron
+void calculatePolyhedronVertices() {
+    // save the vertices positions of a scaled down tetrahedron
     int32_t translations[4][3];
-    tetrahedron.rotate(0, 0, 0);
+    tetrahedron.clearTransformations();
     tetrahedron.scale(3, 5);
     for (uint8_t i=0; i<4; i++) {
-        int32_t *vertice = tetrahedron.getRotatedVertice(i);
+        int32_t *vertice = tetrahedron.getVertice(i);
         translations[i][X] = vertice[X];
         translations[i][Y] = vertice[Y];
         translations[i][Z] = vertice[Z];
     }
-    // we rotate the small tetrahedron
+    // we rotate the small tetrahedrons, scale them and translate them to the vertices of the bigger tetrahedron defined above 
     for (uint8_t i=0; i<4; i++) {
+        tetrahedron.clearTransformations();
         if (i == 0) tetrahedron.rotate(angle/2, angle, 0);
         else if (i == 1) tetrahedron.rotate(angle, angle/2, 0);
         else if (i == 2) tetrahedron.rotate(-angle/2, -angle, 0);
@@ -159,8 +162,8 @@ void createPolyhedronVertices() {
         tetrahedron.scale(1, 2);
         tetrahedron.translate(translations[i][X], translations[i][Y], translations[i][Z]);
         for (uint8_t j=0; j<4; j++) {
-            int32_t *vertice = tetrahedron.getRotatedVertice(j);
-            polyhedron.setVertice(i*4+j, vertice[X], vertice[Y], vertice[Z]);
+            int32_t *vertice = tetrahedron.getVertice(j);
+            polyhedron.setInitialVertice(i*4+j, vertice[X], vertice[Y], vertice[Z]);
         }
     }
 }
