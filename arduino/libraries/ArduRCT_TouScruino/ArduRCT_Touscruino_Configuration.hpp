@@ -40,6 +40,10 @@
 #define TOUSCRUINO_V1_BACKLIGHT_PIN 5
 
 // V2
+
+//#define TOUSCRUINO_V2_TFT_CHIP ArduRCT_ILI9340
+#define TOUSCRUINO_V2_TFT_CHIP ArduRCT_SPFD5408
+
 #define TOUSCRUINO_V2_TP_INT        30   /* Interrupt pin for the TouchPanel */
 #define TOUSCRUINO_V2_WIDTH         240  /* Width of the screen */
 #define TOUSCRUINO_V2_HEIGHT        320  /* Height of the screen */

@@ -54,12 +54,28 @@ int16_t y;
 void setup() {
     // setup the screen 
     graphics.begin(BLACK, WHITE, FONT_MEDIUM, FONT_BOLD);
+    // delete the calibration if required
+    // touchpanel.deleteCalibration();
 }
 
 void loop() {
     // get the state of the touchpanel
     uint8_t tpState = touchpanel.update();
-    if (tpState == EVENT_STATE_PRESSED) {
+    // if the panel is not calibrated, calibrate it
+    if (touchpanel.isCalibrating()) {
+        uint8_t crossNumber = touchpanel.getCalibrationCrossNumber();
+        // if first cross, rotate the screen to get the co-ordinates
+        if (crossNumber == 1) graphics.setRotation(GRAPHICS_ROTATION_0);
+        // clear the screen
+        graphics.fillScreen(WHITE);
+        // draw one of the 3 crosses
+        if (crossNumber <= 3) {
+            touchpanel.getCalibrationCrossXY(crossNumber, &x, &y);
+            graphics.drawLine(x-10, y, x+10, y, BLACK, 3);
+            graphics.drawLine(x, y-10, x, y+10, BLACK, 3);
+            graphics.drawString("Touch the cross", 20, graphics.getHeight()/2, BLACK, FONT_MEDIUM);
+        }
+    } else if (tpState == EVENT_STATE_PRESSED) {
         // if the pen is pressed on the screen, draw a big dot at the pen place
         touchpanel.getPenXYZ(&x, &y);
         graphics.fillRectangle(x-2, y-2, 4, 4, BLUE);

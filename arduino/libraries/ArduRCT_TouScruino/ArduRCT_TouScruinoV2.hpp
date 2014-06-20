@@ -35,11 +35,11 @@
 #include "ArduRCT_TouScruino_Configuration.hpp"
 
 #ifdef __AVR__
-class ArduRCT_TouScruinoV2: public ArduRCT_SPFD5408, public ArduRCT_EventManager {
+class ArduRCT_TouScruinoV2: public TOUSCRUINO_V2_TFT_CHIP, public ArduRCT_EventManager {
 #endif
 
 #if defined(__arm__) && defined(CORE_TEENSY)
-class ArduRCT_TouScruinoV2: public ArduRCT_ILI9340, public ArduRCT_EventManager {
+class ArduRCT_TouScruinoV2: public TOUSCRUINO_V2_TFT_CHIP, public ArduRCT_EventManager {
 #endif
 
 	public:
